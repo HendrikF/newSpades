@@ -4,6 +4,8 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import *
 from math import sin, cos, radians
 from random import randrange
+from Player import *
+from Vector import *
 
 class NewSpades(object):
     def __init__(self):
@@ -16,15 +18,10 @@ class NewSpades(object):
         self.background = [0.5, 0.5, 0.75, 0]
         
         self.running = True
-        # Startposition [x,y,z]
-        self.position = [0, 10, 0]
-        # Blickrichtung [x,y]
-        # x = y = 0 => geradeaus
-        # 0 <= x <= 360 (361 => 1)
-        # -90 <= y <= 90 (Begrenzung)
-        self.orientation = [0, 0]
-        self.step = 1
+        
         self.clock = pygame.time.Clock()
+        
+        self.player = Player("_debuguser_")
         
         self.map = []
     
@@ -36,24 +33,38 @@ class NewSpades(object):
         self.display = pygame.display.set_mode(self.screen, options, 16)
         pygame.mouse.set_visible(False)
         pygame.event.set_grab(True)
-        pygame.key.set_repeat(100, 20)
+        pygame.key.set_repeat(3, 40)
         
         self.generateMap()
         
         glEnable(GL_DEPTH_TEST)
         glDepthFunc(GL_LESS)
         
+        #glEnable(GL_FOG)
+        #glFogfv(GL_FOG_COLOR, (1, 1, 1, 0.9))
+        #glFogf(GL_FOG_MODE, GL_LINEAR)
+        #glFogf(GL_FOG_START, 20)
+        #glFogf(GL_FOG_END, 25)
+        
+        #glEnable(GL_LIGHTING)
+        #glEnable(GL_COLOR_MATERIAL)
+        #glEnable(GL_LIGHT0)
+        #glLightfv(GL_LIGHT0, GL_AMBIENT, (0.2, 0.2, 0.2, 1))
+        #glLightfv(GL_LIGHT0, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
+        #glLightfv(GL_LIGHT0, GL_SPECULAR, (1.0, 1.0, 1.0, 1.0))
+        #glLightfv(GL_LIGHT0, GL_POSITION, (0.0, 10.0, 0.0))
+        
         self.loop()
     
+    # DEBUG
     def generateMap(self):
         self.map = []
         for x in range(5):
             self.map.append([])
-            for z in range(7):
+            for y in range(7):
                 self.map[x].append([])
-                for y in range(6-z):
-                    self.map[x][z].append((y <= 6-z))
-        print(self.map)
+                for z in range(6-y):
+                    self.map[x][y].append((z <= 6-y))
     
     def loop(self):
         while self.running == True:
@@ -77,31 +88,38 @@ class NewSpades(object):
             self.running = False
         
         elif event.key == pygame.K_a:
-            self.position[0] -= self.step
+            self.player.position[0] += self.player.velocity[0]
         elif event.key == pygame.K_d:
-            self.position[0] += self.step
+            self.player.position[0] -= self.player.velocity[0]
         
         elif event.key == pygame.K_w:
-            self.position[2] -= self.step
+            self.player.position[1] -= self.player.velocity[1]
         elif event.key == pygame.K_s:
-            self.position[2] += self.step
+            self.player.position[1] += self.player.velocity[1]
         
         elif event.key == pygame.K_q:
-            self.position[1] -= self.step
+            self.player.position[2] -= self.player.velocity[2]
         elif event.key == pygame.K_e:
-            self.position[1] += self.step
+            self.player.position[2] += self.player.velocity[2]
     
     def handleMouse(self, event):
-        self.orientation[0] -= event.rel[0]/10
-        self.orientation[1] += event.rel[1]/10
-        if self.orientation[0] < 0:
-            self.orientation[0] += 360
-        elif self.orientation[0] > 360:
-            self.orientation[0] -= 360
-        if self.orientation[1] < -90:
-            self.orientation[1] = -90
-        elif self.orientation[1] > 90:
-            self.orientation[1] = 90
+        # When Game starts
+        if event.pos == event.rel:
+            return
+        
+        yaw = event.rel[0]/10
+        pitch = -event.rel[1]/10
+        
+        self.player.orientation[0] += yaw
+        self.player.orientation[1] += pitch
+        if self.player.orientation[0] < 0:
+            self.player.orientation[0] += 360
+        elif self.player.orientation[0] >= 360:
+            self.player.orientation[0] -= 360
+        if self.player.orientation[1] < -90:
+            self.player.orientation[1] = -90
+        elif self.player.orientation[1] > 90:
+            self.player.orientation[1] = 90
     
     def update(self):
         pass
@@ -113,24 +131,28 @@ class NewSpades(object):
         glLoadIdentity()
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        gluPerspective(45, 1.5, 1, self.farplane)
-        gluLookAt(
-            sin(radians(self.orientation[0])), 
-            sin(radians(self.orientation[1])), 
-            cos(radians(self.orientation[0]))*cos(radians(self.orientation[1])), 
+        gluPerspective(45, 1, 1, self.farplane)
+        """gluLookAt(
+            sin(radians(self.player.orientation[0])), 
+            sin(radians(self.player.orientation[1])), 
+            cos(radians(self.player.orientation[0]))*cos(radians(self.player.orientation[1])), 
             0, 0, 0, 
-            0, 1, 0)
+            0, 1, 0)"""
+        orientation = self.player.getVectorFromOrientation(Vector(1, 0, 0))
+        orientation.z *= -1
+        lookat = self.player.position + orientation
+        up = self.player.getVectorFromOrientation(Vector(0, 0, 1))
+        gluLookAt(
+            lookat[0], lookat[1], lookat[2], 
+            self.player.position[0], self.player.position[1], self.player.position[2], 
+            up[0], up[1], up[2]
+        )
         
         glPushMatrix()
-        glTranslatef(-self.position[0], -self.position[1], -self.position[2])
+        #glTranslatef(-self.player.position[0], -self.player.position[1], -self.player.position[2])
         
-        glBegin(GL_QUADS)
         glColor(0, 0, 1)
-        glVertex3f(-10, 0, 10)
-        glVertex3f(10, 0, 10)
-        glVertex3f(10, 0, -10)
-        glVertex3f(-10, 0, -10)
-        glEnd()
+        self.renderQuadrat((0,0,-1), (0,20,-1), (20,20,-1), (20,0,-1))
         
         self.renderMap()
         
@@ -139,13 +161,13 @@ class NewSpades(object):
         pygame.display.flip()
     
     def renderMap(self):
-        glColor(0, 0.5, 0)
+        glColor(0, 1, 0)
         # x  - Counter
         # x_ - Value
         for x, x_ in enumerate(self.map):
-            for z, z_ in enumerate(x_):
-                for y, y_ in enumerate(z_):
-                    if y_ != True:
+            for y, y_ in enumerate(x_):
+                for z, z_ in enumerate(y_):
+                    if z_ != True:
                         continue
                     self.renderQuader(x, y, z)
     
@@ -153,14 +175,14 @@ class NewSpades(object):
         def getEdges(x, y, z):
             return [
                 None,
-                (x-0.5, y+0.5, z+0.5),
-                (x+0.5, y+0.5, z+0.5),
-                (x+0.5, y+0.5, z-0.5),
-                (x-0.5, y+0.5, z-0.5),
-                (x-0.5, y-0.5, z+0.5),
-                (x+0.5, y-0.5, z+0.5),
-                (x+0.5, y-0.5, z-0.5),
-                (x-0.5, y-0.5, z-0.5)
+                (x-0.5, y+0.5, z),
+                (x+0.5, y+0.5, z),
+                (x+0.5, y-0.5, z),
+                (x-0.5, y-0.5, z),
+                (x-0.5, y+0.5, z-1),
+                (x+0.5, y+0.5, z-1),
+                (x+0.5, y-0.5, z-1),
+                (x-0.5, y-0.5, z-1)
             ]
         edges = getEdges(x, y, z)
         self.renderQuadrat(edges[1], edges[5], edges[8], edges[4])

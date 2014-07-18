@@ -58,13 +58,16 @@ class NewSpades(object):
     
     # DEBUG
     def generateMap(self):
+        def rand():
+            # 0 <= x < 0.2
+            return randrange(0, 200)/1000
         self.map = []
         for x in range(5):
             self.map.append([])
             for y in range(7):
                 self.map[x].append([])
                 for z in range(6-y):
-                    self.map[x][y].append((z <= 6-y))
+                    self.map[x][y].append((rand(), 0.8+rand(), rand()) if (z <= 6-y) else False)
     
     def loop(self):
         while self.running == True:
@@ -107,7 +110,7 @@ class NewSpades(object):
         if event.pos == event.rel:
             return
         
-        yaw = event.rel[0]/10
+        yaw = -event.rel[0]/10
         pitch = -event.rel[1]/10
         
         self.player.orientation[0] += yaw
@@ -139,7 +142,7 @@ class NewSpades(object):
             0, 0, 0, 
             0, 1, 0)"""
         orientation = self.player.getVectorFromOrientation(Vector(1, 0, 0))
-        orientation.z *= -1
+        #orientation.z *= -1
         lookat = self.player.position + orientation
         up = self.player.getVectorFromOrientation(Vector(0, 0, 1))
         gluLookAt(
@@ -161,14 +164,14 @@ class NewSpades(object):
         pygame.display.flip()
     
     def renderMap(self):
-        glColor(0, 1, 0)
         # x  - Counter
         # x_ - Value
         for x, x_ in enumerate(self.map):
             for y, y_ in enumerate(x_):
                 for z, z_ in enumerate(y_):
-                    if z_ != True:
+                    if z_ == False:
                         continue
+                    glColor(*z_)
                     self.renderQuader(x, y, z)
     
     def renderQuader(self, x, y, z):
@@ -199,14 +202,3 @@ class NewSpades(object):
         glVertex3f(*p3)
         glVertex3f(*p4)
         glEnd()
-
-
-
-
-
-
-
-
-
-
-

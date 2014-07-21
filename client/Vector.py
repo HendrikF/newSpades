@@ -81,7 +81,15 @@ class Vector(object):
             raise IndexError
     
     def getUnitVector(self, unit=1):
+        if float(self) == 0:
+            return self.__class__(0, 0, 0)
         return self.__div__(float(self) / unit)
     
-    def toUnitVector(self, unit=1):
-        self.x, self.y, self.z = self.__div__(float(self) / unit).getTuple()
+    def update(self, x=None, y=None, z=None):
+        if x == None:
+            x = self.x
+        if y == None:
+            y = self.y
+        if z == None:
+            z = self.z
+        return self.__class__(x, y, z)

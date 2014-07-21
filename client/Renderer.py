@@ -41,10 +41,9 @@ class Renderer(object):
         gluPerspective(45, 1, 1, self.farplane)
         
         orientation = self.player.getVectorFromOrientation(Vector(1, 0, 0))
-        lookat = self.player.position + orientation
         position = self.player.position
+        lookat = position + orientation
         if self.player.crouching:
-            lookat -= Vector(0, 0, 1)
             position -= Vector(0, 0, 1)
         up = self.player.getVectorFromOrientation(Vector(0, 0, 1))
         gluLookAt(
@@ -57,36 +56,14 @@ class Renderer(object):
         self.renderMap()
     
     def renderMap(self):
-        for x, y, z, color in self.map.getBlocks():
-            glColor(*color)
-            self.renderQuader(x, y, z)
-    
-    def renderQuader(self, x, y, z):
-        edges = self.getEdges(x, y, z)
-        self.renderQuadrat(edges[1], edges[5], edges[8], edges[4])
-        self.renderQuadrat(edges[2], edges[6], edges[5], edges[1])
-        self.renderQuadrat(edges[3], edges[7], edges[6], edges[2])
-        self.renderQuadrat(edges[4], edges[8], edges[7], edges[3])
-        self.renderQuadrat(edges[1], edges[2], edges[3], edges[4])
-        self.renderQuadrat(edges[5], edges[6], edges[7], edges[8])
-    
-    def getEdges(self, x, y, z):
-        return [
-            None,
-            (x-0.5, y+0.5, z),
-            (x+0.5, y+0.5, z),
-            (x+0.5, y-0.5, z),
-            (x-0.5, y-0.5, z),
-            (x-0.5, y+0.5, z-1),
-            (x+0.5, y+0.5, z-1),
-            (x+0.5, y-0.5, z-1),
-            (x-0.5, y-0.5, z-1)
-        ]
+        for face, color in self.map.getFaces():
+            glColor(color)
+            self.renderQuadrat(*face)
     
     def renderQuadrat(self, p1, p2, p3, p4):
         glBegin(GL_QUADS)
-        glVertex3f(*p1)
-        glVertex3f(*p2)
-        glVertex3f(*p3)
-        glVertex3f(*p4)
+        glVertex(*p1)
+        glVertex(*p2)
+        glVertex(*p3)
+        glVertex(*p4)
         glEnd()

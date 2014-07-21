@@ -8,7 +8,7 @@ class Player(object):
         self.velocity = Vector(0, 0, 0)
         self.position = Vector(0, 0, 0)
         #                yaw pitch roll
-        self.orientation = [180, 0, 0]
+        self.orientation = [0, 0, 0]
         self.speed = 10
         self.height = 3
         self.crouching = False
@@ -16,7 +16,7 @@ class Player(object):
     def getVectorFromOrientation(self, vector):
         x, y, z = vector.getTuple()
         a, b, c = self.orientation
-        a, b, c = radians(a), radians(b), radians(c)
+        a, b, c = radians(a-180), radians(b), radians(c)
         ca, cb, cc, sa, sb, sc = cos(a), cos(b), cos(c), sin(a), sin(b), sin(c)
         new_x = ca*cb*x + (ca*sb*sc - sa*cc)*y + (ca*sb*cc + sa*sc)*z
         new_y = sa*cb*x + (sa*sb*sc + ca*cc)*y + (sa*sb*cc - ca*sc)*z

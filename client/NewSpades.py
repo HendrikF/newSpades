@@ -39,7 +39,7 @@ class NewSpades(object):
         pygame.event.set_grab(True)
         
         self.map = Map(self.loadMap())
-        self.player.position.z = self.map.getZ(0, 0)+self.player.height
+        self.player.position.z = self.map.getZ(0, 0)+self.player.eyeHeight()
         
         self.renderer.start()
         
@@ -88,8 +88,8 @@ class NewSpades(object):
                 self.player.velocity[1] = -1
             #elif ev.key == self.keys["JUMP"]:
             #    self.player.velocity[2] = 1
-            #elif ev.key == self.keys["CROUCH"]:
-            #    self.player.crouching = True
+            elif ev.key == self.keys["CROUCH"]:
+                self.player.crouching = True
         
         elif action == 0:
             if ev.key == self.keys["FWD"]:
@@ -102,8 +102,8 @@ class NewSpades(object):
                 self.player.velocity[1] = 0
             #elif ev.key == self.keys["JUMP"]:
             #    self.player.velocity[2] = 0
-            #elif ev.key == self.keys["CROUCH"]:
-            #    self.player.crouching = False
+            elif ev.key == self.keys["CROUCH"]:
+                self.player.crouching = False
     
     def handleMouse(self, event):
         if event.pos == event.rel:
@@ -124,9 +124,24 @@ class NewSpades(object):
             self.player.orientation[1] = 90
     
     def update(self):
-        time = self.clock.get_time()
-        self.player.position += (
-            self.player.getVectorFromOrientation( self.player.velocity ).update(z=0)
-                .getUnitVector( self.player.speed )
-            + self.player.velocity.update(x=0, y=0)
-        ) * (time/1000)
+        if float(self.player.velocity) != 0:
+            time = self.clock.get_time()
+            self.player.position += (
+                self.player.getVectorFromOrientation( self.player.velocity ).update(z=0)
+                    .getUnitVector( self.player.speed )
+                + self.player.velocity.update(x=0, y=0)
+            ) * (time/1000)
+            if self.player.position.x > self.map.len_x-1:
+                self.player.position.x = self.map.len_x-1
+            elif self.player.position.x < 0:
+                self.player.position.x = 0
+            
+            if self.player.position.y > self.map.len_y-1:
+                self.player.position.y = self.map.len_y-1
+            elif self.player.position.y < 0:
+                self.player.position.y = 0
+            
+            if self.player.position.z > self.map.len_z-1:
+                self.player.position.z = self.map.len_z-1
+            elif self.player.position.z < 0:
+                self.player.position.z = 0

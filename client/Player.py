@@ -6,6 +6,7 @@ class Player(object):
         self.username = username
         
         self.velocity = Vector(0, 0, 0)
+        # foot coordinates
         self.position = Vector(0, 0, 0)
         #                yaw pitch roll
         self.orientation = [0, 0, 0]
@@ -22,3 +23,6 @@ class Player(object):
         new_y = sa*cb*x + (sa*sb*sc + ca*cc)*y + (sa*sb*cc - ca*sc)*z
         new_z = (-sb)*x +  cb*sc            *y +  cb*cc            *z
         return Vector(new_x, new_y, new_z)
+    
+    def eyeHeight(self):
+        return self.height-1 if self.crouching else self.height

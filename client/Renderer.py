@@ -37,8 +37,8 @@ class Renderer(object):
         glLoadIdentity()
         gluPerspective(45, 1, 1, self.farplane)
         
-        position = self.ns.player.position
-        lookat = self.ns.player.position + self.ns.player.getVectorFromOrientation(Vector(1, 0, 0))
+        position = self.ns.player.position + Vector(0, 0, self.ns.player.eyeHeight())
+        lookat = position + self.ns.player.getVectorFromOrientation(Vector(1, 0, 0))
         up = self.ns.player.getVectorFromOrientation(Vector(0, 0, 1))
         gluLookAt(
             position[0],

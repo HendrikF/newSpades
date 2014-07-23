@@ -11,9 +11,6 @@ class Renderer(object):
         self.background = [0.5, 0.5, 0.75, 0]
     
     def start(self):
-        self.map = self.ns.map
-        self.player = self.ns.player
-        
         glEnable(GL_DEPTH_TEST)
         glDepthFunc(GL_LESS)
         
@@ -33,21 +30,29 @@ class Renderer(object):
     
     def reset(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glClearColor(*self.background)
+        glClearColor(self.background[0], self.background[1], self.background[2], self.background[3])
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         gluPerspective(45, 1, 1, self.farplane)
         
-        orientation = self.player.getVectorFromOrientation(Vector(1, 0, 0))
-        position = self.player.position
+        orientation = self.ns.player.getVectorFromOrientation(Vector(1, 0, 0))
+        position = self.ns.player.position
         lookat = position + orientation
-        if self.player.crouching:
+        if self.ns.player.crouching:
             position -= Vector(0, 0, 1)
-        up = self.player.getVectorFromOrientation(Vector(0, 0, 1))
+        up = self.ns.player.getVectorFromOrientation(Vector(0, 0, 1))
         gluLookAt(
-            *(lookat.getList() + position.getList() + up.getList())
+            lookat[0],
+            lookat[1],
+            lookat[2],
+            position[0],
+            position[1],
+            position[2],
+            up[0],
+            up[1],
+            up[2]
         )
     
     def render(self):
@@ -56,14 +61,14 @@ class Renderer(object):
         self.renderMap()
     
     def renderMap(self):
-        for face, color in self.map.getFaces():
-            glColor(color)
-            self.renderQuadrat(*face)
+        for face, color in self.ns.map.getFaces():
+            glColor3f(color[0], color[1], color[2])
+            self.renderQuadrat(face[0], face[1], face[2], face[3])
     
     def renderQuadrat(self, p1, p2, p3, p4):
         glBegin(GL_QUADS)
-        glVertex(*p1)
-        glVertex(*p2)
-        glVertex(*p3)
-        glVertex(*p4)
+        glVertex3f(p1[0], p1[1], p1[2])
+        glVertex3f(p2[0], p2[1], p2[2])
+        glVertex3f(p3[0], p3[1], p3[2])
+        glVertex3f(p4[0], p4[1], p4[2])
         glEnd()

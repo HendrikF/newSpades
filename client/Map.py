@@ -18,37 +18,7 @@ class Map(object):
     """ Returns only visible faces of a block """
     def getVisibleBlockFaces(self, x, y, z):
         result = []
-        faces = self.getBlockFaces(x, y, z)
-        if self.getBlock(x, y, z+1) == False:
-            result.append(faces[1])
-        if self.getBlock(x-1, y, z) == False:
-            result.append(faces[2])
-        if self.getBlock(x, y-1, z) == False:
-            result.append(faces[3])
-        if self.getBlock(x+1, y, z) == False:
-            result.append(faces[4])
-        if self.getBlock(x, y+1, z) == False:
-            result.append(faces[5])
-        if not z == 0 and self.getBlock(x, y, z-1) == False:
-            result.append(faces[6])
-        return result
-    
-    """ Returns all faces of a block """
-    def getBlockFaces(self, x, y, z):
-        e = self.getEdges(x, y, z)
-        return [
-            None,
-            (e[1], e[2], e[3], e[4]),
-            (e[1], e[2], e[6], e[5]),
-            (e[2], e[3], e[7], e[6]),
-            (e[3], e[4], e[8], e[7]),
-            (e[4], e[1], e[5], e[8]),
-            (e[5], e[6], e[7], e[8])
-        ]
-    
-    """ Returns all edges of a block """
-    def getEdges(self, x, y, z):
-        return [
+        e = [
             None,
             (x-0.5, y+0.5, z),
             (x-0.5, y-0.5, z),
@@ -59,6 +29,19 @@ class Map(object):
             (x+0.5, y-0.5, z-1),
             (x+0.5, y+0.5, z-1)
         ]
+        if self.getBlock(x, y, z+1) == False:
+            result.append((e[1], e[2], e[3], e[4]))
+        if self.getBlock(x-1, y, z) == False:
+            result.append((e[1], e[2], e[6], e[5]))
+        if self.getBlock(x, y-1, z) == False:
+            result.append((e[2], e[3], e[7], e[6]))
+        if self.getBlock(x+1, y, z) == False:
+            result.append((e[3], e[4], e[8], e[7]))
+        if self.getBlock(x, y+1, z) == False:
+            result.append((e[4], e[1], e[5], e[8]))
+        if not z == 0 and self.getBlock(x, y, z-1) == False:
+            result.append((e[5], e[6], e[7], e[8]))
+        return result
     
     def getBlock(self, x, y, z):
         return self.data[x % self.len_x][y % self.len_y][z % self.len_z]

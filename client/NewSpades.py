@@ -79,17 +79,17 @@ class NewSpades(object):
         
         if action == 1:
             if ev.key == self.keys["FWD"]:
-                self.player.velocity[0] = -1
-            elif ev.key == self.keys["BWD"]:
                 self.player.velocity[0] = 1
+            elif ev.key == self.keys["BWD"]:
+                self.player.velocity[0] = -1
             elif ev.key == self.keys["LEFT"]:
-                self.player.velocity[1] = -1
-            elif ev.key == self.keys["RIGHT"]:
                 self.player.velocity[1] = 1
+            elif ev.key == self.keys["RIGHT"]:
+                self.player.velocity[1] = -1
             #elif ev.key == self.keys["JUMP"]:
             #    self.player.velocity[2] = 1
-            elif ev.key == self.keys["CROUCH"]:
-                self.player.crouching = True
+            #elif ev.key == self.keys["CROUCH"]:
+            #    self.player.crouching = True
         
         elif action == 0:
             if ev.key == self.keys["FWD"]:
@@ -102,18 +102,18 @@ class NewSpades(object):
                 self.player.velocity[1] = 0
             #elif ev.key == self.keys["JUMP"]:
             #    self.player.velocity[2] = 0
-            elif ev.key == self.keys["CROUCH"]:
-                self.player.crouching = False
+            #elif ev.key == self.keys["CROUCH"]:
+            #    self.player.crouching = False
     
     def handleMouse(self, event):
         if event.pos == event.rel:
             return
         
-        yaw = event.rel[0]/10
+        yaw = -event.rel[0]/10
         pitch = event.rel[1]/10
         
-        self.player.orientation[0] -= yaw
-        self.player.orientation[1] -= pitch
+        self.player.orientation[0] += yaw
+        self.player.orientation[1] += pitch
         if self.player.orientation[0] < 0:
             self.player.orientation[0] += 360
         elif self.player.orientation[0] >= 360:

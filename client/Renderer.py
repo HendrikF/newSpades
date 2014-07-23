@@ -37,19 +37,16 @@ class Renderer(object):
         glLoadIdentity()
         gluPerspective(45, 1, 1, self.farplane)
         
-        orientation = self.ns.player.getVectorFromOrientation(Vector(1, 0, 0))
         position = self.ns.player.position
-        lookat = position + orientation
-        if self.ns.player.crouching:
-            position -= Vector(0, 0, 1)
+        lookat = self.ns.player.position + self.ns.player.getVectorFromOrientation(Vector(1, 0, 0))
         up = self.ns.player.getVectorFromOrientation(Vector(0, 0, 1))
         gluLookAt(
-            lookat[0],
-            lookat[1],
-            lookat[2],
             position[0],
             position[1],
             position[2],
+            lookat[0],
+            lookat[1],
+            lookat[2],
             up[0],
             up[1],
             up[2]

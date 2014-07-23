@@ -16,7 +16,7 @@ class Player(object):
     def getVectorFromOrientation(self, vector):
         x, y, z = vector.getTuple()
         a, b, c = self.orientation
-        a, b, c = radians(a-180), radians(b), radians(c)
+        a, b, c = radians(a), radians(b), radians(c)
         ca, cb, cc, sa, sb, sc = cos(a), cos(b), cos(c), sin(a), sin(b), sin(c)
         new_x = ca*cb*x + (ca*sb*sc - sa*cc)*y + (ca*sb*cc + sa*sc)*z
         new_y = sa*cb*x + (sa*sb*sc + ca*cc)*y + (sa*sb*cc - ca*sc)*z

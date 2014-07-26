@@ -14,7 +14,7 @@ class Player(object):
         self.height = 3
         self.crouching = False
     
-    def getVectorFromOrientation(self, vector):
+    def getWorldVector(self, vector):
         x, y, z = vector.getTuple()
         a, b, c = self.orientation
         a, b, c = radians(a), radians(b), radians(c)

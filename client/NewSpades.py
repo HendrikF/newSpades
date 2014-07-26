@@ -32,6 +32,7 @@ class NewSpades(object):
         self.mouseSensitivity = 0.1
     
     def start(self):
+        self.ratio = self.screen[0] / self.screen[1]
         options = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
         if self.fullscreen:
             options |= pygame.FULLSCREEN
@@ -55,7 +56,7 @@ class NewSpades(object):
         return data
     
     def loop(self):
-        while self.running == True:
+        while self.running:
             self.clock.tick(self.max_fps)
             pygame.display.set_caption("{} - FPS: {:.3f}".format(self.title, self.clock.get_fps()))
             self.handleEvents()
@@ -131,7 +132,7 @@ class NewSpades(object):
         if float(self.player.velocity) != 0:
             time = self.clock.get_time()
             self.player.position += (
-                self.player.getVectorFromOrientation( self.player.velocity ).update(z=0)
+                self.player.getWorldVector( self.player.velocity ).update(z=0)
                     .getUnitVector( self.player.speed )
                 + self.player.velocity.update(x=0, y=0)
             ) * (time/1000)

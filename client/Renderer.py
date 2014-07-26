@@ -35,11 +35,11 @@ class Renderer(object):
         glLoadIdentity()
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        gluPerspective(45, 1, 1, self.farplane)
+        gluPerspective(45, self.ns.ratio, 1, self.farplane)
         
         position = self.ns.player.position + Vector(0, 0, self.ns.player.eyeHeight())
-        lookat = position + self.ns.player.getVectorFromOrientation(Vector(1, 0, 0))
-        up = self.ns.player.getVectorFromOrientation(Vector(0, 0, 1))
+        lookat = position + self.ns.player.getWorldVector(Vector(1, 0, 0))
+        up = self.ns.player.getWorldVector(Vector(0, 0, 1))
         gluLookAt(
             position[0],
             position[1],

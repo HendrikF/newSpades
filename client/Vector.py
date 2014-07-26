@@ -54,6 +54,7 @@ class Vector(object):
     # Type conversion
     __float__ = lambda self: sqrt(self.x**2 + self.y**2 + self.z**2)
     __int__ = __len__ = lambda self: round(float(self))
+    round = lambda self: self.__class__(round(self.x), round(self.y), round(self.z))
     
     __str__ = __repr__ = lambda self: "<Vector:({v.x}, {v.y}, {v.z})>".format(v=self)
     

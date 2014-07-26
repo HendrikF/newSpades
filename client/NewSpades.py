@@ -1,6 +1,5 @@
 import pygame
 from math import sin, cos, radians
-from random import randrange
 from Player import *
 from Renderer import *
 from Map import *

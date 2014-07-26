@@ -26,20 +26,22 @@ class NewSpades(object):
             "LEFT": pygame.K_a,
             "RIGHT": pygame.K_d,
             "JUMP": pygame.K_SPACE,
-            "CROUCH": pygame.K_LSHIFT
+            "CROUCH": pygame.K_LSHIFT,
+            "FULLSCREEN": pygame.K_F11
         }
+        self.mouseSensitivity = 0.1
     
     def start(self):
         options = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
         if self.fullscreen:
             options |= pygame.FULLSCREEN
         pygame.init()
-        self.display = pygame.display.set_mode(self.screen, options, 16)
+        self.display = pygame.display.set_mode(self.screen, options)
         pygame.mouse.set_visible(False)
         pygame.event.set_grab(True)
         
         self.map = Map(self.loadMap())
-        self.player.position.z = self.map.getZ(0, 0)+self.player.eyeHeight()
+        self.player.position.z = self.map.getZ(0, 0)
         
         self.renderer.start()
         
@@ -90,6 +92,8 @@ class NewSpades(object):
             #    self.player.velocity[2] = 1
             elif ev.key == self.keys["CROUCH"]:
                 self.player.crouching = True
+            elif ev.key == self.keys["FULLSCREEN"]:
+                pygame.display.toggle_fullscreen()
         
         elif action == 0:
             if ev.key == self.keys["FWD"]:
@@ -109,8 +113,8 @@ class NewSpades(object):
         if event.pos == event.rel:
             return
         
-        yaw = -event.rel[0]/10
-        pitch = event.rel[1]/10
+        yaw = -event.rel[0] * self.mouseSensitivity
+        pitch = event.rel[1] * self.mouseSensitivity
         
         self.player.orientation[0] += yaw
         self.player.orientation[1] += pitch

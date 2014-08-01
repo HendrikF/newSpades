@@ -41,7 +41,6 @@ class NewSpades(object):
         pygame.event.set_grab(True)
         
         self.map = Map(self.loadMap())
-        self.player.position.z = self.map.getZ(0, 0)
         
         self.renderer.start()
         
@@ -128,12 +127,16 @@ class NewSpades(object):
             self.player.orientation[1] = 90
     
     def update(self):
+        self.player.position.z = self.map.getZ(
+            round(self.player.position.x),
+            round(self.player.position.y)
+        )
         if float(self.player.velocity) != 0:
             time = self.clock.get_time()
             self.player.position += (
                 self.player.getWorldVector( self.player.velocity ).update(z=0)
                     .getUnitVector( self.player.speed )
-                + self.player.velocity.update(x=0, y=0)
+                #+ self.player.velocity.update(x=0, y=0)
             ) * (time/1000)
             if self.player.position.x > self.map.len_x-1:
                 self.player.position.x = self.map.len_x-1

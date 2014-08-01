@@ -12,6 +12,7 @@ class Player(object):
         self.orientation = [0, 0, 0]
         self.speed = 10
         self.height = 3
+        self.eyeHeight = self.height - 0.5
         self.crouching = False
     
     def getWorldVector(self, vector):
@@ -24,5 +25,5 @@ class Player(object):
         new_z = (-sb)*x +  cb*sc            *y +  cb*cc            *z
         return Vector(new_x, new_y, new_z)
     
-    def eyeHeight(self):
-        return self.height-1 if self.crouching else self.height
+    def getEyeHeight(self):
+        return self.eyeHeight-1 if self.crouching else self.eyeHeight

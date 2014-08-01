@@ -7,18 +7,22 @@ from Vector import *
 class Renderer(object):
     def __init__(self, ns):
         self.ns = ns
-        self.farplane = 150
+        self.farplane = 50
         self.background = [0.5, 0.5, 0.75, 0]
     
     def start(self):
         glEnable(GL_DEPTH_TEST)
         glDepthFunc(GL_LESS)
         
-        #glEnable(GL_FOG)
-        #glFogfv(GL_FOG_COLOR, (1, 1, 1, 0.9))
+        glEnable(GL_CULL_FACE)
+        glCullFace(GL_FRONT)
+        
+        glEnable(GL_FOG)
+        glFogfv(GL_FOG_COLOR, self.background)
         #glFogf(GL_FOG_MODE, GL_LINEAR)
-        #glFogf(GL_FOG_START, 20)
+        #glFogf(GL_FOG_START, 10)
         #glFogf(GL_FOG_END, 25)
+        glFogf(GL_FOG_DENSITY, 0.015)
         
         #glEnable(GL_LIGHTING)
         #glEnable(GL_COLOR_MATERIAL)
@@ -35,7 +39,7 @@ class Renderer(object):
         glLoadIdentity()
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        gluPerspective(45, self.ns.ratio, 1, self.farplane)
+        gluPerspective(45, self.ns.ratio, 0.1, self.farplane)
         
         position = self.ns.player.position + Vector(0, 0, self.ns.player.getEyeHeight())
         lookat = position + self.ns.player.getWorldVector(Vector(1, 0, 0))

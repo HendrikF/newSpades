@@ -30,7 +30,7 @@ class Map(object):
             (x+0.5, y+0.5, z-1)
         ]
         if self.getBlock(x, y, z+1) == False:
-            result.append((e[1], e[2], e[3], e[4]))
+            result.append((e[1], e[4], e[3], e[2]))
         if self.getBlock(x-1, y, z) == False:
             result.append((e[1], e[2], e[6], e[5]))
         if self.getBlock(x, y-1, z) == False:

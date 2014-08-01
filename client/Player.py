@@ -10,7 +10,7 @@ class Player(object):
         self.position = Vector(0, 0, 0)
         #                yaw pitch roll
         self.orientation = [0, 0, 0]
-        self.speed = 10
+        self.speed = 5
         self.height = 3
         self.eyeHeight = self.height - 0.5
         self.crouching = False
@@ -27,3 +27,9 @@ class Player(object):
     
     def getEyeHeight(self):
         return self.eyeHeight-1 if self.crouching else self.eyeHeight
+    
+    def getSpeed(self):
+        return self.speed * (0.5 if self.crouching else 1)
+    
+    def move(self, time):
+        self.position += self.getWorldVector( self.velocity ).update(z=0).getUnitVector( self.getSpeed() ) * time

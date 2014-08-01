@@ -133,11 +133,8 @@ class NewSpades(object):
         )
         if float(self.player.velocity) != 0:
             time = self.clock.get_time()
-            self.player.position += (
-                self.player.getWorldVector( self.player.velocity ).update(z=0)
-                    .getUnitVector( self.player.speed )
-                #+ self.player.velocity.update(x=0, y=0)
-            ) * (time/1000)
+            
+            self.player.move(time/1000)
             if self.player.position.x > self.map.len_x-1:
                 self.player.position.x = self.map.len_x-1
             elif self.player.position.x < 0:

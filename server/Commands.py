@@ -26,6 +26,10 @@ def getCommands(parent):
 		self.config["master"] = not self.config["master"]
 		print("Master broadcast toggled "+ ("ON" if self.config["master"] else "OFF")+"!")
 	parent.addCommand(master, "master", "Switches master broadcast ON/OFF. No arguments.")
+	
+	def show_players(self, args):
+		print("Currently", self.numberOfPlayers, "players online.")
+	parent.addCommand(show_players, "list", "Shows number of players online. No arguments.")
 
 def getHooks(Hooks):
 	class ScriptHooks(Hooks):
@@ -40,3 +44,7 @@ def getHooks(Hooks):
 			#print("Goodbye!")
 			Hooks.hook_Stop(self)
 	return ScriptHooks
+	
+	
+	
+	

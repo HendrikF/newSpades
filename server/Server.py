@@ -1,9 +1,10 @@
 
-import socket
+#import socket
 import threading
 import queue
 import os.path
 import json
+from Connection import *
 #from Commands import *
 
 class Server(object):
@@ -11,12 +12,14 @@ class Server(object):
 	def __init__(self):
 		self.stopNow = False
 		self.numberOfPlayers = 0;
-		self.playerNames = []
+		self.players = []
 		self.commands = {}
 		self.help = {}
 		self.hooks = Hooks
+		self.clientListener = None
 		self.config = {
 			"master": False,
+			"port": 50000,
 			"password": {
 				"admin": ["replaceme"]
 			},
@@ -31,10 +34,10 @@ class Server(object):
 		self.getMap()
 		self.startConsoleInput()
 		self.hooks.hook_Start(self)
+		self.acceptClient()
 		while True:
 			self.connectToMaster()
 			self.checkInput()
-			self.acceptClient()
 			self.hooks.hook_Run(self)
 			if self.stopServer():
 				break
@@ -43,7 +46,7 @@ class Server(object):
 
 	def writeConfig(self):
 		f = open("config.config", "w")
-		json.dump(self.config, f)
+		json.dump(self.config, f, indent=4, separators=(',',': '))
 		f.close()
 	
 	def getConfig(self):
@@ -67,37 +70,6 @@ class Server(object):
 			based on configuration
 		"""
 		pass
-	
-	
-	"""
-	protocol_class = FeatureProtocol
-	connection_class = FeatureConnection
-
-	script_objects = []
-	script_names = config.get('scripts', [])
-	game_mode = config.get('game_mode', 'ctf')
-	if game_mode not in ('ctf', 'tc'):
-		# must be a script with this game mode
-		script_names.append(game_mode)
-
-	script_names = config.get('scripts', [])
-
-	for script in script_names[:]:
-		try:
-			module = __import__('scripts.%s' % script, globals(), locals(), 
-				[script])
-			script_objects.append(module)
-		except ImportError, e:
-			print "(script '%s' not found: %r)" % (script, e)
-			script_names.remove(script)
-
-	for script in script_objects:
-		protocol_class, connection_class = script.apply_script(protocol_class,
-			connection_class, config)
-
-	protocol_class.connection_class = connection_class
-	"""
-	
 	
 	def getScripts(self):
 		script_objects = []
@@ -135,16 +107,17 @@ class Server(object):
 		TODO:
 			check for commands from console or client
 		"""
-		com = ConsoleInput.commands.get()
-		name = com.pop(0)
-		if name in self.commands.keys():
-			try:
-				self.commands[name](self, com)
-			except:
-				pass
-		else:
-			print("Unknown command!")
-		ConsoleInput.commands.task_done()
+		if not ConsoleInput.commands.empty():
+			com = ConsoleInput.commands.get()
+			name = com.pop(0)
+			if name in self.commands.keys():
+				try:
+					self.commands[name](self, com)
+				except:
+					pass
+			else:
+				print("Unknown command!")
+			ConsoleInput.commands.task_done()
 		#pass
 	
 	def acceptClient(self):
@@ -155,7 +128,11 @@ class Server(object):
 				exchange data between clients
 				validate each action done by client
 		"""
-		pass
+		if self.clientListener is None:
+			self.clientListener = ClientListener('', self.config["port"], self)
+			self.clientListener.setDaemon(True)
+			self.clientListener.start()
+			print("Listening for clients...")
 
 	def stopServer(self):
 		"""
@@ -209,21 +186,10 @@ class ConsoleInput(threading.Thread):
 	
 	def run(self):
 		while True:
-			com = input().split()
-			self.commands.put(com)
+			com = input()
+			if len(com) > 0:
+				self.commands.put(com.split())
 
-"""
-class Commands(threading.Thread):
-	
-	
-	def run(self):
-		while True:
-			self.execute(ConsoleInput.commands.get())
-			ConsoleInput.commands.task_done()
-	
-	def execute(self, com):
-		func = com.pop(0)
-"""
 
 
 

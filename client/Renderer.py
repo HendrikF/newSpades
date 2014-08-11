@@ -8,7 +8,7 @@ class Renderer(object):
     def __init__(self, ns):
         self.ns = ns
         self.farplane = 50
-        self.background = [0.5, 0.5, 0.75, 0]
+        self.background = [0.5, 0.9, 1, 1]
     
     def start(self):
         glEnable(GL_DEPTH_TEST)

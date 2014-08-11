@@ -44,7 +44,9 @@ class Map(object):
         return result
     
     def getBlock(self, x, y, z):
-        return self.data[x % self.len_x][y % self.len_y][z % self.len_z]
+        if z >= self.len_z or z < 0:
+            return False
+        return self.data[x % self.len_x][y % self.len_y][z]
     
     def getZ(self, x, y):
         for z in range(self.len_z-1, -1, -1):

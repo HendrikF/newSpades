@@ -82,7 +82,7 @@ class Vector(object):
             raise IndexError
     
     def getUnitVector(self, unit=1):
-        if float(self) == 0:
+        if float(self) == 0 or unit == 0:
             return self.__class__(0, 0, 0)
         return self.__div__(float(self) / unit)
     

@@ -48,8 +48,10 @@ class Map(object):
             return False
         return self.data[x % self.len_x][y % self.len_y][z]
     
-    def getZ(self, x, y):
-        for z in range(self.len_z-1, -1, -1):
+    def getZ(self, x, y, zp=None):
+        if zp is None:
+            zp = self.len_z
+        for z in range(zp-1, -1, -1):
             if self.getBlock(x, y, z) != False:
                 return z
         return 0

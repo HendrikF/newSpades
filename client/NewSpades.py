@@ -41,6 +41,7 @@ class NewSpades(object):
         pygame.event.set_grab(True)
         
         self.map = Map(self.loadMap())
+        self.player.position.z = self.map.getZ(0, 0)
         
         self.renderer.start()
         
@@ -87,8 +88,8 @@ class NewSpades(object):
                 self.player.velocity[1] = 1
             elif ev.key == self.keys["RIGHT"]:
                 self.player.velocity[1] = -1
-            #elif ev.key == self.keys["JUMP"]:
-            #    self.player.velocity[2] = 1
+            elif ev.key == self.keys["JUMP"] and self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z)) != False:
+                self.player.velocity[2] = 3
             elif ev.key == self.keys["CROUCH"]:
                 self.player.crouching = True
             elif ev.key == self.keys["FULLSCREEN"]:
@@ -127,10 +128,18 @@ class NewSpades(object):
             self.player.orientation[1] = 90
     
     def update(self):
-        self.player.position.z = self.map.getZ(
+        """self.player.position.z = self.map.getZ(
             round(self.player.position.x),
             round(self.player.position.y)
-        )
+        )"""
+        
+        if self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z)) == False:
+            self.player.velocity.z -= 1
+            if self.player.velocity.z > self.player.fallSpeed:
+                self.player.velocity.z = self.player.fallSpeed
+        elif self.player.velocity.z != 3:
+            self.player.velocity.z = 0
+        
         if float(self.player.velocity) != 0:
             time = self.clock.get_time()
             

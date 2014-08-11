@@ -14,6 +14,7 @@ class Player(object):
         self.height = 3
         self.eyeHeight = self.height - 0.5
         self.crouching = False
+        self.fallSpeed = -10
     
     def getWorldVector(self, vector):
         x, y, z = vector.getTuple()
@@ -32,4 +33,11 @@ class Player(object):
         return self.speed * (0.5 if self.crouching else 1)
     
     def move(self, time):
-        self.position += self.getWorldVector( self.velocity ).update(z=0).getUnitVector( self.getSpeed() ) * time
+        self.position += (self.getWorldVector( self.velocity.update(z=0) ).update(z=0).getUnitVector( self.getSpeed() ) + Vector(0, 0, self.velocity.z)) * time
+        
+    """def fall(self, time, maxHeight):
+        fallVector = Vector(0,0,-1) * self.fallSpeed * time
+        if float(fallVector) > maxHeight:
+            fallVetor = fallVector.getUnitVector(maxHeight)
+        self.position += fallVector"""
+            

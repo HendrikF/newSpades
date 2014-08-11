@@ -25,5 +25,5 @@ for x in range(lenx):
             data[x][y].append(color)
 
 f = open("map.map", "w")
-json.dump(data, f)
+json.dump(data, f, separators=(',',':'))
 f.close()

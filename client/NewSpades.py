@@ -3,6 +3,7 @@ from math import sin, cos, radians
 from Player import *
 from Renderer import *
 from Map import *
+from Collision import *
 
 class NewSpades(object):
     def __init__(self):
@@ -26,7 +27,10 @@ class NewSpades(object):
             "RIGHT": pygame.K_d,
             "JUMP": pygame.K_SPACE,
             "CROUCH": pygame.K_LSHIFT,
-            "FULLSCREEN": pygame.K_F11
+            "FULLSCREEN": pygame.K_F11,
+            "SHOOT": 1,
+            "SCOPE": 3,
+            "GRENADE": 2
         }
         self.mouseSensitivity = 0.1
     
@@ -74,6 +78,18 @@ class NewSpades(object):
                 self.handleKeyboard(0, event)
             elif event.type == pygame.MOUSEMOTION:
                 self.handleMouse(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                self.handleClick(event)
+    
+    def handleClick(self, ev):
+        if ev.button == self.keys["SHOOT"]:
+            block = Collision.lookAtBlock(self.player, self.map)
+            if block != False:
+                self.map.data[block[0].x][block[0].y][block[0].z] = False
+        elif ev.button == self.keys["SCOPE"]:
+            block = Collision.lookAtBlock(self.player, self.map)
+            if block != False:
+                self.map.setBlock(block[1].x, block[1].y, block[1].z, [0, 0, 1])
     
     def handleKeyboard(self, action, ev):
         if ev.key == pygame.K_ESCAPE:
@@ -160,7 +176,7 @@ class NewSpades(object):
             elif self.player.position.y < 0:
                 self.player.position.y = 0
             
-            if self.player.position.z > self.map.len_z-1:
-                self.player.position.z = self.map.len_z-1
-            elif self.player.position.z < 0:
+            #if self.player.position.z > self.map.len_z-1:
+            #    self.player.position.z = self.map.len_z-1
+            if self.player.position.z < 0:
                 self.player.position.z = 0

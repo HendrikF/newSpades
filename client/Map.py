@@ -1,3 +1,5 @@
+from random import randrange
+
 class Map(object):
     def __init__(self, data):
         self.data = data
@@ -47,6 +49,16 @@ class Map(object):
         if z >= self.len_z or z < 0:
             return False
         return self.data[x % self.len_x][y % self.len_y][z]
+    
+    def setBlock(self, x, y, z, color):
+        if x < 0 or x > self.len_x or y < 0 or y > self.len_y or z < 0 or z > self.len_z:
+            return False
+        def rand(a=0, var=50):
+            return min(max(round(a+randrange(-var, var)/1000, 3), 0), 1)
+        for i, c in enumerate(color):
+            color[i] = rand(c, 100)
+        self.data[x][y][z] = color
+        return True
     
     def getZ(self, x, y, zp=None):
         if zp is None:

@@ -89,7 +89,8 @@ class NewSpades(object):
             elif ev.key == self.keys["RIGHT"]:
                 self.player.velocity[1] = -1
             elif ev.key == self.keys["JUMP"] and self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z)) != False:
-                self.player.velocity[2] = 3
+                self.player.velocity[2] = self.player.jumpSpeed
+                self.player.jumping = self.player.jumpTime
             elif ev.key == self.keys["CROUCH"]:
                 self.player.crouching = True
             elif ev.key == self.keys["FULLSCREEN"]:
@@ -133,17 +134,22 @@ class NewSpades(object):
             round(self.player.position.y)
         )"""
         
-        if self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z)) == False:
-            self.player.velocity.z -= 1
-            if self.player.velocity.z > self.player.fallSpeed:
+        time = self.clock.get_time()/1000
+        
+        if self.player.jumping > 0:
+            self.player.jumping -= time
+        elif self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z)) == False:
+            self.player.velocity += self.player.gravity * time
+            if self.player.velocity.z < self.player.fallSpeed:
                 self.player.velocity.z = self.player.fallSpeed
-        elif self.player.velocity.z != 3:
+        if self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z+1)) != False:
             self.player.velocity.z = 0
+            self.player.position.z = round(self.player.position.z+1)
+        
         
         if float(self.player.velocity) != 0:
-            time = self.clock.get_time()
             
-            self.player.move(time/1000)
+            self.player.move(time)
             if self.player.position.x > self.map.len_x-1:
                 self.player.position.x = self.map.len_x-1
             elif self.player.position.x < 0:

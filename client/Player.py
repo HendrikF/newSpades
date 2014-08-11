@@ -15,6 +15,10 @@ class Player(object):
         self.eyeHeight = self.height - 0.5
         self.crouching = False
         self.fallSpeed = -10
+        self.jumpSpeed = 10
+        self.jumpTime = 0
+        self.gravity = Vector(0, 0, -30)
+        self.jumping = 0
     
     def getWorldVector(self, vector):
         x, y, z = vector.getTuple()

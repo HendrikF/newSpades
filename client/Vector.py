@@ -86,6 +86,14 @@ class Vector(object):
             return self.__class__(0, 0, 0)
         return self.__div__(float(self) / unit)
     
+    def getMainDirection(self):
+        if abs(self.x) > abs(self.y):
+            return 0
+        elif abs(self.x) < abs(self.y):
+            return 1
+        else:
+            return None
+    
     def update(self, x=None, y=None, z=None):
         if x == None:
             x = self.x

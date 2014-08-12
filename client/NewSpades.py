@@ -85,7 +85,7 @@ class NewSpades(object):
         if ev.button == self.keys["SHOOT"]:
             block = Collision.lookAtBlock(self.player, self.map)
             if block != False:
-                self.map.data[block[0].x][block[0].y][block[0].z] = False
+                self.map.setBlock(block[0].x, block[0].y, block[0].z, False)
         elif ev.button == self.keys["SCOPE"]:
             block = Collision.lookAtBlock(self.player, self.map)
             if block != False:
@@ -106,9 +106,10 @@ class NewSpades(object):
                 self.player.velocity[1] = -1
             elif ev.key == self.keys["JUMP"] and self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z)) != False:
                 self.player.velocity[2] = self.player.jumpSpeed
-                self.player.jumping = self.player.jumpTime
+                self.player.jumping = True
             elif ev.key == self.keys["CROUCH"]:
                 self.player.crouching = True
+                self.player.wantToCrouch = True
             elif ev.key == self.keys["FULLSCREEN"]:
                 pygame.display.toggle_fullscreen()
         
@@ -124,7 +125,9 @@ class NewSpades(object):
             #elif ev.key == self.keys["JUMP"]:
             #    self.player.velocity[2] = 0
             elif ev.key == self.keys["CROUCH"]:
-                self.player.crouching = False
+                if self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z+3)) == False:
+                    self.player.crouching = False
+                self.player.wantToCrouch = False
     
     def handleMouse(self, event):
         if event.pos == event.rel:
@@ -152,20 +155,22 @@ class NewSpades(object):
         
         time = self.clock.get_time()/1000
         
-        if self.player.jumping > 0:
-            self.player.jumping -= time
-        elif self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z)) == False:
+        #if self.player.jumping > 0:
+        #    self.player.jumping -= time
+        if self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z)) == False:
             self.player.velocity += self.player.gravity * time
             if self.player.velocity.z < self.player.fallSpeed:
                 self.player.velocity.z = self.player.fallSpeed
+            self.player.jumping = True
         if self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z+1)) != False:
             self.player.velocity.z = 0
             self.player.position.z = round(self.player.position.z+1)
+            self.player.jumping = False
         
         
         if float(self.player.velocity) != 0:
             
-            self.player.move(time)
+            self.player.move(time, self.map)
             if self.player.position.x > self.map.len_x-1:
                 self.player.position.x = self.map.len_x-1
             elif self.player.position.x < 0:
@@ -180,3 +185,19 @@ class NewSpades(object):
             #    self.player.position.z = self.map.len_z-1
             if self.player.position.z < 0:
                 self.player.position.z = 0
+            
+            if self.player.wantToCrouch != self.player.crouching and self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z+3)) == False:
+                self.player.crouching = self.player.wantToCrouch
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -73,3 +73,46 @@ class Renderer(object):
         glVertex3f(p3[0], p3[1], p3[2])
         glVertex3f(p4[0], p4[1], p4[2])
         glEnd()
+
+    def loadTexture(self, file):
+        img = pygame.image.load("textures/"+file)
+        texBufferID = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, texBufferID)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img.get_width, img.get_height, 0, GL_BGR, GL_UNSIGNED_BYTE, img.get_buffer.raw)
+        return texBufferID
+        
+        """
+        glActiveTexture(GL_TEXTURE0)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
+        glTexParameterf(GL_TEXTURE_2D, GL_MAG_FILTER, GL_NEAREST)
+        glTexParameterf(GL_TEXTURE_2D, GL_MIN_FILTER, GL_NEAREST)
+        
+        texCoordID = glGetAttribLocation(progID, "s_vTexCoord")
+        glEnableVertexAttribArray(texCoordID)
+        glVertexAttribPointer(texCoordID, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET)
+        texID = glGetUniformLocation(shaderProgramID, "texture")
+        glActivateTexture(GL_TEXTURE0)
+        glUniform1i(texID, 0)
+        """
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

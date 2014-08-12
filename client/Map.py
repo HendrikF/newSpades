@@ -50,13 +50,22 @@ class Map(object):
             return False
         return self.data[x % self.len_x][y % self.len_y][z]
     
+    def getBlockCenter(self, x, y, z):
+        x = round(x)
+        y = round(y)
+        z = round(z)
+        if self.getBlock(x, y, z) != False:
+            return Vector(x, y, z-0.5)
+        return False
+    
     def setBlock(self, x, y, z, color):
-        if x < 0 or x > self.len_x or y < 0 or y > self.len_y or z < 0 or z > self.len_z:
+        if x < 0 or x >= self.len_x or y < 0 or y >= self.len_y or z < 0 or z >= self.len_z:
             return False
         def rand(a=0, var=50):
             return min(max(round(a+randrange(-var, var)/1000, 3), 0), 1)
-        for i, c in enumerate(color):
-            color[i] = rand(c, 100)
+        if color != False:
+            for i, c in enumerate(color):
+                color[i] = rand(c, 100)
         self.data[x][y][z] = color
         return True
     

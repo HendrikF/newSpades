@@ -1,8 +1,8 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from OpenGL.GLUT import *
 import pygame
 from Vector import *
+from Texture import *
 
 class Renderer(object):
     def __init__(self, ns):
@@ -31,6 +31,10 @@ class Renderer(object):
         #glLightfv(GL_LIGHT0, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
         #glLightfv(GL_LIGHT0, GL_SPECULAR, (1.0, 1.0, 1.0, 1.0))
         #glLightfv(GL_LIGHT0, GL_POSITION, (0.0, 10.0, 0.0))
+        
+        self.textures = {
+            "5": Texture("img")
+        }
     
     def reset(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -62,57 +66,24 @@ class Renderer(object):
         self.renderMap()
     
     def renderMap(self):
+        self.textures["5"].enable()
         for face, color in self.ns.map.getFaces():
             glColor3f(color[0], color[1], color[2])
             self.renderQuadrat(face[0], face[1], face[2], face[3])
     
     def renderQuadrat(self, p1, p2, p3, p4):
         glBegin(GL_QUADS)
+        
+        glTexCoord2f(0, 0)
         glVertex3f(p1[0], p1[1], p1[2])
+        
+        glTexCoord2f(0, 1)
         glVertex3f(p2[0], p2[1], p2[2])
+        
+        glTexCoord2f(1, 1)
         glVertex3f(p3[0], p3[1], p3[2])
+        
+        glTexCoord2f(1, 0)
         glVertex3f(p4[0], p4[1], p4[2])
+        
         glEnd()
-
-    def loadTexture(self, file):
-        img = pygame.image.load("textures/"+file)
-        texBufferID = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, texBufferID)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img.get_width, img.get_height, 0, GL_BGR, GL_UNSIGNED_BYTE, img.get_buffer.raw)
-        return texBufferID
-        
-        """
-        glActiveTexture(GL_TEXTURE0)
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
-        glTexParameterf(GL_TEXTURE_2D, GL_MAG_FILTER, GL_NEAREST)
-        glTexParameterf(GL_TEXTURE_2D, GL_MIN_FILTER, GL_NEAREST)
-        
-        texCoordID = glGetAttribLocation(progID, "s_vTexCoord")
-        glEnableVertexAttribArray(texCoordID)
-        glVertexAttribPointer(texCoordID, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET)
-        texID = glGetUniformLocation(shaderProgramID, "texture")
-        glActivateTexture(GL_TEXTURE0)
-        glUniform1i(texID, 0)
-        """
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        

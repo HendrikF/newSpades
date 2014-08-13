@@ -60,8 +60,7 @@ class NewSpades(object):
     
     def loop(self):
         while self.running:
-            self.clock.tick(self.max_fps)
-            pygame.display.set_caption("{} - FPS: {:.3f}".format(self.title, self.clock.get_fps()))
+            pygame.display.set_caption("{} - delta: {}ms - FPS: {:.3f}".format(self.title, self.clock.tick(self.max_fps), self.clock.get_fps()))
             self.handleEvents()
             self.update()
             self.renderer.render()

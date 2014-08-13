@@ -34,15 +34,15 @@ class Map(object):
         if self.getBlock(x, y, z+1) == False:
             result.append((e[1], e[4], e[3], e[2]))
         if self.getBlock(x-1, y, z) == False:
-            result.append((e[1], e[2], e[6], e[5]))
+            result.append((e[5], e[1], e[2], e[6]))
         if self.getBlock(x, y-1, z) == False:
-            result.append((e[2], e[3], e[7], e[6]))
+            result.append((e[6], e[2], e[3], e[7]))
         if self.getBlock(x+1, y, z) == False:
-            result.append((e[3], e[4], e[8], e[7]))
+            result.append((e[7], e[3], e[4], e[8]))
         if self.getBlock(x, y+1, z) == False:
-            result.append((e[4], e[1], e[5], e[8]))
+            result.append((e[8], e[4], e[1], e[5]))
         if not z == 0 and self.getBlock(x, y, z-1) == False:
-            result.append((e[5], e[6], e[7], e[8]))
+            result.append((e[8], e[5], e[6], e[7]))
         return result
     
     def getBlock(self, x, y, z):

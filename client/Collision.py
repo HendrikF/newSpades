@@ -4,7 +4,7 @@ from Vector import *
 class Collision(object):
     def lookAtBlock(player, map):
         x, y, z = player.position.getTuple()
-        z += player.getEyeHeight()
+        z += player.getEyeHeight()+0.5
         dx, dy, dz = player.getWorldVector(Vector(1, 0, 0)).getTuple()
         i = 0
         m = 8

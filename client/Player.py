@@ -34,6 +34,9 @@ class Player(object):
     def getEyeHeight(self):
         return self.eyeHeight-1 if self.crouching else self.eyeHeight
     
+    def getEyePosition(self):
+        return self.position + Vector(0, 0, self.getEyeHeight())
+    
     def getSpeed(self):
         return self.speed * (0.5 if self.crouching else 1)
     

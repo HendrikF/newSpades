@@ -3,7 +3,7 @@ from Vector import *
 
 class Collision(object):
     def lookAtBlock(player, map):
-        x, y, z = self.ns.player.getEyePosition()
+        x, y, z = player.getEyePosition()
         z += 0.5
         dx, dy, dz = player.getWorldVector(Vector(1, 0, 0)).getTuple()
         i = 0

@@ -3,6 +3,7 @@ from OpenGL.GLU import *
 import pygame
 from Vector import *
 from Texture import *
+from Collision import *
 
 class Renderer(object):
     def __init__(self, ns):
@@ -37,6 +38,8 @@ class Renderer(object):
         }
         
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        
+        glLineWidth(2)
     
     def reset(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -67,8 +70,10 @@ class Renderer(object):
         
         self.renderMap()
         
-        # Test Overlay
+        self.renderLookAt()
         
+        # Test Overlay
+        """
         self.textures["5"].enable()
         
         tl = self.ns.player.getEyePosition() + self.ns.player.getWorldVector(Vector(0.2,  0.08,  0.08))
@@ -95,6 +100,17 @@ class Renderer(object):
         glEnd()
         
         glDisable(GL_BLEND)
+        """
+    
+    def renderLookAt(self):
+        block = Collision.lookAtBlock(self.ns.player, self.ns.map)
+        if block != False:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+            faces = self.ns.map.getAllBlockFaces(block[1].x, block[1].y, block[1].z)
+            glColor3f(0, 0, 0)
+            for face in faces:
+                self.renderQuadrat(face[0], face[1], face[2], face[3])
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
     
     def renderMap(self):
         #self.textures["5"].enable()

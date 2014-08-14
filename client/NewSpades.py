@@ -103,9 +103,9 @@ class NewSpades(object):
                 self.player.velocity[1] = 1
             elif ev.key == self.keys["RIGHT"]:
                 self.player.velocity[1] = -1
-            elif ev.key == self.keys["JUMP"] and self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z)) != False:
+            elif ev.key == self.keys["JUMP"] and Collision.hasGround(self.player, self.map):
                 self.player.velocity[2] = self.player.jumpSpeed
-                self.player.jumping = True
+                #self.player.jumping = True
             elif ev.key == self.keys["CROUCH"]:
                 self.player.crouching = True
                 self.player.wantToCrouch = True
@@ -156,15 +156,16 @@ class NewSpades(object):
         
         #if self.player.jumping > 0:
         #    self.player.jumping -= time
-        if self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z)) == False:
+        if not Collision.hasGround(self.player, self.map):
             self.player.velocity += self.player.gravity * time
             if self.player.velocity.z < self.player.fallSpeed:
                 self.player.velocity.z = self.player.fallSpeed
-            self.player.jumping = True
-        if self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z+1)) != False:
+            #self.player.jumping = True
+        elif self.player.velocity.z < 0:
             self.player.velocity.z = 0
+        if self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z+1)) != False:
             self.player.position.z = round(self.player.position.z+1)
-            self.player.jumping = False
+            #self.player.jumping = False
         
         
         if float(self.player.velocity) != 0:

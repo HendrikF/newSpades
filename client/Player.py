@@ -19,7 +19,7 @@ class Player(object):
         self.jumpSpeed = 10
         self.jumpTime = 0
         self.gravity = Vector(0, 0, -30)
-        self.jumping = False
+        #self.jumping = False
     
     def getWorldVector(self, vector):
         x, y, z = vector.getTuple()
@@ -102,7 +102,7 @@ class Player(object):
                 
         if movement.z > 0:
             if map.getBlock(round(self.position.x), round(self.position.y), round(self.position.z+(3 if self.crouching else 4))) != False:
-                if abs(self.position.z - round(self.position.z+movement.z)) < 0.7:
+                if abs((self.getEyePosition().z+0.5) - round(self.getEyePosition().z+0.5+movement.z)) < 0.7:
                     self.position.z = round(self.position.z)+0.3
                     self.velocity.z = -1
         

@@ -7,8 +7,8 @@ class Collision(object):
         z += 0.5
         dx, dy, dz = player.getWorldVector(Vector(1, 0, 0))
         i = 0
-        m = 8
-        while map.getBlock(round(Vector(x, y, z))) == False and i < 4*m:
+        m = 10
+        while map.getBlock(round(Vector(x, y, z))) == False and i < player.armLength * m:
             i += 1
             x += dx/m
             y += dy/m
@@ -19,4 +19,3 @@ class Collision(object):
             return False
         else:
             return (round(Vector(x, y, z)), round(Vector(x-dx/m, y-dy/m, z-dz/m)))
-            

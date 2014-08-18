@@ -20,6 +20,7 @@ class Player(object):
         self.jumpTime = 0
         self.gravity = -30
         self.jumping = 0
+        self.armLength = 3
     
     def getWorldVector(self, vector, x=None, y=None, z=None):
         vx, vy, vz = vector

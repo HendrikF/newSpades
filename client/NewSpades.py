@@ -60,8 +60,9 @@ class NewSpades(object):
     
     def loop(self):
         while self.running:
+            time = self.clock.get_time()
             self.clock.tick(self.max_fps)
-            pygame.display.set_caption("{} - FPS: {:.3f}".format(self.title, self.clock.get_fps()))
+            pygame.display.set_caption("{} - delta: {}ms - FPS: {:.3f}".format(self.title, time, self.clock.get_fps()))
             self.handleEvents()
             self.update()
             self.renderer.render()
@@ -85,11 +86,11 @@ class NewSpades(object):
         if ev.button == self.keys["SHOOT"]:
             block = Collision.lookAtBlock(self.player, self.map)
             if block != False:
-                self.map.data[block[0].x][block[0].y][block[0].z] = False
+                self.map.setBlock(block[0], False)
         elif ev.button == self.keys["SCOPE"]:
             block = Collision.lookAtBlock(self.player, self.map)
             if block != False:
-                self.map.setBlock(block[1].x, block[1].y, block[1].z, [0, 0, 1])
+                self.map.setBlock(block[1], (0, 0, 1))
     
     def handleKeyboard(self, action, ev):
         if ev.key == pygame.K_ESCAPE:
@@ -104,8 +105,8 @@ class NewSpades(object):
                 self.player.velocity[1] = 1
             elif ev.key == self.keys["RIGHT"]:
                 self.player.velocity[1] = -1
-            elif ev.key == self.keys["JUMP"] and self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z)) != False:
-                self.player.velocity[2] = self.player.jumpSpeed
+            elif ev.key == self.keys["JUMP"] and self.map.getBlock(round(self.player.position)) != False:
+                self.player.velocity_z = self.player.jumpSpeed
                 self.player.jumping = self.player.jumpTime
             elif ev.key == self.keys["CROUCH"]:
                 self.player.crouching = True
@@ -145,25 +146,20 @@ class NewSpades(object):
             self.player.orientation[1] = 90
     
     def update(self):
-        """self.player.position.z = self.map.getZ(
-            round(self.player.position.x),
-            round(self.player.position.y)
-        )"""
-        
         time = self.clock.get_time()/1000
         
         if self.player.jumping > 0:
             self.player.jumping -= time
-        elif self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z)) == False:
-            self.player.velocity += self.player.gravity * time
-            if self.player.velocity.z < self.player.fallSpeed:
-                self.player.velocity.z = self.player.fallSpeed
-        if self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z+1)) != False:
-            self.player.velocity.z = 0
+        elif self.map.getBlock(round(self.player.position)) == False:
+            self.player.velocity_z += self.player.gravity * time
+            if self.player.velocity_z < self.player.fallSpeed:
+                self.player.velocity_z = self.player.fallSpeed
+        if self.map.getBlock(round(self.player.position + Vector(0, 0, 1))) != False:
+            self.player.velocity_z = 0
             self.player.position.z = round(self.player.position.z+1)
         
         
-        if float(self.player.velocity) != 0:
+        if float(self.player.velocity + Vector(0, 0, self.player.velocity_z)) != 0:
             
             self.player.move(time)
             if self.player.position.x > self.map.len_x-1:

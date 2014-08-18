@@ -7,7 +7,7 @@ from Vector import *
 class Renderer(object):
     def __init__(self, ns):
         self.ns = ns
-        self.farplane = 50
+        self.farplane = 500
         self.background = [0.5, 0.9, 1, 1]
     
     def start(self):
@@ -35,13 +35,11 @@ class Renderer(object):
     def reset(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glClearColor(self.background[0], self.background[1], self.background[2], self.background[3])
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         gluPerspective(45, self.ns.ratio, 0.1, self.farplane)
         
-        position = self.ns.player.position + Vector(0, 0, self.ns.player.getEyeHeight())
+        position = self.ns.player.getEyePosition()
         lookat = position + self.ns.player.getWorldVector(Vector(1, 0, 0))
         up = self.ns.player.getWorldVector(Vector(0, 0, 1))
         gluLookAt(

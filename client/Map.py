@@ -1,4 +1,5 @@
 from random import randrange
+from Vector import *
 
 class Map(object):
     def __init__(self, data):
@@ -31,62 +32,34 @@ class Map(object):
             (x+0.5, y-0.5, z-1),
             (x+0.5, y+0.5, z-1)
         ]
-        if self.getBlock(x, y, z+1) == False:
+        if self.getBlock(Vector(x, y, z+1)) == False:
             result.append((e[1], e[4], e[3], e[2]))
-        if self.getBlock(x-1, y, z) == False:
-            result.append((e[5], e[1], e[2], e[6]))
-        if self.getBlock(x, y-1, z) == False:
-            result.append((e[6], e[2], e[3], e[7]))
-        if self.getBlock(x+1, y, z) == False:
-            result.append((e[7], e[3], e[4], e[8]))
-        if self.getBlock(x, y+1, z) == False:
-            result.append((e[8], e[4], e[1], e[5]))
-        if not z == 0 and self.getBlock(x, y, z-1) == False:
-            result.append((e[8], e[5], e[6], e[7]))
+        if self.getBlock(Vector(x-1, y, z)) == False:
+            result.append((e[1], e[2], e[6], e[5]))
+        if self.getBlock(Vector(x, y-1, z)) == False:
+            result.append((e[2], e[3], e[7], e[6]))
+        if self.getBlock(Vector(x+1, y, z)) == False:
+            result.append((e[3], e[4], e[8], e[7]))
+        if self.getBlock(Vector(x, y+1, z)) == False:
+            result.append((e[4], e[1], e[5], e[8]))
+        if not z == 0 and self.getBlock(Vector(x, y, z-1)) == False:
+            result.append((e[5], e[6], e[7], e[8]))
         return result
     
-    def getAllBlockFaces(self, x, y, z):
-        result = []
-        e = [
-            None,
-            (x-0.5, y+0.5, z),
-            (x-0.5, y-0.5, z),
-            (x+0.5, y-0.5, z),
-            (x+0.5, y+0.5, z),
-            (x-0.5, y+0.5, z-1),
-            (x-0.5, y-0.5, z-1),
-            (x+0.5, y-0.5, z-1),
-            (x+0.5, y+0.5, z-1)
-        ]
-        result.append((e[1], e[4], e[3], e[2]))
-        result.append((e[5], e[1], e[2], e[6]))
-        result.append((e[6], e[2], e[3], e[7]))
-        result.append((e[7], e[3], e[4], e[8]))
-        result.append((e[8], e[4], e[1], e[5]))
-        result.append((e[8], e[5], e[6], e[7]))
-        return result
-    
-    def getBlock(self, x, y, z):
-        if z >= self.len_z or z < 0:
+    def getBlock(self, vector):
+        x, y, z = vector
+        if not self.validCoordinates(vector):
             return False
-        return self.data[x % self.len_x][y % self.len_y][z]
+        return self.data[x][y][z]
     
-    def getBlockCenter(self, x, y, z):
-        x = round(x)
-        y = round(y)
-        z = round(z)
-        if self.getBlock(x, y, z) != False:
-            return Vector(x, y, z-0.5)
-        return False
-    
-    def setBlock(self, x, y, z, color):
-        if x < 0 or x >= self.len_x or y < 0 or y >= self.len_y or z < 0 or z >= self.len_z:
+    def setBlock(self, vector, color):
+        x, y, z = vector
+        if not self.validCoordinates(vector):
             return False
-        def rand(a=0, var=50):
+        def rand(a=0, var=100):
             return min(max(round(a+randrange(-var, var)/1000, 3), 0), 1)
         if color != False:
-            for i, c in enumerate(color):
-                color[i] = rand(c, 100)
+            color = (rand(color[0]), rand(color[1]), rand(color[2]))
         self.data[x][y][z] = color
         return True
     
@@ -94,9 +67,19 @@ class Map(object):
         if zp is None:
             zp = self.len_z
         for z in range(zp-1, -1, -1):
-            if self.getBlock(x, y, z) != False:
+            if self.getBlock(round(Vector(x, y, z))) != False:
                 return z
         return 0
+    
+    def validCoordinates(self, v):
+        return not (
+            v.x < 0 or 
+            v.x >= self.len_x or 
+            v.y < 0 or 
+            v.y >= self.len_y or 
+            v.z < 0 or 
+            v.z >= self.len_z
+        )
     
     """
         Edges:

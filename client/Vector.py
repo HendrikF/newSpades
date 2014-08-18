@@ -1,15 +1,12 @@
 from math import sqrt
 
 class Vector(object):
-    def __init__(self, x, y, z):
+    def __init__(self, x, y, z=0):
         self.x = x
         self.y = y
         self.z = z
     
-    getList = lambda self: [self.x, self.y, self.z]
-    getTuple = lambda self: (self.x, self.y, self.z)
-    
-    # Operations with Integers
+    # Operations with Numbers
     def _calc_num(self, other, method):
         return self.__class__(
             method(self.x, other), 
@@ -17,7 +14,7 @@ class Vector(object):
             method(self.z, other)
         )
     
-    # Operations with other Vectors
+    # Operations with Vectors
     def _calc_vec(self, other, method):
         return self.__class__(
             method(self.x, other.x), 
@@ -25,7 +22,6 @@ class Vector(object):
             method(self.z, other.z)
         )
     
-    #__add__ = partial(_calc_vec, method=lambda x,y: x+y)
     __add__ = lambda self,other: self._calc_vec(other, method=lambda x,y: x+y)
     __sub__ = lambda self,other: self._calc_vec(other, method=lambda x,y: x-y)
     
@@ -53,8 +49,16 @@ class Vector(object):
     
     # Type conversion
     __float__ = lambda self: sqrt(self.x**2 + self.y**2 + self.z**2)
-    __int__ = __len__ = lambda self: round(float(self))
-    __round__ = lambda self, n=0: self.__class__(int(round(self.x, n)), int(round(self.y, n)), int(round(self.z, n)))
+    __int__ = __len__ = lambda self: int(round(float(self)))
+    def __round__(self, n=0):
+        x = round(self.x, n)
+        y = round(self.y, n)
+        z = round(self.z, n)
+        if n == 0:
+            x = int(x)
+            y = int(y)
+            z = int(z)
+        return self.__class__(x, y, z)
     
     __str__ = __repr__ = lambda self: "<Vector:({v.x}, {v.y}, {v.z})>".format(v=self)
     
@@ -102,3 +106,9 @@ class Vector(object):
         if z == None:
             z = self.z
         return self.__class__(x, y, z)
+    
+    def add(self, x=0, y=0, z=0):
+        self.x += x
+        self.y += y
+        self.z += z
+        return self

@@ -5,21 +5,21 @@ class Collision(object):
     def lookAtBlock(player, map):
         x, y, z = player.getEyePosition()
         z += 0.5
-        dx, dy, dz = player.getWorldVector(Vector(1, 0, 0)).getTuple()
+        dx, dy, dz = player.getWorldVector(Vector(1, 0, 0))
         i = 0
-        m = 8
-        while map.getBlock(round(x), round(y), round(z)) == False and i < 4 * m:
+        m = 10
+        while map.getBlock(round(Vector(x, y, z))) == False and i < player.armLength * m:
             i += 1
             x += dx/m
             y += dy/m
             z += dz/m
-            if x < 0 or x > map.len_x or y < 0 or y > map.len_y:
+            if not map.validCoordinates(round(Vector(x, y, z))) and not round(z)>=map.len_z:
                 return False
-        if map.getBlock(round(x), round(y), round(z)) == False:
+        if map.getBlock(round(Vector(x, y, z))) == False:
             return False
         else:
-            return [round(Vector(x, y, z)), round(Vector(x-dx/m, y-dy/m, z-dz/m))]
-            
+            return (round(Vector(x, y, z)), round(Vector(x-dx/m, y-dy/m, z-dz/m)))
+    
     def hasGround(player, map):
         x, y, z = player.position.getTuple()
         rx, ry, rz = round(player.position).getTuple()

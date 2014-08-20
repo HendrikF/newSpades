@@ -110,7 +110,6 @@ class NewSpades(object):
                 self.player.jumping = self.player.jumpTime
             elif ev.key == self.keys["CROUCH"]:
                 self.player.crouching = True
-                self.player.wantToCrouch = True
             elif ev.key == self.keys["FULLSCREEN"]:
                 pygame.display.toggle_fullscreen()
         
@@ -126,9 +125,9 @@ class NewSpades(object):
             #elif ev.key == self.keys["JUMP"]:
             #    self.player.velocity[2] = 0
             elif ev.key == self.keys["CROUCH"]:
-                if self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z+3)) == False:
+                if self.map.getBlock(round(self.player.position + Vector(0, 0, 3))) == False:
                     self.player.crouching = False
-                self.player.wantToCrouch = False
+                #self.player.wantToCrouch = False
     
     def handleMouse(self, event):
         if event.pos == event.rel:
@@ -165,7 +164,7 @@ class NewSpades(object):
         
         if float(self.player.velocity + Vector(0, 0, self.player.velocity_z)) != 0:
             
-            self.player.move(time, self.map)
+            self.player.move(time)
             if self.player.position.x > self.map.len_x-1:
                 self.player.position.x = self.map.len_x-1
             elif self.player.position.x < 0:
@@ -176,23 +175,9 @@ class NewSpades(object):
             elif self.player.position.y < 0:
                 self.player.position.y = 0
             
-            #if self.player.position.z > self.map.len_z-1:
-            #    self.player.position.z = self.map.len_z-1
             if self.player.position.z < 0:
                 self.player.position.z = 0
             
-            if self.player.wantToCrouch != self.player.crouching and self.map.getBlock(round(self.player.position.x), round(self.player.position.y), round(self.player.position.z+3)) == False:
-                self.player.crouching = self.player.wantToCrouch
-
-
-
-
-
-
-
-
-
-
-
-
-
+            #if self.player.wantToCrouch != self.player.crouching and self.map.getBlock(round(self.player.position + Vector(0, 0, 3))) == False:
+                #self.player.crouching = self.player.wantToCrouch
+                #pass

@@ -46,6 +46,27 @@ class Map(object):
             result.append((e[5], e[6], e[7], e[8]))
         return result
     
+    def getAllBlockFaces(self, x, y, z):
+        result = []
+        e = [
+            None,
+            (x-0.5, y+0.5, z),
+            (x-0.5, y-0.5, z),
+            (x+0.5, y-0.5, z),
+            (x+0.5, y+0.5, z),
+            (x-0.5, y+0.5, z-1),
+            (x-0.5, y-0.5, z-1),
+            (x+0.5, y-0.5, z-1),
+            (x+0.5, y+0.5, z-1)
+        ]
+        result.append((e[1], e[4], e[3], e[2]))
+        result.append((e[5], e[1], e[2], e[6]))
+        result.append((e[6], e[2], e[3], e[7]))
+        result.append((e[7], e[3], e[4], e[8]))
+        result.append((e[8], e[4], e[1], e[5]))
+        result.append((e[8], e[5], e[6], e[7]))
+        return result
+    
     def getBlock(self, vector):
         x, y, z = vector
         if not self.validCoordinates(vector):

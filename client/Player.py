@@ -1,5 +1,5 @@
 from Vector import *
-from math import radians, sin, cos
+from math import radians, sin, cos, atan
 
 class Player(object):
     def __init__(self, username):
@@ -28,6 +28,7 @@ class Player(object):
         self.gravity = -30
         self.jumping = 0
         self.armLength = 6
+        self.radius = 0.4
     
     def getWorldVector(self, vector, x=None, y=None, z=None):
         vx, vy, vz = vector
@@ -58,3 +59,23 @@ class Player(object):
         if self.keys["RIGHT"]: self.velocity.y = -1
         if self.keys["LEFT"]: self.velocity.y = 1
         self.position += (self.getWorldVector( self.velocity, z=0 ).getUnitVector( self.getSpeed() ).add( z=self.velocity_z )) * time
+
+    """
+        TODO:
+         - fix bugs ;)
+    """
+    def hasGround(self, map):
+        for fx in range(-1,2):
+            for fy in range(-1,2):
+                if map.getBlock(round(self.position + Vector(fx, fy))) == False:
+                    continue
+                dx = self.position.x - round(self.position.x+fx)
+                dy = self.position.y - round(self.position.y+fy)
+                if abs(dx)==abs(dy) or dx==0 or dy==0:
+                    continue
+                rb = 0.5/(sin(atan(dy/dx)%45))
+                if sqrt(dx**2+dy**2)-rb-self.radius <= 0:
+                    return True
+        return False
+
+

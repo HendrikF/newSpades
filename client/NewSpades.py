@@ -152,7 +152,7 @@ class NewSpades(object):
         
         if self.player.jumping > 0:
             self.player.jumping -= time
-        elif self.map.getBlock(round(self.player.position)) == False:
+        elif self.player.hasGround(self.map) == False:
             self.player.velocity_z += self.player.gravity * time
             if self.player.velocity_z < self.player.fallSpeed:
                 self.player.velocity_z = self.player.fallSpeed

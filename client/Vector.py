@@ -1,7 +1,7 @@
 from math import sqrt
 
 class Vector(object):
-    def __init__(self, x, y, z=0):
+    def __init__(self, x=0, y=0, z=0):
         self.x = x
         self.y = y
         self.z = z
@@ -27,14 +27,14 @@ class Vector(object):
     
     __mul__ = lambda self,other: self._calc_num(other, method=lambda x,y: x*y)
     __floordiv__ = lambda self,other: self._calc_num(other, method=lambda x,y: x//y)
-    __div__ = lambda self,other: self._calc_num(other, method=lambda x,y: x/y)
+    __truediv__ = lambda self,other: self._calc_num(other, method=lambda x,y: x/y)
     __mod__ = lambda self,other: self._calc_num(other, method=lambda x,y: x%y)
     __pow__ = lambda self,other: self._calc_num(other, method=lambda x,y: x**y)
     
     # Reflected operations
     __rmul__ = __mul__
     __rfloordiv__ = lambda self,other: self._calc_num(other, method=lambda x,y: y//x)
-    __rdiv__ = lambda self,other: self._calc_num(other, method=lambda x,y: y/x)
+    __rtruediv__ = lambda self,other: self._calc_num(other, method=lambda x,y: y/x)
     __rmod__ = lambda self,other: self._calc_num(other, method=lambda x,y: y%x)
     __rpow__ = lambda self,other: self._calc_num(other, method=lambda x,y: y**x)
     
@@ -43,7 +43,7 @@ class Vector(object):
     __isub__ = __sub__
     __imul__ = __mul__
     __ifloordiv__ = __floordiv__
-    __idiv__ = __div__
+    __itruediv__ = __truediv__
     __imod__ = __mod__
     __ipow__ = __pow__
     
@@ -88,7 +88,7 @@ class Vector(object):
     def getUnitVector(self, unit=1):
         if float(self) == 0 or unit == 0:
             return self.__class__(0, 0, 0)
-        return self.__div__(float(self) / unit)
+        return self.__truediv__(float(self) / unit)
     
     def getMainDirection(self):
         if abs(self.x) > abs(self.y):

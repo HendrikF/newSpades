@@ -7,6 +7,13 @@ class Player(object):
         
         self.velocity = Vector(0, 0)
         self.velocity_z = 0
+        self.keys = {
+            "FWD": False,
+            "BWD": False,
+            "RIGHT": False,
+            "LEFT": False
+        }
+        self.maxSpeed = 5
         # foot coordinates
         self.position = Vector(0, 0, 0)
         #                yaw pitch roll
@@ -45,4 +52,9 @@ class Player(object):
         return self.speed*0.5 if self.crouching else self.speed
     
     def move(self, time):
+        self.velocity = Vector()
+        if self.keys["FWD"]: self.velocity.x = 1
+        if self.keys["BWD"]: self.velocity.x = -1
+        if self.keys["RIGHT"]: self.velocity.y = -1
+        if self.keys["LEFT"]: self.velocity.y = 1
         self.position += (self.getWorldVector( self.velocity, z=0 ).getUnitVector( self.getSpeed() ).add( z=self.velocity_z )) * time

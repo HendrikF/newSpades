@@ -98,13 +98,13 @@ class NewSpades(object):
         
         if action == 1:
             if ev.key == self.keys["FWD"]:
-                self.player.velocity[0] = 1
+                self.player.keys["FWD"] = True
             elif ev.key == self.keys["BWD"]:
-                self.player.velocity[0] = -1
+                self.player.keys["BWD"] = True
             elif ev.key == self.keys["LEFT"]:
-                self.player.velocity[1] = 1
+                self.player.keys["LEFT"] = True
             elif ev.key == self.keys["RIGHT"]:
-                self.player.velocity[1] = -1
+                self.player.keys["RIGHT"] = True
             elif ev.key == self.keys["JUMP"] and self.map.getBlock(round(self.player.position)) != False:
                 self.player.velocity_z = self.player.jumpSpeed
                 self.player.jumping = self.player.jumpTime
@@ -115,13 +115,13 @@ class NewSpades(object):
         
         elif action == 0:
             if ev.key == self.keys["FWD"]:
-                self.player.velocity[0] = 0
+                self.player.keys["FWD"] = False
             elif ev.key == self.keys["BWD"]:
-                self.player.velocity[0] = 0
+                self.player.keys["BWD"] = False
             elif ev.key == self.keys["LEFT"]:
-                self.player.velocity[1] = 0
+                self.player.keys["LEFT"] = False
             elif ev.key == self.keys["RIGHT"]:
-                self.player.velocity[1] = 0
+                self.player.keys["RIGHT"] = False
             #elif ev.key == self.keys["JUMP"]:
             #    self.player.velocity[2] = 0
             elif ev.key == self.keys["CROUCH"]:
@@ -162,21 +162,21 @@ class NewSpades(object):
             #self.player.jumping = False
         
         
-        if float(self.player.velocity + Vector(0, 0, self.player.velocity_z)) != 0:
+        #if float(self.player.velocity + Vector(0, 0, self.player.velocity_z)) != 0:
             
-            self.player.move(time)
-            if self.player.position.x > self.map.len_x-1:
-                self.player.position.x = self.map.len_x-1
-            elif self.player.position.x < 0:
-                self.player.position.x = 0
-            
-            if self.player.position.y > self.map.len_y-1:
-                self.player.position.y = self.map.len_y-1
-            elif self.player.position.y < 0:
-                self.player.position.y = 0
-            
-            if self.player.position.z < 0:
-                self.player.position.z = 0
+        self.player.move(time)
+        if self.player.position.x > self.map.len_x-1:
+            self.player.position.x = self.map.len_x-1
+        elif self.player.position.x < 0:
+            self.player.position.x = 0
+        
+        if self.player.position.y > self.map.len_y-1:
+            self.player.position.y = self.map.len_y-1
+        elif self.player.position.y < 0:
+            self.player.position.y = 0
+        
+        if self.player.position.z < 0:
+            self.player.position.z = 0
             
             #if self.player.wantToCrouch != self.player.crouching and self.map.getBlock(round(self.player.position + Vector(0, 0, 3))) == False:
                 #self.player.crouching = self.player.wantToCrouch

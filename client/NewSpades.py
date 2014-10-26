@@ -102,7 +102,7 @@ class NewSpades(object):
                 self.player.keys["LEFT"] = True
             elif ev.key == self.keys["RIGHT"]:
                 self.player.keys["RIGHT"] = True
-            elif ev.key == self.keys["JUMP"] and self.map.getBlock(round(self.player.position)) != False:
+            elif ev.key == self.keys["JUMP"] and self.player.hasGround(self.map):
                 self.player.velocity_z = self.player.jumpSpeed
                 self.player.jumping = self.player.jumpTime
             elif ev.key == self.keys["CROUCH"]:
@@ -151,7 +151,7 @@ class NewSpades(object):
         time /= 1000
         
         if self.player.jumping > 0:
-            self.player.jumping -= time
+            self.player.jumping -= time*1000
         elif self.player.hasGround(self.map) == False:
             self.player.velocity_z += self.player.gravity * time
             if self.player.velocity_z < self.player.fallSpeed:

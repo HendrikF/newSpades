@@ -8,7 +8,7 @@ from Collision import *
 class Renderer(object):
     def __init__(self, ns):
         self.ns = ns
-        self.farplane = 500
+        self.farplane = 50
         self.background = [0.5, 0.9, 1, 1]
     
     def start(self):

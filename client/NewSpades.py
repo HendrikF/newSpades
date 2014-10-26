@@ -60,9 +60,6 @@ class NewSpades(object):
     
     def loop(self):
         while self.running:
-            time = self.clock.get_time()
-            self.clock.tick(self.max_fps)
-            pygame.display.set_caption("{} - delta: {}ms - FPS: {:.3f}".format(self.title, time, self.clock.get_fps()))
             self.handleEvents()
             self.update()
             self.renderer.render()
@@ -148,7 +145,10 @@ class NewSpades(object):
             self.player.orientation[1] = 90
     
     def update(self):
-        time = self.clock.get_time()/1000
+        time = self.clock.tick(self.max_fps)
+        pygame.display.set_caption("{} - delta: {}ms - FPS: {:.3f}".format(self.title, time, self.clock.get_fps()))
+        
+        time /= 1000
         
         if self.player.jumping > 0:
             self.player.jumping -= time
@@ -156,14 +156,10 @@ class NewSpades(object):
             self.player.velocity_z += self.player.gravity * time
             if self.player.velocity_z < self.player.fallSpeed:
                 self.player.velocity_z = self.player.fallSpeed
-        if self.map.getBlock(round(self.player.position + Vector(0, 0, 1))) != False:
+        elif self.player.hasGround(self.map) != False:
             self.player.velocity_z = 0
-            self.player.position.z = round(self.player.position.z+1)
-            #self.player.jumping = False
+            self.player.position.z = round(self.player.position.z)
         
-        
-        #if float(self.player.velocity + Vector(0, 0, self.player.velocity_z)) != 0:
-            
         self.player.move(time)
         if self.player.position.x > self.map.len_x-1:
             self.player.position.x = self.map.len_x-1
@@ -177,7 +173,7 @@ class NewSpades(object):
         
         if self.player.position.z < 0:
             self.player.position.z = 0
-            
-            #if self.player.wantToCrouch != self.player.crouching and self.map.getBlock(round(self.player.position + Vector(0, 0, 3))) == False:
-                #self.player.crouching = self.player.wantToCrouch
-                #pass
+        
+        
+        if self.map.getBlock(round(self.player.position)) != False and self.map.getBlock(round(self.player.position+Vector(0, 0, 1))) != False:
+            self.player.position.z = round(self.player.position.z+1)

@@ -67,7 +67,7 @@ class Player(object):
             for fy in (-1, 0, 1):
                 if fx==fy==0:
                     continue
-                if map.getBlock(round(self.position + Vector(fx, fy))) == False:
+                if map.getBlock(round(self.position + Vector(fx, fy))) == False or map.getBlock(round(self.position + Vector(fx, fy, 1))) != False or map.getBlock(round(self.position + Vector(fx, fy, 2))) != False or (map.getBlock(round(self.position + Vector(fx, fy, 3))) != False and not self.crouching):
                     continue
                 dx = self.position.x - round(self.position.x+fx)
                 dy = self.position.y - round(self.position.y+fy)

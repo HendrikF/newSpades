@@ -28,7 +28,7 @@ class Player(object):
         self.gravity = -30
         self.jumping = 0
         self.armLength = 6
-        self.radius = 0.3
+        self.radius = 0.35
     
     def getWorldVector(self, vector, x=None, y=None, z=None):
         vx, vy, vz = vector
@@ -71,12 +71,15 @@ class Player(object):
                     continue
                 dx = self.position.x - round(self.position.x+fx)
                 dy = self.position.y - round(self.position.y+fy)
-                if abs(dx)==abs(dy):
-                    rb = sqrt(2)
+                v = abs(dy / dx)
+                if v == 1:
+                    c = sqrt(0.5)
                 elif dx==0 or dy==0:
-                    rb = 0.5
-                else:
-                    rb = 0.5/(sin(atan(dy/dx)%radians(45)))
-                if sqrt(dx**2+dy**2)-rb-self.radius <= 0:
+                    c = 0.5
+                elif v < 1:
+                    c = sqrt(0.25 + (dy/dx/2)**2)
+                elif v > 1:
+                    c = sqrt((dx/dy/2)**2 + 0.25)
+                if sqrt(dx**2+dy**2)-c-self.radius < 0:
                     return True
         return False

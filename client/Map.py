@@ -113,10 +113,15 @@ class Map(object):
         for n in range(0, m+1):
             free = True
             for z in range(1, h+1):
-                print("n{} z{}".format(n, z))
                 if self.getBlock(round(position1 + delta/m*n + Vector(0, 0, z))) != False:
                     free = False
                     break
+            if not free:
+                free = True
+                for z in range(2, h+2):
+                    if self.getBlock(round(position1 + delta/m*n + Vector(0, 0, z))) != False:
+                        free = False
+                        break
             if not free:
                 pos = position1 + delta/m*(n-1)
                 break

@@ -21,6 +21,7 @@ class Player(object):
         self.speed = 5
         self.height = 3
         self.crouching = False
+        self.wantToCrouch = False
         self.fallSpeed = -15
         self.jumpSpeed = 10
         self.jumpTime = 10

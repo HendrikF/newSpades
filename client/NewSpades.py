@@ -107,6 +107,7 @@ class NewSpades(object):
                 self.player.jumping = self.player.jumpTime
             elif ev.key == self.keys["CROUCH"]:
                 self.player.crouching = True
+                self.player.wantToCrouch = True
             elif ev.key == self.keys["FULLSCREEN"]:
                 pygame.display.toggle_fullscreen()
         
@@ -124,7 +125,7 @@ class NewSpades(object):
             elif ev.key == self.keys["CROUCH"]:
                 if self.map.getBlock(round(self.player.position + Vector(0, 0, 3))) == False:
                     self.player.crouching = False
-                #self.player.wantToCrouch = False
+                self.player.wantToCrouch = False
     
     def handleMouse(self, event):
         if event.pos == event.rel:
@@ -149,6 +150,9 @@ class NewSpades(object):
         pygame.display.set_caption("{} - delta: {}ms - FPS: {:.3f}".format(self.title, time, self.clock.get_fps()))
         
         time /= 1000
+        
+        if self.player.crouching == True and self.player.wantToCrouch == False and self.map.getBlock(round(self.player.position + Vector(0, 0, 3))) == False:
+            self.player.crouching = False
         
         if self.player.jumping > 0:
             self.player.jumping -= time*1000

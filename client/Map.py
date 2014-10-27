@@ -116,7 +116,7 @@ class Map(object):
                 if self.getBlock(round(position1 + delta/m*n + Vector(0, 0, z))) != False:
                     free = False
                     break
-            if not free:
+            if player.velocity_z == 0 and not free:
                 free = True
                 for z in range(2, h+2):
                     if self.getBlock(round(position1 + delta/m*n + Vector(0, 0, z))) != False:

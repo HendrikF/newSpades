@@ -156,11 +156,11 @@ class NewSpades(object):
             self.player.velocity_z += self.player.gravity * time
             if self.player.velocity_z < self.player.fallSpeed:
                 self.player.velocity_z = self.player.fallSpeed
-        elif self.player.hasGround(self.map) != False:
+        elif self.player.hasGround(self.map) == True:
             self.player.velocity_z = 0
             self.player.position.z = round(self.player.position.z)
         
-        self.player.move(time)
+        self.player.move(time, self.map)
         if self.player.position.x > self.map.len_x-1:
             self.player.position.x = self.map.len_x-1
         elif self.player.position.x < 0:
@@ -175,5 +175,5 @@ class NewSpades(object):
             self.player.position.z = 0
         
         
-        if self.map.getBlock(round(self.player.position)) != False and self.map.getBlock(round(self.player.position+Vector(0, 0, 1))) != False:
+        if self.map.getBlock(round(self.player.position)) != False and self.map.getBlock(round(self.player.position+Vector(0, 0, 1))) != False and self.map.getBlock(round(self.player.position+Vector(0, 0, 2))) == False:
             self.player.position.z = round(self.player.position.z+1)

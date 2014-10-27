@@ -1,5 +1,5 @@
 from Vector import *
-from math import radians, sin, cos, atan
+from math import radians, sin, cos
 
 class Player(object):
     def __init__(self, username):
@@ -20,7 +20,6 @@ class Player(object):
         self.orientation = [0, 0, 0]
         self.speed = 5
         self.height = 3
-        self.eyeHeight = self.height - 0.5
         self.crouching = False
         self.fallSpeed = -15
         self.jumpSpeed = 10
@@ -44,7 +43,10 @@ class Player(object):
         return Vector(new_x, new_y, new_z)
     
     def getEyeHeight(self):
-        return self.eyeHeight-1 if self.crouching else self.eyeHeight
+        return self.height-1.5 if self.crouching else self.height-0.5
+    
+    def getHeight(self):
+        return self.height-1 if self.crouching else self.height
     
     def getEyePosition(self):
         return self.position + Vector(0, 0, self.getEyeHeight())
@@ -52,13 +54,14 @@ class Player(object):
     def getSpeed(self):
         return self.speed*0.5 if self.crouching else self.speed
     
-    def move(self, time):
+    def move(self, time, map):
         self.velocity = Vector()
         if self.keys["FWD"]: self.velocity.x += 1
         if self.keys["BWD"]: self.velocity.x -= 1
         if self.keys["RIGHT"]: self.velocity.y -= 1
         if self.keys["LEFT"]:  self.velocity.y += 1
-        self.position += (self.getWorldVector( self.velocity, z=0 ).getUnitVector( self.getSpeed() ).add( z=self.velocity_z )) * time
+        newPosition = self.position + (self.getWorldVector( self.velocity, z=0 ).getUnitVector( self.getSpeed() ).add( z=self.velocity_z )) * time
+        self.position = map.getFreeWay(self.position, newPosition, self)
     
     def hasGround(self, map):
         if map.getBlock(round(self.position)) != False:

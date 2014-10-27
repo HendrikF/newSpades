@@ -1,5 +1,6 @@
 from random import randrange
 from Vector import *
+from math import ceil
 
 class Map(object):
     def __init__(self, data):
@@ -101,6 +102,25 @@ class Map(object):
             v.z < 0 or 
             v.z >= self.len_z
         )
+    
+    def getFreeWay(self, position1, position2, player):
+        delta = position2 - position1
+        pos = position2
+        h = player.getHeight()
+        m = ceil(float(delta))
+        if m == 0:
+            return position2
+        for n in range(0, m+1):
+            free = True
+            for z in range(1, h+1):
+                print("n{} z{}".format(n, z))
+                if self.getBlock(round(position1 + delta/m*n + Vector(0, 0, z))) != False:
+                    free = False
+                    break
+            if not free:
+                pos = position1 + delta/m*(n-1)
+                break
+        return pos
     
     """
         Edges:

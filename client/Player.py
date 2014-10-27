@@ -71,7 +71,10 @@ class Player(object):
                     continue
                 dx = self.position.x - round(self.position.x+fx)
                 dy = self.position.y - round(self.position.y+fy)
-                v = abs(dy / dx)
+                try:
+                    v = abs(dy / dx)
+                except ZeroDivisionError:
+                    v = 2 # > 1
                 if v == 1:
                     c = sqrt(0.5)
                 elif dx==0 or dy==0:

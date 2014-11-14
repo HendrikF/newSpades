@@ -17,6 +17,7 @@ class NewSpades(object):
         self.clock = pygame.time.Clock()
         
         self.player = Player("_debuguser_")
+        self.players = []
         
         self.renderer = Renderer(self)
         
@@ -33,6 +34,8 @@ class NewSpades(object):
             "GRENADE": 2
         }
         self.mouseSensitivity = 0.1
+        
+        self.debugsight = False
     
     def start(self):
         self.ratio = self.screen[0] / self.screen[1]
@@ -110,6 +113,8 @@ class NewSpades(object):
                 self.player.wantToCrouch = True
             elif ev.key == self.keys["FULLSCREEN"]:
                 pygame.display.toggle_fullscreen()
+            elif ev.key == pygame.K_k:
+                self.debugsight = not self.debugsight
         
         elif action == 0:
             if ev.key == self.keys["FWD"]:

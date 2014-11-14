@@ -5,6 +5,10 @@ from Vector import *
 from Texture import *
 from Collision import *
 
+"""
+Rechtecke -> Eckpunkte im UZS !!
+"""
+
 class Renderer(object):
     def __init__(self, ns):
         self.ns = ns
@@ -48,25 +52,42 @@ class Renderer(object):
         glLoadIdentity()
         gluPerspective(45, self.ns.ratio, 0.1, self.farplane)
         
-        position = self.ns.player.getEyePosition()
-        lookat = position + self.ns.player.getWorldVector(Vector(1, 0, 0))
-        up = self.ns.player.getWorldVector(Vector(0, 0, 1))
-        gluLookAt(
-            position[0],
-            position[1],
-            position[2],
-            lookat[0],
-            lookat[1],
-            lookat[2],
-            up[0],
-            up[1],
-            up[2]
-        )
+        if not self.ns.debugsight:
+            position = self.ns.player.getEyePosition()
+            lookat = position + self.ns.player.getWorldVector(Vector(1, 0, 0))
+            up = self.ns.player.getWorldVector(Vector(0, 0, 1))
+            gluLookAt(
+                position[0],
+                position[1],
+                position[2],
+                lookat[0],
+                lookat[1],
+                lookat[2],
+                up[0],
+                up[1],
+                up[2]
+            )
+        else:
+            gluLookAt(
+                0,
+                0,
+                7,
+                1,
+                1,
+                6.5,
+                0,
+                0,
+                1
+            )
     
     def render(self):
         self.reset()
         
         self.renderMap()
+        
+        self.renderPlayer(self.ns.player)
+        for player in self.ns.players:
+            self.renderPlayer(player)
         
         self.renderLookAt()
         
@@ -134,3 +155,96 @@ class Renderer(object):
         glVertex3f(p4[0], p4[1], p4[2])
         
         glEnd()
+    
+    def renderPlayer(self, player):
+        w = lambda v: player.position+player.getWorldVector(v, pitch=0, roll=0)
+        # Sides(Edges)
+        s = lambda edges: [
+            # Front
+            (edges[7], edges[3], edges[4], edges[8]),
+            # Right
+            (edges[6], edges[2], edges[3], edges[7]),
+            # Back
+            (edges[5], edges[1], edges[2], edges[6]),
+            # Left
+            (edges[8], edges[4], edges[1], edges[5]),
+            # Bottom
+            (edges[8], edges[5], edges[6], edges[7]),
+            # Top
+            (edges[1], edges[4], edges[3], edges[2])
+        ]
+        
+        # Edges
+        lleg = [
+            None,
+            w(Vector(-0.15, 0.3, 1.2)),
+            w(Vector(-0.15, 0,   1.2)),
+            w(Vector( 0.15, 0,   1.2)),
+            w(Vector( 0.15, 0.3, 1.2)),
+            w(Vector(-0.15, 0.3, 0)),
+            w(Vector(-0.15, 0,   0)),
+            w(Vector( 0.15, 0,   0)),
+            w(Vector( 0.15, 0.3, 0))
+        ]
+        rleg = [
+            None,
+            w(Vector(-0.15,  0,   1.2)),
+            w(Vector(-0.15, -0.3, 1.2)),
+            w(Vector( 0.15, -0.3, 1.2)),
+            w(Vector( 0.15,  0,   1.2)),
+            w(Vector(-0.15,  0,   0)),
+            w(Vector(-0.15, -0.3, 0)),
+            w(Vector( 0.15, -0.3, 0)),
+            w(Vector( 0.15,  0,   0))
+        ]
+        body = [
+            None,
+            w(Vector(-0.15,  0.3, 2.5)),
+            w(Vector(-0.15, -0.3, 2.5)),
+            w(Vector( 0.15, -0.3, 2.5)),
+            w(Vector( 0.15,  0.3, 2.5)),
+            w(Vector(-0.15,  0.3, 1.2)),
+            w(Vector(-0.15, -0.3, 1.2)),
+            w(Vector( 0.15, -0.3, 1.2)),
+            w(Vector( 0.15,  0.3, 1.2))
+        ]
+        larm = [
+            None,
+            w(Vector(-0.1,  0.45, 2.5)),
+            w(Vector(-0.1,  0.3, 2.5)),
+            w(Vector( 0.1,  0.3, 2.5)),
+            w(Vector( 0.1,  0.45, 2.5)),
+            w(Vector(-0.1,  0.45, 1.2)),
+            w(Vector(-0.1,  0.3, 1.2)),
+            w(Vector( 0.1,  0.3, 1.2)),
+            w(Vector( 0.1,  0.45, 1.2))
+        ]
+        rarm = [
+            None,
+            w(Vector(-0.1, -0.3, 2.5)),
+            w(Vector(-0.1, -0.45, 2.5)),
+            w(Vector( 0.1, -0.45, 2.5)),
+            w(Vector( 0.1, -0.3, 2.5)),
+            w(Vector(-0.1, -0.3, 1.2)),
+            w(Vector(-0.1, -0.45, 1.2)),
+            w(Vector( 0.1, -0.45, 1.2)),
+            w(Vector( 0.1, -0.3, 1.2))
+        ]
+        
+        glColor3f(1, 1, 0)
+        for side in s(lleg)+s(rleg)+s(body)+s(larm)+s(rarm):
+            self.renderQuadrat(*side)
+        
+    """
+        Edges:
+        
+           4-------3              Z
+          /|      /|              |  X
+         / |     / |              | /
+        1-------2  |              |/
+        |  8----|--7        Y-----O--
+        | /     | /              /|
+        |/      |/
+        5-------6
+        
+    """

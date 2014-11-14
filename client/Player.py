@@ -30,9 +30,12 @@ class Player(object):
         self.armLength = 6
         self.radius = 0.35
     
-    def getWorldVector(self, vector, x=None, y=None, z=None):
+    def getWorldVector(self, vector, x=None, y=None, z=None, yaw=None, pitch=None, roll=None):
         vx, vy, vz = vector
         a, b, c = self.orientation
+        if yaw   != None: a = yaw
+        if pitch != None: b = pitch
+        if roll  != None: c = roll
         a, b, c = radians(a), radians(b), radians(c)
         ca, cb, cc, sa, sb, sc = cos(a), cos(b), cos(c), sin(a), sin(b), sin(c)
         new_x = ca*cb*vx + (ca*sb*sc - sa*cc)*vy + (ca*sb*cc + sa*sc)*vz

@@ -158,6 +158,7 @@ class Renderer(object):
     
     def renderPlayer(self, player):
         w = lambda v: player.position+player.getWorldVector(v, pitch=0, roll=0)
+        h = lambda v: Vector(0, 0, 2.2)+player.position+player.getWorldVector(v, roll=0)
         # Sides(Edges)
         s = lambda edges: [
             # Front
@@ -177,10 +178,10 @@ class Renderer(object):
         # Edges
         lleg = [
             None,
-            w(Vector(-0.15, 0.3, 1.2)),
-            w(Vector(-0.15, 0,   1.2)),
-            w(Vector( 0.15, 0,   1.2)),
-            w(Vector( 0.15, 0.3, 1.2)),
+            w(Vector(-0.15, 0.3, 1.1)),
+            w(Vector(-0.15, 0,   1.1)),
+            w(Vector( 0.15, 0,   1.1)),
+            w(Vector( 0.15, 0.3, 1.1)),
             w(Vector(-0.15, 0.3, 0)),
             w(Vector(-0.15, 0,   0)),
             w(Vector( 0.15, 0,   0)),
@@ -188,10 +189,10 @@ class Renderer(object):
         ]
         rleg = [
             None,
-            w(Vector(-0.15,  0,   1.2)),
-            w(Vector(-0.15, -0.3, 1.2)),
-            w(Vector( 0.15, -0.3, 1.2)),
-            w(Vector( 0.15,  0,   1.2)),
+            w(Vector(-0.15,  0,   1.1)),
+            w(Vector(-0.15, -0.3, 1.1)),
+            w(Vector( 0.15, -0.3, 1.1)),
+            w(Vector( 0.15,  0,   1.1)),
             w(Vector(-0.15,  0,   0)),
             w(Vector(-0.15, -0.3, 0)),
             w(Vector( 0.15, -0.3, 0)),
@@ -199,40 +200,51 @@ class Renderer(object):
         ]
         body = [
             None,
-            w(Vector(-0.15,  0.3, 2.5)),
-            w(Vector(-0.15, -0.3, 2.5)),
-            w(Vector( 0.15, -0.3, 2.5)),
-            w(Vector( 0.15,  0.3, 2.5)),
-            w(Vector(-0.15,  0.3, 1.2)),
-            w(Vector(-0.15, -0.3, 1.2)),
-            w(Vector( 0.15, -0.3, 1.2)),
-            w(Vector( 0.15,  0.3, 1.2))
+            w(Vector(-0.15,  0.3, 2.2)),
+            w(Vector(-0.15, -0.3, 2.2)),
+            w(Vector( 0.15, -0.3, 2.2)),
+            w(Vector( 0.15,  0.3, 2.2)),
+            w(Vector(-0.15,  0.3, 1.1)),
+            w(Vector(-0.15, -0.3, 1.1)),
+            w(Vector( 0.15, -0.3, 1.1)),
+            w(Vector( 0.15,  0.3, 1.1))
         ]
         larm = [
             None,
-            w(Vector(-0.1,  0.45, 2.5)),
-            w(Vector(-0.1,  0.3, 2.5)),
-            w(Vector( 0.1,  0.3, 2.5)),
-            w(Vector( 0.1,  0.45, 2.5)),
-            w(Vector(-0.1,  0.45, 1.2)),
-            w(Vector(-0.1,  0.3, 1.2)),
-            w(Vector( 0.1,  0.3, 1.2)),
-            w(Vector( 0.1,  0.45, 1.2))
+            w(Vector(-0.1,  0.45, 2.2)),
+            w(Vector(-0.1,  0.3,  2.2)),
+            w(Vector( 0.1,  0.3,  2.2)),
+            w(Vector( 0.1,  0.45, 2.2)),
+            w(Vector(-0.1,  0.45, 1.1)),
+            w(Vector(-0.1,  0.3,  1.1)),
+            w(Vector( 0.1,  0.3,  1.1)),
+            w(Vector( 0.1,  0.45, 1.1))
         ]
         rarm = [
             None,
-            w(Vector(-0.1, -0.3, 2.5)),
-            w(Vector(-0.1, -0.45, 2.5)),
-            w(Vector( 0.1, -0.45, 2.5)),
-            w(Vector( 0.1, -0.3, 2.5)),
-            w(Vector(-0.1, -0.3, 1.2)),
-            w(Vector(-0.1, -0.45, 1.2)),
-            w(Vector( 0.1, -0.45, 1.2)),
-            w(Vector( 0.1, -0.3, 1.2))
+            w(Vector(-0.1, -0.3,  2.2)),
+            w(Vector(-0.1, -0.45, 2.2)),
+            w(Vector( 0.1, -0.45, 2.2)),
+            w(Vector( 0.1, -0.3,  2.2)),
+            w(Vector(-0.1, -0.3,  1.1)),
+            w(Vector(-0.1, -0.45, 1.1)),
+            w(Vector( 0.1, -0.45, 1.1)),
+            w(Vector( 0.1, -0.3,  1.1))
+        ]
+        head = [
+            None,
+            h(Vector(-0.2,  0.2, 0.5)),
+            h(Vector(-0.2, -0.2, 0.5)),
+            h(Vector( 0.2, -0.2, 0.5)),
+            h(Vector( 0.2,  0.2, 0.5)),
+            h(Vector(-0.2,  0.2, 0)),
+            h(Vector(-0.2, -0.2, 0)),
+            h(Vector( 0.2, -0.2, 0)),
+            h(Vector( 0.2,  0.2, 0))
         ]
         
         glColor3f(1, 1, 0)
-        for side in s(lleg)+s(rleg)+s(body)+s(larm)+s(rarm):
+        for side in s(lleg)+s(rleg)+s(body)+s(larm)+s(rarm)+s(head):
             self.renderQuadrat(*side)
         
     """

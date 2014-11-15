@@ -5,7 +5,7 @@ import pygame
 class Texture(object):
     def __init__(self, filename):
         self.filename = filename
-        self.img = pygame.image.load("png/{}.png".format(self.filename))
+        self.img = pygame.image.load("client/png/{}.png".format(self.filename))
         self.img.convert_alpha()
         self.texture_data = pygame.image.tostring(self.img, 'RGBA', True)
         self.texture_id = glGenTextures(1)

@@ -1,6 +1,6 @@
 import legume
 import time
-import Messages
+from shared import Messages
 
 class Server(object):
     def __init__(self, registry):

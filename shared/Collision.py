@@ -1,4 +1,4 @@
-from Vector import *
+from shared.Vector import *
 
 class Collision(object):
     def lookAtBlock(player, map):

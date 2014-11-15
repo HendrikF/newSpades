@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from NewSpades import *
+from client.NewSpades import *
 
 # place mod loading here
 

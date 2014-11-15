@@ -1,5 +1,5 @@
 from random import randrange
-from Vector import *
+from shared.Vector import *
 from math import ceil
 
 class Map(object):

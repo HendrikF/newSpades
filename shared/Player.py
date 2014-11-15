@@ -1,4 +1,4 @@
-from Vector import *
+from shared.Vector import *
 from math import radians, sin, cos
 
 class Player(object):

@@ -1,9 +1,9 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
 import pygame
-from Vector import *
-from Texture import *
-from Collision import *
+from shared.Vector import *
+from client.Texture import *
+from shared.Collision import *
 
 """
 Rechtecke -> Eckpunkte im UZS !!

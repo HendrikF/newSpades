@@ -1,7 +1,7 @@
 #!/usr/bin/python3
-from Registry import Registry
+from server.Registry import Registry
 
-from Server import Server
+from server.Server import Server
 
 registry = Registry()
 registry('Server', Server)

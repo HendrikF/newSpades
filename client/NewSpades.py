@@ -1,9 +1,9 @@
 import pygame
 from math import sin, cos, radians
-from Player import *
-from Renderer import *
-from Map import *
-from Collision import *
+from shared.Player import *
+from client.Renderer import *
+from shared.Map import *
+from shared.Collision import *
 
 class NewSpades(object):
     def __init__(self):
@@ -55,7 +55,7 @@ class NewSpades(object):
         self.loop()
     
     def loadMap(self):
-        f = open("map.map")
+        f = open("client/map.map")
         import json
         data = json.load(f)
         f.close()

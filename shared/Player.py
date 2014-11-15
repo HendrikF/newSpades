@@ -2,8 +2,9 @@ from shared.Vector import *
 from math import radians, sin, cos
 
 class Player(object):
-    def __init__(self, username):
+    def __init__(self, username, network=True):
         self.username = username
+        self.network = network
         
         self.velocity = Vector(0, 0)
         self.velocity_z = 0
@@ -59,13 +60,43 @@ class Player(object):
         return self.speed*0.5 if self.crouching else self.speed
     
     def move(self, time, map):
-        self.velocity = Vector()
-        if self.keys["FWD"]: self.velocity.x += 1
-        if self.keys["BWD"]: self.velocity.x -= 1
-        if self.keys["RIGHT"]: self.velocity.y -= 1
-        if self.keys["LEFT"]:  self.velocity.y += 1
+        if self.crouching == True and self.wantToCrouch == False and map.getBlock(round(self.position + Vector(0, 0, 3))) == False:
+            self.crouching = False
+            
+        if self.jumping > 0:
+            self.jumping -= time*1000
+        elif self.hasGround(map) == False:
+            self.velocity_z += self.gravity * time
+            if self.velocity_z < self.fallSpeed:
+                self.velocity_z = self.fallSpeed
+        elif self.hasGround(map) == True:
+            self.velocity_z = 0
+            self.position.z = round(self.position.z)
+        
+        if not self.network:
+            self.velocity = Vector()
+            if self.keys["FWD"]: self.velocity.x += 1
+            if self.keys["BWD"]: self.velocity.x -= 1
+            if self.keys["RIGHT"]: self.velocity.y -= 1
+            if self.keys["LEFT"]:  self.velocity.y += 1
         newPosition = self.position + (self.getWorldVector( self.velocity, z=0 ).getUnitVector( self.getSpeed() ).add( z=self.velocity_z )) * time
         self.position = map.getFreeWay(self.position, newPosition, self)
+        
+        if self.position.x > map.len_x-1:
+            self.position.x = map.len_x-1
+        elif self.position.x < 0:
+            self.position.x = 0
+        
+        if self.position.y > map.len_y-1:
+            self.position.y = map.len_y-1
+        elif self.position.y < 0:
+            self.position.y = 0
+        
+        if self.position.z < 0:
+            self.position.z = 0
+        
+        if map.getBlock(round(self.position)) != False and map.getBlock(round(self.position+Vector(0, 0, 1))) != False and map.getBlock(round(self.position+Vector(0, 0, 2))) == False:
+            self.position.z = round(self.position.z+1)
     
     def hasGround(self, map):
         if map.getBlock(round(self.position)) != False:
@@ -93,3 +124,6 @@ class Player(object):
                 if sqrt(dx**2+dy**2)-c-self.radius < 0:
                     return True
         return False
+    
+    def __repr__(self):
+        return '<Player ({}) at (x{}, y{}, z{})>'.format(self.username, *self.position)

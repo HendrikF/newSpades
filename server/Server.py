@@ -7,15 +7,15 @@ class Server(object):
         self.registry = registry
         self.addr = ''
         self.port = 55555
-        self.clients = []
+        self.players = []
         self.time_update = 1
         self.time_network = 1
     
     def start(self):
         self._server = legume.Server()
-        self._server.OnConnectRequest += self.joinHandler
+        self._server.OnConnectRequest += self.connectHandler
         self._server.OnMessage += self.messageHandler
-        self._server.OnDisconnect += self.messageHandler
+        self._server.OnDisconnect += self.disconnectHandler
         self._server.listen((self.addr, self.port))
         self.loop()
     
@@ -34,7 +34,7 @@ class Server(object):
                 self.last_network = time.time()
             # Update legume-Server
             self._server.update()
-            time.sleep(0.0001)
+            time.sleep(0.001)
     
     def update(self, delta):
         pass
@@ -42,14 +42,21 @@ class Server(object):
     def updateNetwork(self, delta):
         pass
     
-    def joinHandler(self, sender, args):
-        print('joinHandler')
+    def connectHandler(self, sender, args):
+        print('Connect:')
         print(sender.address)
-        print(sender)
-        print(args)
-        sender.send_message(legume.messages.ConnectRequestAccepted())
     
-    def messageHandler(self, sender, message):
-        print('messageHandler')
-        print(sender)
-        print(message)
+    def disconnectHandler(self, sender, args):
+        print('Disconnect:')
+        print(sender.address)
+    
+    def messageHandler(self, sender, msg):
+        print('Message:')
+        print(sender.address)
+        print(msg)
+    
+    def broadcastMessage(self, msg, reliable=False):
+        if not reliable:
+            self._server.send_message_to_all(msg)
+        else:
+            self._server.send_reliable_message_to_all(msg)

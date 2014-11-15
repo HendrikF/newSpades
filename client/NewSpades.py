@@ -1,9 +1,13 @@
 import pygame
 from math import sin, cos, radians
+import time
 from shared.Player import *
 from client.Renderer import *
 from shared.Map import *
 from shared.Collision import *
+import threading
+from shared import Messages
+import legume
 
 class NewSpades(object):
     def __init__(self):
@@ -16,7 +20,7 @@ class NewSpades(object):
         self.running = True
         self.clock = pygame.time.Clock()
         
-        self.player = Player("_debuguser_")
+        self.player = Player("_debuguser_", network=False)
         self.players = []
         
         self.renderer = Renderer(self)
@@ -35,6 +39,15 @@ class NewSpades(object):
         }
         self.mouseSensitivity = 0.1
         
+        self._client = legume.Client()
+        self._client.OnMessage += self.messageHandler
+        self.host = 'localhost'
+        self.port = 55555
+        self.networkThread = None
+        self.updatingNetwork = True
+        self.lastNetworkUpdate = time.time()
+        self.networkUpdateTime = 1
+        
         self.debugsight = False
     
     def start(self):
@@ -50,9 +63,67 @@ class NewSpades(object):
         self.map = Map(self.loadMap())
         self.player.position.z = self.map.getZ(0, 0)
         
+        self.connect()
+        self.startUpdateNetwork()
+        
         self.renderer.start()
         
         self.loop()
+    
+    def messageHandler(self, sender, msg):
+        print('Message:')
+        print(msg)
+        if msg.MessageTypeID == Messages.JoinMsg.MessageTypeID:
+            self.players.append(Player(msg.username.value))
+        elif msg.MessageTypeID == Messages.PlayerUpdateMsg.MessageTypeID:
+            player = self.getPlayerByName(msg.username.value)
+            if player:
+                player.position = Vector(msg.posx.value, msg.posy.value, msg.posz.value)
+                player.velocity = Vector(msg.velx.value, msg.vely.value)
+                player.velocity_z = msg.velz.value
+                player.orientation = [msg.yaw.value, msg.pitch.value, msg.roll.value]
+                player.crouching = msg.crouching.value
+            else:
+                print('Player not found: '+msg.username.value)
+    
+    def connect(self):
+        self._client.connect((self.host, self.port))
+    
+    def startUpdateNetwork(self):
+        self.networkThread = threading.Thread(target=self.updateNetwork)
+        self.networkThread.start()
+    
+    def updateNetwork(self):
+        while self.updatingNetwork:
+            time.sleep(0.01)
+            if time.time() - self.lastNetworkUpdate >= self.networkUpdateTime:
+                self._client.update()
+                if not self._client.connected: continue
+                
+                pum = Messages.PlayerUpdateMsg()
+                pum.username.value = self.player.username
+                pum.posx.value, pum.posy.value, pum.posz.value = self.player.position
+                pum.velx.value, pum.vely.value, z = self.player.velocity
+                pum.velz.value = self.player.velocity_z
+                pum.yaw.value, pum.pitch.value, pum.roll.value = self.player.orientation
+                pum.crouching.value = self.player.crouching
+                self.sendMessage(pum)
+                
+                print(self.players[0].position.z)
+                
+                self.lastNetworkUpdate = time.time()
+    
+    def getPlayerByName(self, username):
+        for player in self.players:
+            if player.username == username:
+                return player
+        return False
+    
+    def sendMessage(self, msg, reliable=False):
+        if not reliable:
+            self._client.send_message(msg)
+        else:
+            self._client.send_reliable_message(msg)
     
     def loadMap(self):
         f = open("client/map.map")
@@ -67,7 +138,12 @@ class NewSpades(object):
             self.update()
             self.renderer.render()
             pygame.display.flip()
+        self.close()
+    
+    def close(self):
         pygame.quit()
+        self._client.disconnect()
+        self.updatingNetwork = False
     
     def handleEvents(self):
         for event in pygame.event.get():
@@ -156,33 +232,7 @@ class NewSpades(object):
         
         time /= 1000
         
-        if self.player.crouching == True and self.player.wantToCrouch == False and self.map.getBlock(round(self.player.position + Vector(0, 0, 3))) == False:
-            self.player.crouching = False
-        
-        if self.player.jumping > 0:
-            self.player.jumping -= time*1000
-        elif self.player.hasGround(self.map) == False:
-            self.player.velocity_z += self.player.gravity * time
-            if self.player.velocity_z < self.player.fallSpeed:
-                self.player.velocity_z = self.player.fallSpeed
-        elif self.player.hasGround(self.map) == True:
-            self.player.velocity_z = 0
-            self.player.position.z = round(self.player.position.z)
-        
         self.player.move(time, self.map)
-        if self.player.position.x > self.map.len_x-1:
-            self.player.position.x = self.map.len_x-1
-        elif self.player.position.x < 0:
-            self.player.position.x = 0
         
-        if self.player.position.y > self.map.len_y-1:
-            self.player.position.y = self.map.len_y-1
-        elif self.player.position.y < 0:
-            self.player.position.y = 0
-        
-        if self.player.position.z < 0:
-            self.player.position.z = 0
-        
-        
-        if self.map.getBlock(round(self.player.position)) != False and self.map.getBlock(round(self.player.position+Vector(0, 0, 1))) != False and self.map.getBlock(round(self.player.position+Vector(0, 0, 2))) == False:
-            self.player.position.z = round(self.player.position.z+1)
+        for player in self.players:
+            player.move(time, self.map)

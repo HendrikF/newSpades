@@ -109,8 +109,6 @@ class NewSpades(object):
                 pum.crouching.value = self.player.crouching
                 self.sendMessage(pum)
                 
-                print(self.players[0].position.z)
-                
                 self.lastNetworkUpdate = time.time()
     
     def getPlayerByName(self, username):

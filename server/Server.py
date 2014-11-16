@@ -2,6 +2,9 @@ import legume
 import time
 from shared import Messages
 
+import logging
+logger = logging.getLogger(__name__)
+
 class Server(object):
     def __init__(self, registry):
         self.registry = registry
@@ -43,17 +46,13 @@ class Server(object):
         pass
     
     def connectHandler(self, sender, args):
-        print('Connect:')
-        print(sender.address)
+        logger.info('Client connected: %s', sender.address)
     
     def disconnectHandler(self, sender, args):
-        print('Disconnect:')
-        print(sender.address)
+        logger.info('Client disconnected: %s', sender.address)
     
     def messageHandler(self, sender, msg):
-        print('Message:')
-        print(sender.address)
-        print(msg)
+        logger.debug('Recieved Message from %s: %s', sender.address, msg)
     
     def broadcastMessage(self, msg, reliable=False):
         if not reliable:

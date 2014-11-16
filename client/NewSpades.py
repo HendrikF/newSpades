@@ -9,6 +9,9 @@ import threading
 from shared import Messages
 import legume
 
+import logging
+logger = logging.getLogger(__name__)
+
 class NewSpades(object):
     def __init__(self):
         self.fullscreen = False
@@ -71,8 +74,7 @@ class NewSpades(object):
         self.loop()
     
     def messageHandler(self, sender, msg):
-        print('Message:')
-        print(msg)
+        logger.debug('Recieved Message: %s', msg)
         if msg.MessageTypeID == Messages.JoinMsg.MessageTypeID:
             self.players.append(Player(msg.username.value))
         elif msg.MessageTypeID == Messages.PlayerUpdateMsg.MessageTypeID:
@@ -84,7 +86,7 @@ class NewSpades(object):
                 player.orientation = [msg.yaw.value, msg.pitch.value, msg.roll.value]
                 player.crouching = msg.crouching.value
             else:
-                print('Player not found: '+msg.username.value)
+                logger.warn('Recieved PlayerUpdateMsg for unknown player: '+msg.username.value)
     
     def connect(self):
         self._client.connect((self.host, self.port))

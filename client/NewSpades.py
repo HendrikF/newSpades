@@ -2,7 +2,7 @@ from client.BaseWindow import BaseWindow
 from shared.Map import Map
 from shared.Player import Player
 from pyglet.gl import *
-from pyglet.window import key
+from pyglet.window import key, mouse
 
 import logging
 logger = logging.getLogger(__name__)
@@ -27,6 +27,9 @@ class NewSpades(BaseWindow):
             "CROUCH": key.LSHIFT,
             "FULLSCREEN": key.F11
         }
+        pyglet.resource.path = ['client/resources']
+        pyglet.resource.reindex()
+        self.crosshair = pyglet.sprite.Sprite(pyglet.resource.image('crosshair.png'))
     
     def start(self):
         self.map.load()
@@ -40,20 +43,23 @@ class NewSpades(BaseWindow):
         self.label.text = '%02d (%.2f, %.2f, %.2f)' % (
             pyglet.clock.get_fps(), x, y, z)
         self.label.draw()
+        self.crosshair.draw()
     
     def draw3d(self):
         x, y, z = self.player.eyePosition
         dx, dy, dz = self.player.getSightVector()
         gluLookAt(
-            x,      y,      z,
-            x+dx,   y+dy,   z+dz,
-            0,      1,      0
+            x,      y-0.5,      z,     # the -0.5 are for the same fix as Player.eyeHeight
+            x+dx,   y+dy-0.5,   z+dz,  #
+            0,      1,          0
         )
         self.map.draw()
         self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
     
     def onResize(self, width, height):
         self.label.y = height
+        self.crosshair.x = (width+self.crosshair.width)/2
+        self.crosshair.y = (height+self.crosshair.height)/2
     
     def update(self, dt):
         self.map.update(self.player.position)
@@ -68,7 +74,12 @@ class NewSpades(BaseWindow):
     # Client Interaction
     
     def handleMousePress(self, x, y, button, modifiers):
-        pass
+        block, previous = self.map.getBlocksLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
+        if button == mouse.RIGHT:
+            if previous:
+                self.map.addBlock(previous, (1, 0.5, 0))
+        elif button == mouse.LEFT and block:
+            self.map.removeBlock(block)
     
     def handleMouseMove(self, dx, dy):
         m = 0.1
@@ -84,11 +95,13 @@ class NewSpades(BaseWindow):
             self.player.orientation[1] = 90
     
     def handleKeyboard(self, symbol, modifiers, press):
-        if symbol == key.ESCAPE:
-            self.close()
-        
         if press:
-            if symbol == self.keys["FWD"]:
+            if symbol == key.ESCAPE:
+                if self.exclusive:
+                    self.set_exclusive_mouse(False)
+                else:
+                    self.close()
+            elif symbol == self.keys["FWD"]:
                 self.player.velocity[0] -= 1
             elif symbol == self.keys["BWD"]:
                 self.player.velocity[0] += 1

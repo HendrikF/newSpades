@@ -3,6 +3,9 @@ import math
 def radians(deg):
     return deg*0.01745329251994329577 #deg*PI/180
 
+def correct(x):
+    return 0 if abs(x) <= 0.000001 else x
+
 class Player(object):
     def __init__(self, username=''):
         self.username = username
@@ -20,7 +23,7 @@ class Player(object):
     @property
     def eyePosition(self):
         x, y, z = self.position
-        return (x, y+2.5, z)
+        return (x, y+3, z) # should be 2.5 but you cannot build the block in eye-height ??
     
     @property
     def speed(self):
@@ -42,7 +45,7 @@ class Player(object):
             dz = math.sin(x_angle)
         else:
             return (0, 0)
-        return (dx, dz)
+        return (correct(dx), correct(dz))
     
     def getSightVector(self):
         x, y = self.orientation
@@ -55,7 +58,7 @@ class Player(object):
         dy = math.sin(math.radians(y))
         dx = math.cos(math.radians(x - 90)) * m
         dz = math.sin(math.radians(x - 90)) * m
-        return (dx, dy, dz)
+        return (correct(dx), correct(dy), correct(dz))
     
     def __repr__(self):
         return '<Player ({}) at (x{}, y{}, z{})>'.format(self.username, *self.position)

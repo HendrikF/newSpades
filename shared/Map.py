@@ -13,13 +13,15 @@ SECTOR_SIZE = 16
 
 def cubeVertices(x, y, z, d=0.5):
     """Returns a list of all verticies of the block at (x, y, z)"""
+    e = d-0.5
+    f = d+0.5
     return [
-        x-d, y  , z-d, x-d, y  , z+d, x+d, y  , z+d, x+d, y  , z-d, # top
-        x-d, y-1, z-d, x+d, y-1, z-d, x+d, y-1, z+d, x-d, y-1, z+d, # bottom
-        x-d, y-1, z-d, x-d, y-1, z+d, x-d, y  , z+d, x-d, y  , z-d, # left
-        x+d, y-1, z+d, x+d, y-1, z-d, x+d, y  , z-d, x+d, y  , z+d, # right
-        x-d, y-1, z+d, x+d, y-1, z+d, x+d, y  , z+d, x-d, y  , z+d, # front
-        x+d, y-1, z-d, x-d, y-1, z-d, x-d, y  , z-d, x+d, y  , z-d, # back
+        x-d, y+e, z-d, x-d, y+e, z+d, x+d, y+e, z+d, x+d, y+e, z-d, # top
+        x-d, y-f, z-d, x+d, y-f, z-d, x+d, y-f, z+d, x-d, y-f, z+d, # bottom
+        x-d, y-f, z-d, x-d, y-f, z+d, x-d, y+e, z+d, x-d, y+e, z-d, # left
+        x+d, y-f, z+d, x+d, y-f, z-d, x+d, y+e, z-d, x+d, y+e, z+d, # right
+        x-d, y-f, z+d, x+d, y-f, z+d, x+d, y+e, z+d, x-d, y+e, z+d, # front
+        x+d, y-f, z-d, x-d, y-f, z-d, x-d, y+e, z-d, x+d, y+e, z-d, # back
     ]
 
 def sectorize(position):
@@ -56,14 +58,24 @@ class Map(object):
         self.queue = deque()
         # save position of player
         self.currentSector = None
+        self.dimensions = (0, 0)
     
     def load(self):
         self._load()
+        self.calculateDimensions()
     
     def _load(self):
         for x in range(0, 50):
             for z in range(0, 50):
                     self.addBlock((x, 0, z), (0, 1, 0), immediate=False)
+    
+    def calculateDimensions(self):
+        dx = 0
+        dz = 0
+        for x, y, z in self.world:
+            dx = max(dx, x)
+            dz = max(dz, z)
+        self.dimensions = (dx+1, dz+1)
     
     ######################
     # Map modification
@@ -119,11 +131,11 @@ class Map(object):
             x, y, z = x + dx / m, y + dy / m, z + dz / m
         return None, None
     
-    def drawBlockLookingAt(self, position, vector, maxDistance, width=3):
+    def drawBlockLookingAt(self, position, vector, maxDistance, width=2):
         block = self.getBlocksLookingAt(position, vector, maxDistance)[0]
         if block:
             x, y, z = block
-            vertex_data = cubeVertices(x, y, z, 0.6)
+            vertex_data = cubeVertices(x, y, z, 0.51)
             glColor3d(0, 0, 0)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
             glLineWidth(width)
@@ -141,7 +153,7 @@ class Map(object):
                 return True
         return False
     
-    def check_neighbors(self, position):
+    def checkNeighbors(self, position):
         """Checks whether a new or removed block covers a neighbor and eventually hides/shows the neighbors"""
         x, y, z = position
         for dx, dy, dz in FACES:

@@ -1,129 +1,58 @@
-from shared.Vector import *
-from math import radians, sin, cos
+import math
+
+def radians(deg):
+    return deg*0.01745329251994329577 #deg*PI/180
 
 class Player(object):
-    def __init__(self, username, network=True):
+    def __init__(self, username=''):
         self.username = username
-        self.network = network
         
-        self.velocity = Vector(0, 0)
-        self.velocity_z = 0
-        self.keys = {
-            "FWD": False,
-            "BWD": False,
-            "RIGHT": False,
-            "LEFT": False
-        }
-        self.maxSpeed = 5
-        # foot coordinates
-        self.position = Vector(0, 0, 0)
-        #                yaw pitch roll
-        self.orientation = [0, 0, 0]
+        self.velocity = [0, 0]
+        self.dy = 0
+        self.position = (0, 0, 0)
+        self.orientation = [90, 0]
         self.speed = 5
-        self.height = 3
-        self.crouching = False
-        self.wantToCrouch = False
-        self.fallSpeed = -15
-        self.jumpSpeed = 10
-        self.jumpTime = 10
-        self.gravity = -30
-        self.jumping = 0
-        self.armLength = 6
-        self.radius = 0.35
-    
-    def getWorldVector(self, vector, x=None, y=None, z=None, yaw=None, pitch=None, roll=None):
-        vx, vy, vz = vector
-        a, b, c = self.orientation
-        if yaw   != None: a = yaw
-        if pitch != None: b = pitch
-        if roll  != None: c = roll
-        a, b, c = radians(a), radians(b), radians(c)
-        ca, cb, cc, sa, sb, sc = cos(a), cos(b), cos(c), sin(a), sin(b), sin(c)
-        new_x = ca*cb*vx + (ca*sb*sc - sa*cc)*vy + (ca*sb*cc + sa*sc)*vz
-        new_y = sa*cb*vx + (sa*sb*sc + ca*cc)*vy + (sa*sb*cc - ca*sc)*vz
-        new_z = (-sb)*vx +  cb*sc            *vy +  cb*cc            *vz
-        if x != None: new_x = x
-        if y != None: new_y = y
-        if z != None: new_z = z
-        return Vector(new_x, new_y, new_z)
-    
-    def getEyeHeight(self):
-        return self.height-1.5 if self.crouching else self.height-0.5
     
     def getHeight(self):
         return self.height-1 if self.crouching else self.height
     
     def getEyePosition(self):
-        return self.position + Vector(0, 0, self.getEyeHeight())
+        x, y, z = self.position
+        return (x, y+2.5, z)
     
     def getSpeed(self):
-        return self.speed*0.5 if self.crouching else self.speed
+        return self.speed
     
-    def move(self, time, map):
-        if self.crouching == True and self.wantToCrouch == False and map.getBlock(round(self.position + Vector(0, 0, 3))) == False:
-            self.crouching = False
-            
-        if self.jumping > 0:
-            self.jumping -= time*1000
-        elif self.hasGround(map) == False:
-            self.velocity_z += self.gravity * time
-            if self.velocity_z < self.fallSpeed:
-                self.velocity_z = self.fallSpeed
-        elif self.hasGround(map) == True:
-            self.velocity_z = 0
-            self.position.z = round(self.position.z)
-        
-        if not self.network:
-            self.velocity = Vector()
-            if self.keys["FWD"]: self.velocity.x += 1
-            if self.keys["BWD"]: self.velocity.x -= 1
-            if self.keys["RIGHT"]: self.velocity.y -= 1
-            if self.keys["LEFT"]:  self.velocity.y += 1
-        newPosition = self.position + (self.getWorldVector( self.velocity, z=0 ).getUnitVector( self.getSpeed() ).add( z=self.velocity_z )) * time
-        self.position = map.getFreeWay(self.position, newPosition, self)
-        
-        if self.position.x > map.len_x-1:
-            self.position.x = map.len_x-1
-        elif self.position.x < 0:
-            self.position.x = 0
-        
-        if self.position.y > map.len_y-1:
-            self.position.y = map.len_y-1
-        elif self.position.y < 0:
-            self.position.y = 0
-        
-        if self.position.z < 0:
-            self.position.z = 0
-        
-        if map.getBlock(round(self.position)) != False and map.getBlock(round(self.position+Vector(0, 0, 1))) != False and map.getBlock(round(self.position+Vector(0, 0, 2))) == False:
-            self.position.z = round(self.position.z+1)
+    def move(self, time):
+        x, y, z = self.position
+        dx, dz = self.getMotionVector()
+        dy = self.dy
+        d = self.getSpeed() * time
+        dx, dy, dz = dx*d, dy*d, dz*d
+        self.position = x+dx, y+dy, z+dz
     
-    def hasGround(self, map):
-        if map.getBlock(round(self.position)) != False:
-            return True
-        for fx in (-1, 0, 1):
-            for fy in (-1, 0, 1):
-                if fx==fy==0:
-                    continue
-                if map.getBlock(round(self.position + Vector(fx, fy))) == False or map.getBlock(round(self.position + Vector(fx, fy, 1))) != False or map.getBlock(round(self.position + Vector(fx, fy, 2))) != False or (map.getBlock(round(self.position + Vector(fx, fy, 3))) != False and not self.crouching):
-                    continue
-                dx = self.position.x - round(self.position.x+fx)
-                dy = self.position.y - round(self.position.y+fy)
-                try:
-                    v = abs(dy / dx)
-                except ZeroDivisionError:
-                    v = 2 # > 1
-                if v == 1:
-                    c = sqrt(0.5)
-                elif dx==0 or dy==0:
-                    c = 0.5
-                elif v < 1:
-                    c = sqrt(0.25 + (dy/dx/2)**2)
-                elif v > 1:
-                    c = sqrt((dx/dy/2)**2 + 0.25)
-                if sqrt(dx**2+dy**2)-c-self.radius < 0:
-                    return True
-        return False
+    def getMotionVector(self):
+        if any(self.velocity):
+            x = self.orientation[0]
+            x_angle = math.radians(x + math.degrees(math.atan2(self.velocity[0], self.velocity[1])))
+            dx = math.cos(x_angle)
+            dz = math.sin(x_angle)
+        else:
+            return (0, 0)
+        return (dx, dz)
+    
+    def getSightVector(self):
+        x, y = self.orientation
+        # y ranges from -90 to 90, or -pi/2 to pi/2, so m ranges from 0 to 1 and
+        # is 1 when looking ahead parallel to the ground and 0 when looking
+        # straight up or down.
+        m = math.cos(math.radians(y))
+        # dy ranges from -1 to 1 and is -1 when looking straight down and 1 when
+        # looking straight up.
+        dy = math.sin(math.radians(y))
+        dx = math.cos(math.radians(x - 90)) * m
+        dz = math.sin(math.radians(x - 90)) * m
+        return (dx, dy, dz)
     
     def __repr__(self):
         return '<Player ({}) at (x{}, y{}, z{})>'.format(self.username, *self.position)

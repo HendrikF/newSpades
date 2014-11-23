@@ -19,7 +19,7 @@ logger = logging.getLogger()
 logger.setLevel(loglevel)
 
 consolehandler = logging.StreamHandler()
-consolehandler.setLevel(logging.INFO)
+consolehandler.setLevel(logging.DEBUG)
 fileformatter = logging.Formatter('%(name)s\t%(levelname)s\t%(message)s')
 consolehandler.setFormatter(fileformatter)
 logger.addHandler(consolehandler)
@@ -39,5 +39,6 @@ if os.path.exists('logs'):
         filehandler.setFormatter(fileformatter)
         logger.addHandler(filehandler)
 
-newSpades = NewSpades()
-newSpades.start()
+newspades = NewSpades(width=800, height=600, caption='NewSpades', resizable=True)
+newspades.set_exclusive_mouse(True)
+newspades.start()

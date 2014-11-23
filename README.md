@@ -1,7 +1,7 @@
 New Spades
 ===========
 This game is developed by KingEik and HendrikF.
-It consists of a client and a server and is inspired by the old Beta version (0.75) of [Ace of Spades](http://buildandshoot.com/)
+It consists of a client and a server and is inspired by the old Beta version (0.75) of [Ace of Spades](http://buildandshoot.com/).
 It is in pre-alpha state.
 Dependencies may change or be included in future.
 

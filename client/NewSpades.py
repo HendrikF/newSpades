@@ -8,6 +8,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 class NewSpades(BaseWindow):
+    ##################
+    # General stuff
     def __init__(self, *args, **kw):
         self.label = pyglet.text.Label('', font_name='Ubuntu', font_size=10,
             x=10, y=self.height, anchor_x='left', anchor_y='top',
@@ -30,6 +32,9 @@ class NewSpades(BaseWindow):
         self.map.load()
         super(NewSpades, self).start()
     
+    ###############
+    # Rendering
+    
     def draw2d(self):
         x, y, z = self.player.position
         self.label.text = '%02d (%.2f, %.2f, %.2f)' % (
@@ -37,7 +42,7 @@ class NewSpades(BaseWindow):
         self.label.draw()
     
     def draw3d(self):
-        x, y, z = self.player.getEyePosition()
+        x, y, z = self.player.eyePosition
         dx, dy, dz = self.player.getSightVector()
         gluLookAt(
             x,      y,      z,
@@ -45,12 +50,22 @@ class NewSpades(BaseWindow):
             0,      1,      0
         )
         self.map.draw()
+        self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
+    
+    def onResize(self, width, height):
+        self.label.y = height
     
     def update(self, dt):
         self.map.update(self.player.position)
     
+    ##############
+    # Physics
+    
     def updatePhysics(self, dt):
         self.player.move(dt)
+    
+    #########################
+    # Client Interaction
     
     def handleMousePress(self, x, y, button, modifiers):
         pass
@@ -101,6 +116,3 @@ class NewSpades(BaseWindow):
                 self.player.dy -= 1
             elif symbol == self.keys["CROUCH"]:
                 self.player.dy += 1
-    
-    def onResize(self, width, height):
-        self.label.y = height

@@ -11,15 +11,15 @@ logger = logging.getLogger(__name__)
 
 SECTOR_SIZE = 16
 
-def cubeVerticies(x, y, z):
+def cubeVertices(x, y, z, d=0.5):
     """Returns a list of all verticies of the block at (x, y, z)"""
     return [
-        x-0.5, y  , z-0.5, x-0.5, y  , z+0.5, x+0.5, y  , z+0.5, x+0.5, y  , z-0.5, # top
-        x-0.5, y-1, z-0.5, x+0.5, y-1, z-0.5, x+0.5, y-1, z+0.5, x-0.5, y-1, z+0.5, # bottom
-        x-0.5, y-1, z-0.5, x-0.5, y-1, z+0.5, x-0.5, y  , z+0.5, x-0.5, y  , z-0.5, # left
-        x+0.5, y-1, z+0.5, x+0.5, y-1, z-0.5, x+0.5, y  , z-0.5, x+0.5, y  , z+0.5, # right
-        x-0.5, y-1, z+0.5, x+0.5, y-1, z+0.5, x+0.5, y  , z+0.5, x-0.5, y  , z+0.5, # front
-        x+0.5, y-1, z-0.5, x-0.5, y-1, z-0.5, x-0.5, y  , z-0.5, x+0.5, y  , z-0.5, # back
+        x-d, y  , z-d, x-d, y  , z+d, x+d, y  , z+d, x+d, y  , z-d, # top
+        x-d, y-1, z-d, x+d, y-1, z-d, x+d, y-1, z+d, x-d, y-1, z+d, # bottom
+        x-d, y-1, z-d, x-d, y-1, z+d, x-d, y  , z+d, x-d, y  , z-d, # left
+        x+d, y-1, z+d, x+d, y-1, z-d, x+d, y  , z-d, x+d, y  , z+d, # right
+        x-d, y-1, z+d, x+d, y-1, z+d, x+d, y  , z+d, x-d, y  , z+d, # front
+        x+d, y-1, z-d, x-d, y-1, z-d, x-d, y  , z-d, x+d, y  , z-d, # back
     ]
 
 def sectorize(position):
@@ -65,13 +65,8 @@ class Map(object):
             for z in range(0, 50):
                     self.addBlock((x, 0, z), (0, 1, 0), immediate=False)
     
-    def exposed(self, position):
-        """Returns whether a block must be rendered (True when not covered on all 6 sides)"""
-        x, y, z = position
-        for dx, dy, dz in FACES:
-            if (x + dx, y + dy, z + dz) not in self.world:
-                return True
-        return False
+    ######################
+    # Map modification
     
     def addBlock(self, position, color, immediate=True):
         """Adds a block to the map"""
@@ -92,6 +87,59 @@ class Map(object):
             if position in self.shown:
                 self.hideBlock(position)
             self.checkNeighbors(position)
+    
+    ##############
+    # Rendering
+    
+    def update(self, position):
+        """Checks whether the player moved to an other sector"""
+        self.process_queue()
+        sector = sectorize(position)
+        if sector != self.currentSector:
+            self.changeSectors(self.currentSector, sector)
+            if self.currentSector is None:
+                self.process_entire_queue()
+            self.currentSector = sector
+    
+    def draw(self):
+        """Draws the map"""
+        self.batch.draw()
+    
+    def getBlocksLookingAt(self, position, vector, maxDistance):
+        """Returns which blocks the player is looking at"""
+        m = 8
+        x, y, z = position
+        dx, dy, dz = vector
+        previous = None
+        for _ in range(maxDistance * m):
+            key = (round(x), round(y), round(z))
+            if key != previous and key in self.world:
+                return key, previous
+            previous = key
+            x, y, z = x + dx / m, y + dy / m, z + dz / m
+        return None, None
+    
+    def drawBlockLookingAt(self, position, vector, maxDistance, width=3):
+        block = self.getBlocksLookingAt(position, vector, maxDistance)[0]
+        if block:
+            x, y, z = block
+            vertex_data = cubeVertices(x, y, z, 0.6)
+            glColor3d(0, 0, 0)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+            glLineWidth(width)
+            pyglet.graphics.draw(24, GL_QUADS, ('v3f/static', vertex_data))
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    
+    ##################
+    # Private stuff
+    
+    def exposed(self, position):
+        """Returns whether a block must be rendered (True when not covered on all 6 sides)"""
+        x, y, z = position
+        for dx, dy, dz in FACES:
+            if (x + dx, y + dy, z + dz) not in self.world:
+                return True
+        return False
     
     def check_neighbors(self, position):
         """Checks whether a new or removed block covers a neighbor and eventually hides/shows the neighbors"""
@@ -117,7 +165,7 @@ class Map(object):
     
     def _showBlock(self, position, color):
         x, y, z = position
-        vertex_data = cubeVerticies(x, y, z)
+        vertex_data = cubeVertices(x, y, z)
         color_data = list(color)
         self._shown[position] = self.batch.add(24, GL_QUADS, None,
             ('v3f/static', vertex_data),
@@ -181,17 +229,3 @@ class Map(object):
     def process_entire_queue(self):
         while self.queue:
             self._dequeue()
-    
-    def update(self, position):
-        """Checks whether the player moved to an other sector"""
-        self.process_queue()
-        sector = sectorize(position)
-        if sector != self.currentSector:
-            self.changeSectors(self.currentSector, sector)
-            if self.currentSector is None:
-                self.process_entire_queue()
-            self.currentSector = sector
-    
-    def draw(self):
-        """Draws the map"""
-        self.batch.draw()

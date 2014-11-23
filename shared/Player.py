@@ -11,23 +11,26 @@ class Player(object):
         self.dy = 0
         self.position = (0, 0, 0)
         self.orientation = [90, 0]
-        self.speed = 5
+        self._speed = 5
+        self.armLength = 5
     
     def getHeight(self):
         return self.height-1 if self.crouching else self.height
     
-    def getEyePosition(self):
+    @property
+    def eyePosition(self):
         x, y, z = self.position
         return (x, y+2.5, z)
     
-    def getSpeed(self):
-        return self.speed
+    @property
+    def speed(self):
+        return self._speed
     
     def move(self, time):
         x, y, z = self.position
         dx, dz = self.getMotionVector()
         dy = self.dy
-        d = self.getSpeed() * time
+        d = self.speed * time
         dx, dy, dz = dx*d, dy*d, dz*d
         self.position = x+dx, y+dy, z+dz
     

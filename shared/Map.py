@@ -56,10 +56,6 @@ class Map(object):
             self.addBlock((x, 1, 0), (1, 1, 0), immediate=False)
             for z in range(0, 50):
                     self.addBlock((x, 0, z), (0, 1, 0), immediate=False)
-        self.addBlock((4, 0, 0), (1, 0, 0), immediate=False)
-        self.addBlock((0, 4, 0), (0.5, 0, 0), immediate=False)
-        self.addBlock((0, 0, 4), (0, 0, 0), immediate=False)
-        self.addBlock((4, 4, 4), (1, 1, 1), immediate=False)
     
     def calculateDimensions(self):
         dx = 0
@@ -339,4 +335,3 @@ class Map(object):
     * the coordinate of the block lies on top of it in the middle                   
 
 """
-

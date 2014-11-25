@@ -67,7 +67,7 @@ class NewSpades(BaseWindow):
     # Physics
     
     def updatePhysics(self, dt):
-        self.player.move(dt)
+        self.player.move(dt, self.map)
     
     #########################
     # Client Interaction
@@ -96,6 +96,7 @@ class NewSpades(BaseWindow):
     def handleKeyboard(self, symbol, modifiers, press):
         if press:
             if symbol == key.ESCAPE:
+                self.set_fullscreen(False)
                 if self.exclusive:
                     self.set_exclusive_mouse(False)
                 else:
@@ -109,9 +110,9 @@ class NewSpades(BaseWindow):
             elif symbol == self.keys["RIGHT"]:
                 self.player.velocity[1] += 1
             elif symbol == self.keys["JUMP"]:
-                self.player.dy += 1
+                self.player.jump()
             elif symbol == self.keys["CROUCH"]:
-                self.player.dy -= 1
+                self.player.crouching = True
             elif symbol == self.keys["FULLSCREEN"]:
                 self.set_fullscreen(not self.fullscreen)
         
@@ -124,7 +125,5 @@ class NewSpades(BaseWindow):
                 self.player.velocity[1] += 1
             elif symbol == self.keys["RIGHT"]:
                 self.player.velocity[1] -= 1
-            elif symbol == self.keys["JUMP"]:
-                self.player.dy -= 1
             elif symbol == self.keys["CROUCH"]:
-                self.player.dy += 1
+                self.player.crouching = False

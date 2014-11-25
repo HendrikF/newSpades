@@ -11,11 +11,10 @@ class NewSpades(BaseWindow):
     ##################
     # General stuff
     def __init__(self, *args, **kw):
+        super(NewSpades, self).__init__(*args, **kw)
         self.label = pyglet.text.Label('', font_name='Ubuntu', font_size=10,
             x=10, y=self.height, anchor_x='left', anchor_y='top',
             color=(0, 0, 0, 255))
-        # label must be set, because init can trigger on_resize, which uses label
-        super(NewSpades, self).__init__(*args, **kw)
         self.map = Map(maxFPS=self.maxFPS, farplane=self.farplane)
         self.player = Player()
         self.keys = {

@@ -1,4 +1,4 @@
-from client.BaseWindow import BaseWindow
+from shared.BaseWindow import BaseWindow
 from shared.Map import Map
 from shared.Player import Player
 from pyglet.gl import *
@@ -26,7 +26,7 @@ class NewSpades(BaseWindow):
             "CROUCH": key.LSHIFT,
             "FULLSCREEN": key.F11
         }
-        pyglet.resource.path = ['client/resources']
+        pyglet.resource.path = ['client/resources', 'shared/resources']
         pyglet.resource.reindex()
         self.crosshair = pyglet.sprite.Sprite(pyglet.resource.image('crosshair.png'))
     
@@ -57,8 +57,8 @@ class NewSpades(BaseWindow):
     
     def onResize(self, width, height):
         self.label.y = height
-        self.crosshair.x = (width+self.crosshair.width)/2
-        self.crosshair.y = (height+self.crosshair.height)/2
+        self.crosshair.x = (width-self.crosshair.width)/2
+        self.crosshair.y = (height-self.crosshair.height)/2
     
     def update(self, dt):
         self.map.update(self.player.position)

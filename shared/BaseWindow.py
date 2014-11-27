@@ -17,8 +17,8 @@ class BaseWindow(pyglet.window.Window):
         glFogfv(GL_FOG_COLOR, (GLfloat * 4)(*self._bgColor))
         glHint(GL_FOG_HINT, GL_DONT_CARE)
         glFogi(GL_FOG_MODE, GL_LINEAR)
-        glFogf(GL_FOG_START, 20)
-        glFogf(GL_FOG_END, 60)
+        glFogf(GL_FOG_START, self.farplane/4)
+        glFogf(GL_FOG_END, self.farplane)
         pyglet.clock.schedule_interval(self._update, 1 / self.maxFPS)
         pyglet.app.run()
     

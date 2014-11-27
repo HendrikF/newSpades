@@ -58,6 +58,7 @@ class Map(object):
                     self.addBlock((x, 0, z), (0, 1, 0), immediate=False)
     
     def calculateDimensions(self):
+        # TODO calc negative boundaries!
         dx = 0
         dz = 0
         for x, y, z in self.world:
@@ -303,7 +304,7 @@ class Map(object):
                 (x+0.5, y+1, z-0.5)
             ]
         ]
-        return sum([0 if pos in self.world else 0.25 for pos in m[f]])
+        return sum([0.15 if pos in self.world else 0.25 for pos in m[f]])
     
     def vertexColors(self, x, y, z, vertex_data):
         """For each vertex look which lightlevel it has and modify its color"""

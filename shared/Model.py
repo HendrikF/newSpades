@@ -1,4 +1,8 @@
 from pyglet.gl import *
+import sqlite3
+
+import logging
+logger = logging.getLogger(__name__)
 
 FACES = [
     ( 0, 1, 0),
@@ -130,3 +134,29 @@ class Model(object):
             ll = self.getLightLevel(vertex_data[i*3:i*3+3], i//4)
             color_data.extend((r*ll, g*ll, b*ll))
         return color_data
+    
+    def clear(self):
+        self.blocks = {}
+        [self._blocks[pos].delete() for pos in self._blocks]
+        self._blocks = {}
+    
+    def save(self, fn):
+        with sqlite3.connect(fn) as conn:
+            conn.execute('CREATE TABLE blocks (id INTEGER PRIMARY KEY, x REAL, y REAL, z REAL, r REAL, g REAL, b REAL)')
+            inserted = 0
+            for pos in self.blocks:
+                x, y, z = pos
+                r, g, b = self.blocks[pos]
+                inserted += conn.execute('INSERT INTO blocks (id, x, y, z, r, g, b) VALUES (NULL, ?, ?, ?, ?, ?, ?)', (x, y, z, r, g, b)).rowcount
+            if inserted != self.size:
+                logger.warn('Number rows inserted (%s) did not match the number of blocks (%s)', (inserted, self.size))
+    
+    def load(self, fn):
+        conn = sqlite3.connect(fn)
+        self.clear()
+        c = conn.cursor()
+        c.execute('SELECT x, y, z, r, g, b FROM blocks ORDER BY x, y, z')
+        for x, y, z, r, g, b in c:
+            self.addBlock((x, y, z), (r, g, b))
+        c.close()
+        conn.close()

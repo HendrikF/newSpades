@@ -52,6 +52,7 @@ class ModelEditor(BaseWindow):
         self.colorPicker = ColorPicker()
     
     def start(self):
+        #self.model.load('model.nsmdl')
         super(ModelEditor, self).start()
     
     ###############
@@ -178,6 +179,9 @@ class ModelEditor(BaseWindow):
                 self.colorPicker.input(y=1)
             elif symbol == self.keys["CP-D"]:
                 self.colorPicker.input(y=-1)
+            
+            #if symbol == key.S and modifiers&key.MOD_CTRL:
+            #    self.model.save('model.nsmdl')
         
         else: #not press / release
             if symbol == self.keys["FWD"]:

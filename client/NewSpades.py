@@ -3,6 +3,7 @@ from shared.Map import Map
 from shared.Player import Player
 from pyglet.gl import *
 from pyglet.window import key, mouse
+from shared.ColorPicker import ColorPicker
 
 import logging
 logger = logging.getLogger(__name__)
@@ -24,11 +25,17 @@ class NewSpades(BaseWindow):
             "RIGHT": key.D,
             "JUMP": key.SPACE,
             "CROUCH": key.LSHIFT,
-            "FULLSCREEN": key.F11
+            "FULLSCREEN": key.F11,
+            "CP-R": key.RIGHT,
+            "CP-L": key.LEFT,
+            "CP-U": key.UP,
+            "CP-D": key.DOWN
         }
         pyglet.resource.path = ['client/resources', 'shared/resources']
         pyglet.resource.reindex()
         self.crosshair = pyglet.sprite.Sprite(pyglet.resource.image('crosshair.png'))
+        
+        self.colorPicker = ColorPicker()
     
     def start(self):
         self.map.load()
@@ -43,6 +50,11 @@ class NewSpades(BaseWindow):
             pyglet.clock.get_fps(), x, y, z)
         self.label.draw()
         self.crosshair.draw()
+        
+        glPushMatrix()
+        glTranslatef(self.width-self.colorPicker.width, 0, 0)
+        self.colorPicker.draw()
+        glPopMatrix()
     
     def draw3d(self):
         x, y, z = self.player.eyePosition
@@ -76,7 +88,7 @@ class NewSpades(BaseWindow):
         block, previous = self.map.getBlocksLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
         if button == mouse.RIGHT:
             if previous:
-                self.map.addBlock(previous, (1, 0.5, 0))
+                self.map.addBlock(previous, self.colorPicker.getRGB())
         elif button == mouse.LEFT and block:
             self.map.removeBlock(block)
     
@@ -115,6 +127,14 @@ class NewSpades(BaseWindow):
                 self.player.crouching = True
             elif symbol == self.keys["FULLSCREEN"]:
                 self.set_fullscreen(not self.fullscreen)
+            elif symbol == self.keys["CP-R"]:
+                self.colorPicker.input(x=1)
+            elif symbol == self.keys["CP-L"]:
+                self.colorPicker.input(x=-1)
+            elif symbol == self.keys["CP-U"]:
+                self.colorPicker.input(y=1)
+            elif symbol == self.keys["CP-D"]:
+                self.colorPicker.input(y=-1)
         
         else: #not press / release
             if symbol == self.keys["FWD"]:

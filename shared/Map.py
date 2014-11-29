@@ -47,6 +47,11 @@ class Map(object):
         # save position of player
         self.currentSector = None
         self.dimensions = (0, 0)
+        # map borders
+        self.border_x = [-20, 70]
+        self.border_y = [-20, 70]
+        self.border_z = [-20, 70]
+        self.border_dps = 100
     
     def load(self):
         self._load()

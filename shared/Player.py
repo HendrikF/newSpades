@@ -17,6 +17,9 @@ class Player(object):
         self.position = (0, 2, 0)
         self.orientation = [90, 0]
         self.crouching = False
+        self.health = 100;
+        self.respawning = False;
+        self.respawnTime = 0;
         
         # Static
         self._speed = 5
@@ -26,6 +29,8 @@ class Player(object):
         self.jumpSpeed = math.sqrt(2*self.gravity*self.jumpHeight)
         self._height = 3
         self.armLength = 5
+        self.maxHealth = 100;
+        self.maxRespawnTime = 5;
     
     @property
     def height(self):
@@ -39,6 +44,24 @@ class Player(object):
     @property
     def speed(self):
         return self._speed
+    
+    def damage(self, dmg):
+        self.health -= dmg
+        if self.health > self.maxHealth:
+            self.health = self.maxHealth
+        if self.health <= 0:
+            self.respawning = True
+            self.respawnTime = self.maxRespawnTime
+            
+    def respawn(self, time):
+        if not self.respawning:
+            return
+        self.respawnTime -= time
+        if self.respawnTime < 0:
+            self.respawning = False
+            self.position = (0, 2, 0)
+            self.orientation = [90, 0]
+            self.health = self.maxHealth
     
     def jump(self):
         self.dy = self.jumpSpeed
@@ -54,6 +77,9 @@ class Player(object):
         dy = self.dy * time
         # COLLIDE
         self.position = self._collide((x+dx, y+dy, z+dz), map)
+        x, y, z = self.position
+        if y < -20 and not self.respawning:
+            self.damage(100*time)
     
     def _collide(self, position, map):
         """Checks if the player is colliding with any blocks in the world and returns its position"""

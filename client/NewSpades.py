@@ -16,6 +16,15 @@ class NewSpades(BaseWindow):
         self.label = pyglet.text.Label('', font_name='Ubuntu', font_size=10,
             x=10, y=self.height, anchor_x='left', anchor_y='top',
             color=(0, 0, 0, 255))
+        self.deathScreen = pyglet.text.Label('YOU DIED!', font_name='Ubuntu', font_size=50,
+            x=self.width/2, y=self.height*3/4, anchor_x='center', anchor_y='center',
+            color=(255, 0, 0, 255))
+        self.healthLabel = pyglet.text.Label('100', font_name='Ubuntu', font_size=10,
+            x=self.width/2, y=10, anchor_x='center', anchor_y='bottom',
+            color=(0, 0, 0, 255))
+        self.respawnTimeLabel = pyglet.text.Label('', font_name='Ubuntu', font_size=20,
+            x=self.width/2, y=self.height/4, anchor_x='center', anchor_y='center',
+            color=(255, 0, 0, 255))
         self.map = Map(maxFPS=self.maxFPS, farplane=self.farplane)
         self.player = Player()
         self.keys = {
@@ -51,21 +60,30 @@ class NewSpades(BaseWindow):
         self.label.draw()
         self.crosshair.draw()
         
-        glPushMatrix()
-        glTranslatef(self.width-self.colorPicker.width, 0, 0)
-        self.colorPicker.draw()
-        glPopMatrix()
+        self.healthLabel.text = '%d' % (self.player.health)
+        self.healthLabel.draw()
+        
+        if self.player.respawning:
+            self.deathScreen.draw()
+            self.respawnTimeLabel.text = '%d' % (self.player.respawnTime+1) # +1 so it does not display 0 as respawn time for a second
+            self.respawnTimeLabel.draw()
+        else:
+            glPushMatrix()
+            glTranslatef(self.width-self.colorPicker.width, 0, 0)
+            self.colorPicker.draw()
+            glPopMatrix()
     
     def draw3d(self):
-        x, y, z = self.player.eyePosition
-        dx, dy, dz = self.player.getSightVector()
-        gluLookAt(
-            x,      y-0.5,      z,     # the -0.5 are for the same fix as Player.eyeHeight
-            x+dx,   y+dy-0.5,   z+dz,  #
-            0,      1,          0
-        )
-        self.map.draw()
-        self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
+        if not self.player.respawning:
+            x, y, z = self.player.eyePosition
+            dx, dy, dz = self.player.getSightVector()
+            gluLookAt(
+                x,      y-0.5,      z,     # the -0.5 are for the same fix as Player.eyeHeight
+                x+dx,   y+dy-0.5,   z+dz,  #
+                0,      1,          0
+            )
+            self.map.draw()
+            self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
     
     def onResize(self, width, height):
         self.label.y = height
@@ -80,6 +98,7 @@ class NewSpades(BaseWindow):
     
     def updatePhysics(self, dt):
         self.player.move(dt, self.map)
+        self.player.respawn(dt)
     
     #########################
     # Client Interaction

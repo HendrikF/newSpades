@@ -17,9 +17,9 @@ class Player(object):
         self.position = (0, 2, 0)
         self.orientation = [90, 0]
         self.crouching = False
-        self.health = 100;
-        self.respawning = False;
-        self.respawnTime = 0;
+        self.health = 100
+        self.respawning = False
+        self.respawnTime = 0
         
         # Static
         self._speed = 5
@@ -29,8 +29,8 @@ class Player(object):
         self.jumpSpeed = math.sqrt(2*self.gravity*self.jumpHeight)
         self._height = 3
         self.armLength = 5
-        self.maxHealth = 100;
-        self.maxRespawnTime = 5;
+        self.maxHealth = 100
+        self.maxRespawnTime = 5
     
     @property
     def height(self):

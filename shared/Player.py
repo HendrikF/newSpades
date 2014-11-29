@@ -46,22 +46,27 @@ class Player(object):
         return self._speed
     
     def damage(self, dmg):
-        self.health -= dmg
-        if self.health > self.maxHealth:
-            self.health = self.maxHealth
-        if self.health <= 0:
-            self.respawning = True
-            self.respawnTime = self.maxRespawnTime
+        if not self.respawning:
+            self.health -= dmg
+            if self.health > self.maxHealth:
+                self.health = self.maxHealth
+            if self.health <= 0:
+                self.health = 0
+                self.respawning = True
+                self.respawnTime = self.maxRespawnTime
+                #self.position = (0, 2, 0)
+                #self.orientation = [90, 0]
             
     def respawn(self, time):
         if not self.respawning:
             return
         self.respawnTime -= time
         if self.respawnTime < 0:
-            self.respawning = False
             self.position = (0, 2, 0)
             self.orientation = [90, 0]
+            self.dy = 0
             self.health = self.maxHealth
+            self.respawning = False
     
     def jump(self):
         self.dy = self.jumpSpeed
@@ -77,9 +82,13 @@ class Player(object):
         dy = self.dy * time
         # COLLIDE
         self.position = self._collide((x+dx, y+dy, z+dz), map)
+        # DAMAGE
+        self._boundaryDamage(time, map)
+    
+    def _boundaryDamage(self, time, map):
         x, y, z = self.position
-        if y < -20 and not self.respawning:
-            self.damage(100*time)
+        if  x < map.border_x[0] or x > map.border_x[1] or y < map.border_y[0] or y > map.border_y[1] or z < map.border_z[0] or z > map.border_z[1]:
+            self.damage(map.border_dps*time)
     
     def _collide(self, position, map):
         """Checks if the player is colliding with any blocks in the world and returns its position"""
@@ -106,8 +115,12 @@ class Player(object):
                         continue
                     p[i] -= (d - pad) * face[i]
                     if face == (0, -1, 0) or face == (0, 1, 0):
-                        # You are colliding with the ground or ceiling, so stop
-                        # falling / rising.
+                        # You are colliding with the ground or ceiling
+                        # get fall damage
+                        if self.dy < -15: # ca 5 blocks falling
+                            self.damage((-self.dy-15)*3) # maxFallSpeed = 50 --> (50 - 15)*3 = 35*3 = 105 -> dead
+                        
+                        # stop falling / rising.
                         self.dy = 0
                     break
         return tuple(p)

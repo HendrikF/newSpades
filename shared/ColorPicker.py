@@ -1,4 +1,5 @@
 from pyglet.gl import *
+import pyglet
 import math
 
 class ColorPicker(object):

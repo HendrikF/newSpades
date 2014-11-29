@@ -5,6 +5,7 @@ import random
 import time
 import math
 from pyglet.gl import *
+import pyglet
 
 import logging
 logger = logging.getLogger(__name__)

@@ -2,6 +2,7 @@ from shared.BaseWindow import BaseWindow
 from shared.Map import Map
 from shared.Player import Player
 from pyglet.gl import *
+import pyglet
 from pyglet.window import key, mouse
 
 import logging

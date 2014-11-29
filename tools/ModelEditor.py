@@ -4,6 +4,7 @@ from pyglet.window import key, mouse
 import math
 from shared.Model import Model
 from shared.ColorPicker import ColorPicker
+import pyglet
 
 import logging
 logger = logging.getLogger(__name__)
@@ -37,6 +38,7 @@ class ModelEditor(BaseWindow):
         pyglet.resource.path = ['shared/resources']
         pyglet.resource.reindex()
         self.crosshair = pyglet.sprite.Sprite(pyglet.resource.image('crosshair.png'))
+        pyglet.resource.add_font('Ubuntu-R.ttf')
         self.farplane = 600
         self.displayHelp = False
         

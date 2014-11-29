@@ -1,4 +1,5 @@
 from pyglet.gl import *
+import pyglet
 import sqlite3
 
 import logging

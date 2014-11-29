@@ -1,6 +1,7 @@
 #pyglet.options['debug_gl'] = False
 
 from pyglet.gl import *
+import pyglet
 
 class BaseWindow(pyglet.window.Window):
     def __init__(self, *args, **kw):

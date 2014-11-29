@@ -1,10 +1,11 @@
-from shared.BaseWindow import BaseWindow
+import pyglet
 from pyglet.gl import *
 from pyglet.window import key, mouse
 import math
+from shared.BaseWindow import BaseWindow
 from shared.Model import Model
 from shared.ColorPicker import ColorPicker
-import pyglet
+from shared.CommandLine import CommandLine
 
 import logging
 logger = logging.getLogger(__name__)
@@ -20,20 +21,21 @@ class ModelEditor(BaseWindow):
         self.helpLabel = pyglet.text.Label('Press H for help', font_name='Ubuntu', font_size=10,
             x=0, y=0, anchor_x='left', anchor_y='bottom',
             color=(200, 0, 0, 255))
-        self.helpText = pyglet.text.HTMLLabel('<h1>Model Editor - NewSpades</h1><h2>Keys</h2><p>WASD: Move<br>Left Shift: Move Down<br>Space: Move Up<br>Arrows: Select Color<br>F11: Toggle Fullscreen<br>ESC: Release mouse/Exit Fullscreen/Quit Editor<br>H: Toggle this help text</p>', x=50, width=800, multiline=True, anchor_y='top')
+        self.helpText = pyglet.text.HTMLLabel('<h1>Model Editor - NewSpades</h1><h2>Keys</h2><p>WASD: Move<br>Left Shift: Move Down<br>Space: Move Up<br>Arrows: Select Color<br>F11: Toggle Fullscreen<br>ESC: Release mouse/Exit Fullscreen/Quit Editor<br>T: Turn Command line on<br>H: Toggle this help text</p>', x=50, width=800, multiline=True, anchor_y='top')
         self.helpText.font_name = 'Ubuntu'
         self.keys = {
-            "FWD": key.W,
-            "BWD": key.S,
-            "LEFT": key.A,
-            "RIGHT": key.D,
-            "UP": key.SPACE,
-            "DOWN": key.LSHIFT,
-            "FULLSCREEN": key.F11,
-            "CP-R": key.RIGHT,
-            "CP-L": key.LEFT,
-            "CP-U": key.UP,
-            "CP-D": key.DOWN
+            'FWD': key.W,
+            'BWD': key.S,
+            'LEFT': key.A,
+            'RIGHT': key.D,
+            'UP': key.SPACE,
+            'DOWN': key.LSHIFT,
+            'FULLSCREEN': key.F11,
+            'CP-R': key.RIGHT,
+            'CP-L': key.LEFT,
+            'CP-U': key.UP,
+            'CP-D': key.DOWN,
+            'CHAT': key.T
         }
         pyglet.resource.path = ['shared/resources']
         pyglet.resource.reindex()
@@ -52,6 +54,8 @@ class ModelEditor(BaseWindow):
         self.model.addBlock((0,0,0), (0,0,0))
         
         self.colorPicker = ColorPicker()
+        self.commandLine = CommandLine(10, 50, 300, self.handleCommands)
+        self.push_handlers(self.commandLine)
     
     def start(self):
         #self.model.load('model.nsmdl')
@@ -80,6 +84,8 @@ class ModelEditor(BaseWindow):
         glPopMatrix()
         
         self.helpLabel.draw()
+        
+        self.commandLine.draw()
     
     def draw3d(self):
         x, y, z = self.position
@@ -150,54 +156,64 @@ class ModelEditor(BaseWindow):
             self.orientation[1] = 90
     
     def handleKeyboard(self, symbol, modifiers, press):
-        if press:
-            if symbol == key.ESCAPE:
-                self.set_fullscreen(False)
-                if self.exclusive:
-                    self.set_exclusive_mouse(False)
-                else:
-                    self.close()
-            elif symbol == key.H:
-                self.displayHelp = not self.displayHelp
-            elif symbol == self.keys["FWD"]:
-                self.velocity[0] -= 1
-            elif symbol == self.keys["BWD"]:
-                self.velocity[0] += 1
-            elif symbol == self.keys["LEFT"]:
-                self.velocity[1] -= 1
-            elif symbol == self.keys["RIGHT"]:
-                self.velocity[1] += 1
-            elif symbol == self.keys["UP"]:
-                self.dy += 1
-            elif symbol == self.keys["DOWN"]:
-                self.dy -= 1
-            elif symbol == self.keys["FULLSCREEN"]:
-                self.set_fullscreen(not self.fullscreen)
-            elif symbol == self.keys["CP-R"]:
-                self.colorPicker.input(x=1)
-            elif symbol == self.keys["CP-L"]:
-                self.colorPicker.input(x=-1)
-            elif symbol == self.keys["CP-U"]:
-                self.colorPicker.input(y=1)
-            elif symbol == self.keys["CP-D"]:
-                self.colorPicker.input(y=-1)
-            
-            #if symbol == key.S and modifiers&key.MOD_CTRL:
-            #    self.model.save('model.nsmdl')
+        if press and symbol == key.ESCAPE:
+            self.set_fullscreen(False)
+            if self.commandLine.active:
+                self.commandLine.deactivate()
+            elif self.exclusive:
+                self.set_exclusive_mouse(False)
+            else:
+                self.close()
+            return pyglet.event.EVENT_HANDLED
         
-        else: #not press / release
-            if symbol == self.keys["FWD"]:
-                self.velocity[0] += 1
-            elif symbol == self.keys["BWD"]:
-                self.velocity[0] -= 1
-            elif symbol == self.keys["LEFT"]:
-                self.velocity[1] += 1
-            elif symbol == self.keys["RIGHT"]:
-                self.velocity[1] -= 1
-            elif symbol == self.keys["UP"]:
-                self.dy -= 1
-            elif symbol == self.keys["DOWN"]:
-                self.dy += 1
+        if not self.commandLine.active:
+            if press:
+                if symbol == key.H:
+                    self.displayHelp = not self.displayHelp
+                elif symbol == self.keys["FWD"]:
+                    self.velocity[0] -= 1
+                elif symbol == self.keys["BWD"]:
+                    self.velocity[0] += 1
+                elif symbol == self.keys["LEFT"]:
+                    self.velocity[1] -= 1
+                elif symbol == self.keys["RIGHT"]:
+                    self.velocity[1] += 1
+                elif symbol == self.keys["UP"]:
+                    self.dy += 1
+                elif symbol == self.keys["DOWN"]:
+                    self.dy -= 1
+                elif symbol == self.keys["FULLSCREEN"]:
+                    self.set_fullscreen(not self.fullscreen)
+                elif symbol == self.keys["CP-R"]:
+                    self.colorPicker.input(x=1)
+                elif symbol == self.keys["CP-L"]:
+                    self.colorPicker.input(x=-1)
+                elif symbol == self.keys["CP-U"]:
+                    self.colorPicker.input(y=1)
+                elif symbol == self.keys["CP-D"]:
+                    self.colorPicker.input(y=-1)
+                elif symbol == self.keys["CHAT"]:
+                    self.commandLine.activate(chr(symbol))
+                
+                #if symbol == key.S and modifiers&key.MOD_CTRL:
+                #    self.model.save('model.nsmdl')
+            
+            else: #not press / release
+                if symbol == self.keys["FWD"]:
+                    self.velocity[0] += 1
+                elif symbol == self.keys["BWD"]:
+                    self.velocity[0] -= 1
+                elif symbol == self.keys["LEFT"]:
+                    self.velocity[1] += 1
+                elif symbol == self.keys["RIGHT"]:
+                    self.velocity[1] -= 1
+                elif symbol == self.keys["UP"]:
+                    self.dy -= 1
+                elif symbol == self.keys["DOWN"]:
+                    self.dy += 1
+    
+    def handleCommands(self, text, cl):
+        print(text)
     
     ###################
     # Stuff

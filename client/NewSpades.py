@@ -4,6 +4,7 @@ from shared.Player import Player
 from pyglet.gl import *
 import pyglet
 from pyglet.window import key, mouse
+from shared.ColorPicker import ColorPicker
 
 import logging
 logger = logging.getLogger(__name__)
@@ -16,6 +17,15 @@ class NewSpades(BaseWindow):
         self.label = pyglet.text.Label('', font_name='Ubuntu', font_size=10,
             x=10, y=self.height, anchor_x='left', anchor_y='top',
             color=(0, 0, 0, 255))
+        self.deathScreen = pyglet.text.Label('YOU DIED!', font_name='Ubuntu', font_size=50,
+            x=self.width/2, y=self.height*3/4, anchor_x='center', anchor_y='center',
+            color=(255, 0, 0, 255))
+        self.healthLabel = pyglet.text.Label('100', font_name='Ubuntu', font_size=10,
+            x=self.width/2, y=10, anchor_x='center', anchor_y='bottom',
+            color=(0, 0, 0, 255))
+        self.respawnTimeLabel = pyglet.text.Label('', font_name='Ubuntu', font_size=20,
+            x=self.width/2, y=self.height/4, anchor_x='center', anchor_y='center',
+            color=(255, 0, 0, 255))
         self.map = Map(maxFPS=self.maxFPS, farplane=self.farplane)
         self.player = Player()
         self.keys = {
@@ -25,11 +35,17 @@ class NewSpades(BaseWindow):
             "RIGHT": key.D,
             "JUMP": key.SPACE,
             "CROUCH": key.LSHIFT,
-            "FULLSCREEN": key.F11
+            "FULLSCREEN": key.F11,
+            "CP-R": key.RIGHT,
+            "CP-L": key.LEFT,
+            "CP-U": key.UP,
+            "CP-D": key.DOWN
         }
         pyglet.resource.path = ['client/resources', 'shared/resources']
         pyglet.resource.reindex()
         self.crosshair = pyglet.sprite.Sprite(pyglet.resource.image('crosshair.png'))
+        
+        self.colorPicker = ColorPicker()
     
     def start(self):
         self.map.load()
@@ -44,17 +60,31 @@ class NewSpades(BaseWindow):
             pyglet.clock.get_fps(), x, y, z)
         self.label.draw()
         self.crosshair.draw()
+        
+        self.healthLabel.text = '%d' % (self.player.health)
+        self.healthLabel.draw()
+        
+        if self.player.respawning:
+            self.deathScreen.draw()
+            self.respawnTimeLabel.text = '%d' % (self.player.respawnTime+1) # +1 so it does not display 0 as respawn time for a second
+            self.respawnTimeLabel.draw()
+        else:
+            glPushMatrix()
+            glTranslatef(self.width-self.colorPicker.width, 0, 0)
+            self.colorPicker.draw()
+            glPopMatrix()
     
     def draw3d(self):
-        x, y, z = self.player.eyePosition
-        dx, dy, dz = self.player.getSightVector()
-        gluLookAt(
-            x,      y-0.5,      z,     # the -0.5 are for the same fix as Player.eyeHeight
-            x+dx,   y+dy-0.5,   z+dz,  #
-            0,      1,          0
-        )
-        self.map.draw()
-        self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
+        if not self.player.respawning:
+            x, y, z = self.player.eyePosition
+            dx, dy, dz = self.player.getSightVector()
+            gluLookAt(
+                x,      y-0.5,      z,     # the -0.5 are for the same fix as Player.eyeHeight
+                x+dx,   y+dy-0.5,   z+dz,  #
+                0,      1,          0
+            )
+            self.map.draw()
+            self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
     
     def onResize(self, width, height):
         self.label.y = height
@@ -69,6 +99,7 @@ class NewSpades(BaseWindow):
     
     def updatePhysics(self, dt):
         self.player.move(dt, self.map)
+        self.player.respawn(dt)
     
     #########################
     # Client Interaction
@@ -77,7 +108,7 @@ class NewSpades(BaseWindow):
         block, previous = self.map.getBlocksLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
         if button == mouse.RIGHT:
             if previous:
-                self.map.addBlock(previous, (1, 0.5, 0))
+                self.map.addBlock(previous, self.colorPicker.getRGB())
         elif button == mouse.LEFT and block:
             self.map.removeBlock(block)
     
@@ -116,6 +147,14 @@ class NewSpades(BaseWindow):
                 self.player.crouching = True
             elif symbol == self.keys["FULLSCREEN"]:
                 self.set_fullscreen(not self.fullscreen)
+            elif symbol == self.keys["CP-R"]:
+                self.colorPicker.input(x=1)
+            elif symbol == self.keys["CP-L"]:
+                self.colorPicker.input(x=-1)
+            elif symbol == self.keys["CP-U"]:
+                self.colorPicker.input(y=1)
+            elif symbol == self.keys["CP-D"]:
+                self.colorPicker.input(y=-1)
         
         else: #not press / release
             if symbol == self.keys["FWD"]:

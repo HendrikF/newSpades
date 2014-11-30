@@ -12,6 +12,7 @@ class CommandLine(object):
         self._height = height
         self.batch = pyglet.graphics.Batch()
         self.document.push_handlers(self.on_insert_text)
+        self.document.set_style(0, 0, dict(font_name='Ubuntu'))
         self.layout = pyglet.text.layout.IncrementalTextLayout(self.document, width, height, batch=self.batch)
         self.layout.x = x
         self.layout.y = y
@@ -30,7 +31,7 @@ class CommandLine(object):
         if ord(text) == 10: # Enter
             content = self.document.text.replace(chr(10), '')
             if len(content) > 0:
-                self.callback(content, self)
+                self.callback(content)
             self.clear()
             self.deactivate()
     

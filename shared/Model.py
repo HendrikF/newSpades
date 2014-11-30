@@ -41,7 +41,7 @@ class Model(object):
         self._blocks[pos].delete()
         del self._blocks[pos]
         if cn:
-            # cn avoids infinite recursion
+            # cn avoids 'infinite' recursion
             self.checkNeighbors(pos)
     
     def contains(self, pos):

@@ -2,6 +2,7 @@ import pyglet
 from pyglet.gl import *
 from pyglet.window import key, mouse
 import math
+import os, sys
 from shared.BaseWindow import BaseWindow
 from shared.Model import Model
 from shared.ColorPicker import ColorPicker
@@ -21,7 +22,7 @@ class ModelEditor(BaseWindow):
         self.helpLabel = pyglet.text.Label('Press H for help', font_name='Ubuntu', font_size=10,
             x=0, y=0, anchor_x='left', anchor_y='bottom',
             color=(200, 0, 0, 255))
-        self.helpText = pyglet.text.HTMLLabel('<h1>Model Editor - NewSpades</h1><h2>Keys</h2><p>WASD: Move<br>Left Shift: Move Down<br>Space: Move Up<br>Arrows: Select Color<br>F11: Toggle Fullscreen<br>ESC: Release mouse/Exit Fullscreen/Quit Editor<br>T: Turn Command line on<br>H: Toggle this help text</p>', x=50, width=800, multiline=True, anchor_y='top')
+        self.helpText = pyglet.text.HTMLLabel('<h1>Model Editor - NewSpades</h1><h2>Keys</h2><p>WASD: Move<br>Left Shift: Move Down<br>Space: Move Up<br>Arrows: Select Color<br>F11: Toggle Fullscreen<br>ESC: Release mouse/Exit Fullscreen/Quit Editor<br>T: Turn Command line on (/save &lt;modelname&gt; to <b>save</b>)<br>H: Toggle this help text</p>', x=50, width=800, multiline=True, anchor_y='top')
         self.helpText.font_name = 'Ubuntu'
         self.keys = {
             'FWD': key.W,
@@ -54,11 +55,13 @@ class ModelEditor(BaseWindow):
         self.model.addBlock((0,0,0), (0,0,0))
         
         self.colorPicker = ColorPicker()
-        self.commandLine = CommandLine(10, 50, 300, self.handleCommands)
+        self.commandLine = CommandLine(10, 50, 500, self.handleCommands)
         self.push_handlers(self.commandLine)
     
     def start(self):
-        #self.model.load('model.nsmdl')
+        if len(sys.argv) > 1:
+            fn = sys.argv[1]
+            self.model.load(fn)
         super(ModelEditor, self).start()
     
     ###############
@@ -212,8 +215,16 @@ class ModelEditor(BaseWindow):
                 elif symbol == self.keys["DOWN"]:
                     self.dy += 1
     
-    def handleCommands(self, text, cl):
-        print(text)
+    def handleCommands(self, text):
+        if text.startswith('/save'):
+            text = text[5:].strip()
+            text = text+'.nsmdl'
+            try:
+                os.remove(text)
+                self.helpLabel.text = 'overwriting '+text
+            except OSError:
+                pass
+            self.model.save(text)
     
     ###################
     # Stuff

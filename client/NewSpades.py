@@ -7,6 +7,7 @@ from pyglet.window import key, mouse
 from shared.ColorPicker import ColorPicker
 from client.Sounds import Sounds
 from shared.CommandLine import CommandLine
+from client.Networking import Networking
 
 import logging
 logger = logging.getLogger(__name__)
@@ -56,7 +57,10 @@ class NewSpades(BaseWindow):
         self.cheat = False
         self.command = CommandLine(10, 50, 500, self.handleCommands)
         self.push_handlers(self.command)
-    
+        
+        self.otherPlayers = {}
+        self.network = Networking(self)
+        
     def start(self):
         self.map.load()
         super(NewSpades, self).start()

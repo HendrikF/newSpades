@@ -29,7 +29,7 @@ class PlayerUpdateMsg(legume.messages.BaseMessage):
         'velz'      : 'float',
         'yaw'       : 'float',
         'pitch'     : 'float',
-        'roll'      : 'float',
+        #'roll'      : 'float',
         'crouching' : 'bool'
     }
     

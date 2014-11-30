@@ -27,8 +27,11 @@ class NewSpades(BaseWindow):
         self.respawnTimeLabel = pyglet.text.Label('', font_name='Ubuntu', font_size=20,
             x=self.width/2, y=self.height/4, anchor_x='center', anchor_y='center',
             color=(255, 0, 0, 255))
+            
+        self.sounds = Sounds()
+        
         self.map = Map(maxFPS=self.maxFPS, farplane=self.farplane)
-        self.player = Player()
+        self.player = Player(sounds=self.sounds)
         self.keys = {
             "FWD": key.W,
             "BWD": key.S,
@@ -45,8 +48,6 @@ class NewSpades(BaseWindow):
         pyglet.resource.path = ['client/resources', 'shared/resources']
         pyglet.resource.reindex()
         self.crosshair = pyglet.sprite.Sprite(pyglet.resource.image('crosshair.png'))
-        
-        self.sounds = Sounds()
         
         self.colorPicker = ColorPicker()
     
@@ -101,21 +102,22 @@ class NewSpades(BaseWindow):
     # Physics
     
     def updatePhysics(self, dt):
-        self.player.move(dt, self.map, self.sounds)
+        self.player.move(dt, self.map)
         self.player.respawn(dt)
     
     #########################
     # Client Interaction
     
     def handleMousePress(self, x, y, button, modifiers):
-        block, previous = self.map.getBlocksLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
-        if button == mouse.RIGHT:
-            if previous:
-                self.map.addBlock(previous, self.colorPicker.getRGB())
+        if not self.player.respawning:
+            block, previous = self.map.getBlocksLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
+            if button == mouse.RIGHT:
+                if previous:
+                    self.map.addBlock(previous, self.colorPicker.getRGB())
+                    self.sounds.play("build")
+            elif button == mouse.LEFT and block:
+                self.map.removeBlock(block)
                 self.sounds.play("build")
-        elif button == mouse.LEFT and block:
-            self.map.removeBlock(block)
-            self.sounds.play("build")
     
     def handleMouseMove(self, dx, dy):
         m = 0.1
@@ -147,7 +149,7 @@ class NewSpades(BaseWindow):
             elif symbol == self.keys["RIGHT"]:
                 self.player.velocity[1] += 1
             elif symbol == self.keys["JUMP"]:
-                self.player.jump(self.sounds)
+                self.player.jump()
             elif symbol == self.keys["CROUCH"]:
                 self.player.crouching = True
             elif symbol == self.keys["FULLSCREEN"]:

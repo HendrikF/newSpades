@@ -17,3 +17,5 @@ class Sounds(object):
         
     def play(self, name):
         self.sounds[name].play()
+        
+

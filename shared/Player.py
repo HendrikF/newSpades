@@ -8,7 +8,7 @@ def correct(x):
     return 0 if abs(x) <= 0.000001 else x
 
 class Player(object):
-    def __init__(self, username=''):
+    def __init__(self, sounds, username=''):
         self.username = username
         
         # Dynamic
@@ -20,6 +20,7 @@ class Player(object):
         self.health = 100
         self.respawning = False
         self.respawnTime = 0
+        self.jumpCount = 0
         
         # Static
         self._speed = 5
@@ -31,6 +32,8 @@ class Player(object):
         self.armLength = 5
         self.maxHealth = 100
         self.maxRespawnTime = 5
+        self.maxJumpCount = 1
+        self.sounds = sounds
     
     @property
     def height(self):
@@ -45,7 +48,7 @@ class Player(object):
     def speed(self):
         return self._speed
     
-    def damage(self, dmg, sounds):
+    def damage(self, dmg):
         if not self.respawning:
             self.health -= dmg
             if self.health > self.maxHealth:
@@ -54,7 +57,7 @@ class Player(object):
                 self.health = 0
                 self.respawning = True
                 self.respawnTime = self.maxRespawnTime
-                sounds.play("death")
+                self.sounds.play("death")
                 #self.position = (0, 2, 0)
                 #self.orientation = [90, 0]
             
@@ -69,11 +72,13 @@ class Player(object):
             self.health = self.maxHealth
             self.respawning = False
     
-    def jump(self, sounds):
-        self.dy = self.jumpSpeed
-        sounds.play("jump")
+    def jump(self):
+        if self.jumpCount < self.maxJumpCount:
+            self.dy = self.jumpSpeed
+            self.sounds.play("jump")
+            self.jumpCount += 1
     
-    def move(self, time, map, sounds):
+    def move(self, time, map):
         x, y, z = self.position
         dx, dz = self.getMotionVector()
         d = self.speed * time
@@ -83,16 +88,16 @@ class Player(object):
         self.dy = max(self.dy, -self.maxFallSpeed)
         dy = self.dy * time
         # COLLIDE
-        self.position = self._collide((x+dx, y+dy, z+dz), map, sounds)
+        self.position = self._collide((x+dx, y+dy, z+dz), map)
         # DAMAGE
-        self._boundaryDamage(time, map, sounds)
+        self._boundaryDamage(time, map)
     
-    def _boundaryDamage(self, time, map, sounds):
+    def _boundaryDamage(self, time, map):
         x, y, z = self.position
         if  x < map.border_x[0] or x > map.border_x[1] or y < map.border_y[0] or y > map.border_y[1] or z < map.border_z[0] or z > map.border_z[1]:
-            self.damage(map.border_dps*time, sounds)
+            self.damage(map.border_dps*time)
     
-    def _collide(self, position, map, sounds):
+    def _collide(self, position, map):
         """Checks if the player is colliding with any blocks in the world and returns its position"""
         # How much overlap with a dimension of a surrounding block you need to
         # have to count as a collision. If 0, touching terrain at all counts as
@@ -120,13 +125,15 @@ class Player(object):
                         # You are colliding with the ground or ceiling
                         # get fall damage
                         if self.dy < -15: # ca 5 blocks falling
-                            self.damage((-self.dy-15)*3, sounds) # maxFallSpeed = 50 --> (50 - 15)*3 = 35*3 = 105 -> dead
-                            sounds.play("fallhurt")
+                            self.damage((-self.dy-15)*3) # maxFallSpeed = 50 --> (50 - 15)*3 = 35*3 = 105 -> dead
+                            self.sounds.play("fallhurt")
                         elif self.dy < -7:
-                            sounds.play("land")
+                            self.sounds.play("land")
                         
                         # stop falling / rising.
                         self.dy = 0
+                        # reset jumps
+                        self.jumpCount = 0
                     break
         return tuple(p)
     

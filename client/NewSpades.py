@@ -106,6 +106,11 @@ class NewSpades(BaseWindow):
         self.label.y = height
         self.crosshair.x = (width-self.crosshair.width)/2
         self.crosshair.y = (height-self.crosshair.height)/2
+        self.deathScreen.x = self.width/2
+        self.deathScreen.y = self.height*3/4
+        self.healthLabel.x = self.width/2
+        self.respawnTimeLabel.x = self.width/2
+        self.respawnTimeLabel.y=self.height/4
     
     def update(self, dt):
         self.map.update(self.player.position)

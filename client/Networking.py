@@ -29,7 +29,7 @@ class Networking(object):
     def loop(self):
         while self.running:
             self._client.update()
-            time.sleep(0.01)
+            time.sleep(0.001)
             
     def start(self):
         self.thread = threading.Thread(target=self.loop)

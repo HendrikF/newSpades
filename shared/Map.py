@@ -78,7 +78,7 @@ class Map(object):
     def addBlock(self, position, color, immediate=True):
         """Adds a block to the map"""
         if position in self.world:
-            self.removeBlock(position, immediate=immediate)
+            self.removeBlock(position, immediate)
         self.world[position] = color
         self.sectors.setdefault(sectorize(position), []).append(position)
         if immediate:
@@ -164,11 +164,10 @@ class Map(object):
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
                 for dz in [-1, 0, 1]:
-                    #if dx==dy==0 or dx==dz==0 or dy==dz==0:
                     if dx==dy==dz==0:
                         continue
                     pos = (x + dx, y + dy, z + dz)
-                    if pos in self.world:
+                    if pos in self.shown:
                         self.updateBlock(pos)
     
     def showBlock(self, position, immediate=True):
@@ -198,6 +197,7 @@ class Map(object):
         self._shown.pop(position).delete()
     
     def updateBlock(self, position):
+        """Call this to update the shadows of a block"""
         self.hideBlock(position)
         self.showBlock(position)
     

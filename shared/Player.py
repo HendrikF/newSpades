@@ -74,9 +74,15 @@ class Player(object):
     
     def jump(self):
         if self.jumpCount < self.maxJumpCount and ((self.jumpCount==0 and self.dy==0) or self.jumpCount > 0):
-            self.dy = self.jumpSpeed
-            self.sounds.play("jump")
+            self._jump()
+        elif self.jumpCount < self.maxJumpCount-1:
             self.jumpCount += 1
+            self._jump()
+    
+    def _jump(self):
+        self.dy = self.jumpSpeed
+        self.sounds.play("jump")
+        self.jumpCount += 1
     
     def move(self, time, map):
         x, y, z = self.position

@@ -1,7 +1,7 @@
 import legume
 import time
 import threading
-from shared.Messages import Messages
+from shared import Messages
 from shared.Player import Player
 
 class Networking(object):
@@ -35,7 +35,7 @@ class Networking(object):
         self.thread = threading.Thread(target=self.loop)
         self.thread.start()
         
-    def stop(self).
+    def stop(self):
         self.running = False
         
         

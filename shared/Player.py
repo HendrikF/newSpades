@@ -1,6 +1,6 @@
 import math
 from shared.Map import FACES
-from shared.Messages import Messages
+from shared import Messages
 
 def radians(deg):
     return deg*0.01745329251994329577 #deg*PI/180
@@ -90,7 +90,7 @@ class Player(object):
     
     def _jump(self):
         self.dy = self.jumpSpeed
-        if self.sounds != None:
+        if self.sounds != None and not self.respawning:
             self.sounds.play("jump")
         self.jumpCount += 1
     
@@ -142,10 +142,10 @@ class Player(object):
                         # get fall damage
                         if self.dy < -15: # ca 5 blocks falling
                             self.damage((-self.dy-15)*3) # maxFallSpeed = 50 --> (50 - 15)*3 = 35*3 = 105 -> dead
-                            if self.sounds != None:
+                            if self.sounds != None and not self.respawning:
                                 self.sounds.play("fallhurt")
                         elif self.dy < -7:
-                            if self.sounds != None:
+                            if self.sounds != None and not self.respawning:
                                 self.sounds.play("land")
                         
                         # stop falling / rising.

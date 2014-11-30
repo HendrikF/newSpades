@@ -78,7 +78,7 @@ class Map(object):
     def addBlock(self, position, color, immediate=True):
         """Adds a block to the map"""
         if position in self.world:
-            self.removeBlock(position, immediate)
+            self.removeBlock(position, immediate=immediate)
         self.world[position] = color
         self.sectors.setdefault(sectorize(position), []).append(position)
         if immediate:

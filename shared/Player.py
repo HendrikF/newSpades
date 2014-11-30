@@ -45,7 +45,7 @@ class Player(object):
     def speed(self):
         return self._speed
     
-    def damage(self, dmg):
+    def damage(self, dmg, sounds):
         if not self.respawning:
             self.health -= dmg
             if self.health > self.maxHealth:
@@ -54,6 +54,7 @@ class Player(object):
                 self.health = 0
                 self.respawning = True
                 self.respawnTime = self.maxRespawnTime
+                sounds.play("death")
                 #self.position = (0, 2, 0)
                 #self.orientation = [90, 0]
             
@@ -64,14 +65,15 @@ class Player(object):
         if self.respawnTime < 0:
             self.position = (0, 2, 0)
             self.orientation = [90, 0]
-            self.dy = 0
+            self.dy = 0 # without this the player instantly dies if his corpse never hit the ground
             self.health = self.maxHealth
             self.respawning = False
     
-    def jump(self):
+    def jump(self, sounds):
         self.dy = self.jumpSpeed
+        sounds.play("jump")
     
-    def move(self, time, map):
+    def move(self, time, map, sounds):
         x, y, z = self.position
         dx, dz = self.getMotionVector()
         d = self.speed * time
@@ -81,16 +83,16 @@ class Player(object):
         self.dy = max(self.dy, -self.maxFallSpeed)
         dy = self.dy * time
         # COLLIDE
-        self.position = self._collide((x+dx, y+dy, z+dz), map)
+        self.position = self._collide((x+dx, y+dy, z+dz), map, sounds)
         # DAMAGE
-        self._boundaryDamage(time, map)
+        self._boundaryDamage(time, map, sounds)
     
-    def _boundaryDamage(self, time, map):
+    def _boundaryDamage(self, time, map, sounds):
         x, y, z = self.position
         if  x < map.border_x[0] or x > map.border_x[1] or y < map.border_y[0] or y > map.border_y[1] or z < map.border_z[0] or z > map.border_z[1]:
-            self.damage(map.border_dps*time)
+            self.damage(map.border_dps*time, sounds)
     
-    def _collide(self, position, map):
+    def _collide(self, position, map, sounds):
         """Checks if the player is colliding with any blocks in the world and returns its position"""
         # How much overlap with a dimension of a surrounding block you need to
         # have to count as a collision. If 0, touching terrain at all counts as
@@ -118,7 +120,10 @@ class Player(object):
                         # You are colliding with the ground or ceiling
                         # get fall damage
                         if self.dy < -15: # ca 5 blocks falling
-                            self.damage((-self.dy-15)*3) # maxFallSpeed = 50 --> (50 - 15)*3 = 35*3 = 105 -> dead
+                            self.damage((-self.dy-15)*3, sounds) # maxFallSpeed = 50 --> (50 - 15)*3 = 35*3 = 105 -> dead
+                            sounds.play("fallhurt")
+                        elif self.dy < -7:
+                            sounds.play("land")
                         
                         # stop falling / rising.
                         self.dy = 0

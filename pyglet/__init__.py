@@ -228,6 +228,14 @@ if sys.platform == 'cygwin':
     ctypes.WINFUNCTYPE = ctypes.CFUNCTYPE
     ctypes.HRESULT = ctypes.c_long
 
+# workaround for Issue 518: AVBin fails to load after loading opengl32 on Windows
+if sys.platform == 'win32':
+    import ctypes
+    try:
+        ctypes.cdll.LoadLibrary('avbin')
+    except:
+        pass
+    
 # Call tracing
 # ------------
 

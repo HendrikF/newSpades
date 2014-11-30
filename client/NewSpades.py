@@ -5,6 +5,7 @@ from pyglet.gl import *
 import pyglet
 from pyglet.window import key, mouse
 from shared.ColorPicker import ColorPicker
+from client.Sounds import Sounds
 
 import logging
 logger = logging.getLogger(__name__)
@@ -44,6 +45,8 @@ class NewSpades(BaseWindow):
         pyglet.resource.path = ['client/resources', 'shared/resources']
         pyglet.resource.reindex()
         self.crosshair = pyglet.sprite.Sprite(pyglet.resource.image('crosshair.png'))
+        
+        self.sounds = Sounds()
         
         self.colorPicker = ColorPicker()
     
@@ -98,7 +101,7 @@ class NewSpades(BaseWindow):
     # Physics
     
     def updatePhysics(self, dt):
-        self.player.move(dt, self.map)
+        self.player.move(dt, self.map, self.sounds)
         self.player.respawn(dt)
     
     #########################
@@ -109,8 +112,10 @@ class NewSpades(BaseWindow):
         if button == mouse.RIGHT:
             if previous:
                 self.map.addBlock(previous, self.colorPicker.getRGB())
+                self.sounds.play("build")
         elif button == mouse.LEFT and block:
-            self.map.removeBlock(block)
+            self.map.removeBlock(block, self.sounds)
+            self.sounds.play("build")
     
     def handleMouseMove(self, dx, dy):
         m = 0.1
@@ -142,7 +147,7 @@ class NewSpades(BaseWindow):
             elif symbol == self.keys["RIGHT"]:
                 self.player.velocity[1] += 1
             elif symbol == self.keys["JUMP"]:
-                self.player.jump()
+                self.player.jump(self.sounds)
             elif symbol == self.keys["CROUCH"]:
                 self.player.crouching = True
             elif symbol == self.keys["FULLSCREEN"]:

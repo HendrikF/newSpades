@@ -73,7 +73,7 @@ class Player(object):
             self.respawning = False
     
     def jump(self):
-        if self.jumpCount < self.maxJumpCount:
+        if self.jumpCount < self.maxJumpCount and ((self.jumpCount==0 and self.dy==0) or self.jumpCount > 0):
             self.dy = self.jumpSpeed
             self.sounds.play("jump")
             self.jumpCount += 1

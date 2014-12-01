@@ -46,12 +46,16 @@ class Map(object):
         self.queue = deque()
         # save position of player
         self.currentSector = None
+        self.position = (0, 0)
         self.dimensions = (0, 0)
         # map borders
         self.border_x = [-20, 70]
         self.border_y = [-20, 70]
         self.border_z = [-20, 70]
         self.border_dps = 100
+        # MINIMAP
+        self.mmShown = {}
+        self.mmBatch = pyglet.graphics.Batch()
     
     def load(self):
         self._load()
@@ -80,6 +84,7 @@ class Map(object):
         if position in self.world:
             self.removeBlock(position, immediate)
         self.world[position] = color
+        self.updateMinimap(position)
         self.sectors.setdefault(sectorize(position), []).append(position)
         if immediate:
             if self.exposed(position):
@@ -90,6 +95,7 @@ class Map(object):
         """Removes a block from the map"""
         del self.world[position]
         self.sectors[sectorize(position)].remove(position)
+        self.updateMinimap(position)
         if immediate:
             if position in self.shown:
                 self.hideBlock(position)
@@ -100,6 +106,8 @@ class Map(object):
     
     def update(self, position):
         """Checks whether the player moved to an other sector"""
+        x, y, z = position
+        self.position = (x, z)
         self.process_queue()
         sector = sectorize(position)
         if sector != self.currentSector:
@@ -320,6 +328,32 @@ class Map(object):
             ll = self.getLightLevel(vertex_data[i*3:i*3+3], i//4)
             color_data.extend((r*ll, g*ll, b*ll))
         return color_data
+    
+    def getHighestBlocksColor(self, x, z):
+        for y in range(30, -1, -1):
+            if (x, y, z) in self.world:
+                return self.world[(x, y, z)]
+        return (0, 0, 0)
+    
+    def drawMinimap(self):
+        x, z = self.position
+        glPushMatrix()
+        glTranslatef(-z, -x, 0)
+        self.mmBatch.draw()
+        glPopMatrix()
+    
+    def updateMinimap(self, pos3):
+        x, y, z = pos3
+        pos2 = (x, z)
+        px, pz = self.position
+        if pos2 in self.mmShown:
+            self.mmShown.pop(pos2).delete()
+        c = self.getHighestBlocksColor(x, z)*4
+        r = 3
+        self.mmShown[pos2] = self.mmBatch.add(4, GL_QUADS, None,
+            ('v2f', [r*z,r*x, (r+1)*z,r*x, (r+1)*z,(r+1)*x, r*z,(r+1)*x]),
+            ('c3f', c)
+        )
 
 """
     (x+d|y+e|z-d) o------------------o (x+d|y+e|z+d)                                

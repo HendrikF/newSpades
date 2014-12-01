@@ -46,7 +46,7 @@ class Map(object):
         self.queue = deque()
         # save position of player
         self.currentSector = None
-        self.dimensions = (0, 0)
+        self.dimensions = ((0, 0), (0, 0), (0, 0))
         # map borders
         self.border_x = [-20, 70]
         self.border_y = [-20, 70]
@@ -55,22 +55,39 @@ class Map(object):
     
     def load(self):
         self._load()
-        self.calculateDimensions()
+        self.recalculateDimensions()
     
     def _load(self):
         for x in range(0, 50):
             self.addBlock((x, 1, 0), (1, 1, 0), immediate=False)
             for z in range(0, 50):
-                    self.addBlock((x, 0, z), (0, 1, 0), immediate=False)
+                self.addBlock((x, 0, z), (0, 1, 0), immediate=False)
     
-    def calculateDimensions(self):
-        # TODO calc negative boundaries!
-        dx = 0
-        dz = 0
+    def recalculateDimensions(self):
+        x1 = 0
+        x2 = 0
+        y1 = 0
+        y2 = 0
+        z1 = 0
+        z2 = 0
         for x, y, z in self.world:
-            dx = max(dx, x)
-            dz = max(dz, z)
-        self.dimensions = (dx+1, dz+1)
+            x1 = min(x1, x)
+            x2 = max(x2, x)
+            y1 = min(y1, y)
+            y2 = max(y2, y)
+            z1 = min(z1, z)
+            z2 = max(z2, z)
+        self.dimensions = ((x1, x2), (y1, y2), (z1, z2))
+    
+    def calculateDimensions(self, pos):
+        x, y, z = pos
+        x1 = min(self.dimensions[0][0], x)
+        x2 = max(self.dimensions[0][1], x)
+        y1 = min(self.dimensions[1][0], y)
+        y2 = max(self.dimensions[1][1], y)
+        z1 = min(self.dimensions[2][0], z)
+        z2 = max(self.dimensions[2][1], z)
+        self.dimensions = ((x1, x2), (y1, y2), (z1, z2))
     
     ######################
     # Map modification
@@ -81,6 +98,7 @@ class Map(object):
             self.removeBlock(position, immediate)
         self.world[position] = color
         self.sectors.setdefault(sectorize(position), []).append(position)
+        self.calculateDimensions(position)
         if immediate:
             if self.exposed(position):
                 self.showBlock(position)
@@ -90,6 +108,7 @@ class Map(object):
         """Removes a block from the map"""
         del self.world[position]
         self.sectors[sectorize(position)].remove(position)
+        self.recalculateDimensions()
         if immediate:
             if position in self.shown:
                 self.hideBlock(position)

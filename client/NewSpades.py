@@ -1,9 +1,9 @@
+import pyglet
+from pyglet.gl import *
+from pyglet.window import key, mouse
 from shared.BaseWindow import BaseWindow
 from shared.Map import Map
 from shared.Player import Player
-from pyglet.gl import *
-import pyglet
-from pyglet.window import key, mouse
 from shared.ColorPicker import ColorPicker
 from client.Sounds import Sounds
 from shared.CommandLine import CommandLine
@@ -89,6 +89,11 @@ class NewSpades(BaseWindow):
             glPopMatrix()
             
         self.command.draw()
+        
+        glPushMatrix()
+        glTranslatef(self.width-100, self.height-100, 0)
+        self.map.drawMinimap()
+        glPopMatrix()
     
     def draw3d(self):
         if not self.player.respawning:
@@ -219,17 +224,3 @@ class NewSpades(BaseWindow):
                     except:
                         return
                     self.player.damage(c)
-
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        

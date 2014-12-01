@@ -28,13 +28,14 @@ class Server(object):
         self.last_network = 0
         while self.running:
             # Physics
-            if time.time() - self.last_update >= self.time_update:
-                self.update(time.time() - self.last_update)
-                self.last_update = time.time()
+            t = time.time()
+            if t - self.last_update >= self.time_update:
+                self.update(t - self.last_update)
+                self.last_update = t
             # Networking
-            if time.time() - self.last_network >= self.time_network:
-                self.updateNetwork(time.time() - self.last_network)
-                self.last_network = time.time()
+            if t - self.last_network >= self.time_network:
+                self.updateNetwork(t - self.last_network)
+                self.last_network = t
             # Update legume-Server
             self._server.update()
             time.sleep(0.001)

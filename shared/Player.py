@@ -1,5 +1,6 @@
 import math
 from shared.Map import FACES
+from shared import Messages
 
 def radians(deg):
     return deg*0.01745329251994329577 #deg*PI/180
@@ -8,7 +9,7 @@ def correct(x):
     return 0 if abs(x) <= 0.000001 else x
 
 class Player(object):
-    def __init__(self, sounds, username=''):
+    def __init__(self, sounds=None, username=''):
         self.username = username
         
         # Dynamic
@@ -48,6 +49,13 @@ class Player(object):
     def speed(self):
         return self._speed
     
+    def updateFromMsg(self, msg):
+        self.position = (msg.posx.value, msg.posy.value, msg.posz.value)
+        self.velocity = [msg.velx.value, msg.velz.value]
+        self.dy = msg.vely.value
+        self.crouching = msg.crouching.value
+        self.orientation = [msg.yaw.value, msg.pitch.value]
+    
     def damage(self, dmg):
         if not self.respawning:
             self.health -= dmg
@@ -57,7 +65,8 @@ class Player(object):
                 self.health = 0
                 self.respawning = True
                 self.respawnTime = self.maxRespawnTime
-                self.sounds.play("death")
+                if self.sounds != None:
+                    self.sounds.play("death")
                 #self.position = (0, 2, 0)
                 #self.orientation = [90, 0]
             
@@ -73,10 +82,17 @@ class Player(object):
             self.respawning = False
     
     def jump(self):
-        if self.jumpCount < self.maxJumpCount:
-            self.dy = self.jumpSpeed
-            self.sounds.play("jump")
+        if self.jumpCount < self.maxJumpCount and ((self.jumpCount==0 and self.dy==0) or self.jumpCount > 0):
+            self._jump()
+        elif self.jumpCount < self.maxJumpCount-1:
             self.jumpCount += 1
+            self._jump()
+    
+    def _jump(self):
+        self.dy = self.jumpSpeed
+        if self.sounds != None and not self.respawning:
+            self.sounds.play("jump")
+        self.jumpCount += 1
     
     def move(self, time, map):
         x, y, z = self.position
@@ -94,7 +110,7 @@ class Player(object):
     
     def _boundaryDamage(self, time, map):
         x, y, z = self.position
-        if  x < map.border_x[0] or x > map.border_x[1] or y < map.border_y[0] or y > map.border_y[1] or z < map.border_z[0] or z > map.border_z[1]:
+        if  (x < map.border_x[0] or x > map.border_x[1] or y < map.border_y[0] or y > map.border_y[1] or z < map.border_z[0] or z > map.border_z[1]) and map.border_dps > 0:
             self.damage(map.border_dps*time)
     
     def _collide(self, position, map):
@@ -126,9 +142,11 @@ class Player(object):
                         # get fall damage
                         if self.dy < -15: # ca 5 blocks falling
                             self.damage((-self.dy-15)*3) # maxFallSpeed = 50 --> (50 - 15)*3 = 35*3 = 105 -> dead
-                            self.sounds.play("fallhurt")
+                            if self.sounds != None and not self.respawning:
+                                self.sounds.play("fallhurt")
                         elif self.dy < -7:
-                            self.sounds.play("land")
+                            if self.sounds != None and not self.respawning:
+                                self.sounds.play("land")
                         
                         # stop falling / rising.
                         self.dy = 0

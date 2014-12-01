@@ -1,11 +1,13 @@
+import pyglet
+from pyglet.gl import *
+from pyglet.window import key, mouse
 from shared.BaseWindow import BaseWindow
 from shared.Map import Map
 from shared.Player import Player
-from pyglet.gl import *
-import pyglet
-from pyglet.window import key, mouse
 from shared.ColorPicker import ColorPicker
 from client.Sounds import Sounds
+from shared.CommandLine import CommandLine
+from client.Networking import Networking
 
 import logging
 logger = logging.getLogger(__name__)
@@ -43,14 +45,22 @@ class NewSpades(BaseWindow):
             "CP-R": key.RIGHT,
             "CP-L": key.LEFT,
             "CP-U": key.UP,
-            "CP-D": key.DOWN
+            "CP-D": key.DOWN,
+            "CHAT": key.T
         }
         pyglet.resource.path = ['client/resources', 'shared/resources']
         pyglet.resource.reindex()
         self.crosshair = pyglet.sprite.Sprite(pyglet.resource.image('crosshair.png'))
         
         self.colorPicker = ColorPicker()
-    
+        
+        self.cheat = False
+        self.command = CommandLine(10, 50, 500, self.handleCommands)
+        self.push_handlers(self.command)
+        
+        self.otherPlayers = {}
+        self.network = Networking(self)
+        
     def start(self):
         self.map.load()
         super(NewSpades, self).start()
@@ -77,6 +87,13 @@ class NewSpades(BaseWindow):
             glTranslatef(self.width-self.colorPicker.width, 0, 0)
             self.colorPicker.draw()
             glPopMatrix()
+            
+        self.command.draw()
+        
+        glPushMatrix()
+        glTranslatef(self.width-100, self.height-100, 0)
+        self.map.drawMinimap()
+        glPopMatrix()
     
     def draw3d(self):
         if not self.player.respawning:
@@ -94,6 +111,11 @@ class NewSpades(BaseWindow):
         self.label.y = height
         self.crosshair.x = (width-self.crosshair.width)/2
         self.crosshair.y = (height-self.crosshair.height)/2
+        self.deathScreen.x = self.width/2
+        self.deathScreen.y = self.height*3/4
+        self.healthLabel.x = self.width/2
+        self.respawnTimeLabel.x = self.width/2
+        self.respawnTimeLabel.y=self.height/4
     
     def update(self, dt):
         self.map.update(self.player.position)
@@ -133,44 +155,72 @@ class NewSpades(BaseWindow):
             self.player.orientation[1] = 90
     
     def handleKeyboard(self, symbol, modifiers, press):
-        if press:
-            if symbol == key.ESCAPE:
+        if press and symbol == key.ESCAPE:
+            if self.command.active:
+                self.command.deactivate()
+            elif self.fullscreen:
                 self.set_fullscreen(False)
-                if self.exclusive:
-                    self.set_exclusive_mouse(False)
-                else:
-                    self.close()
-            elif symbol == self.keys["FWD"]:
-                self.player.velocity[0] -= 1
-            elif symbol == self.keys["BWD"]:
-                self.player.velocity[0] += 1
-            elif symbol == self.keys["LEFT"]:
-                self.player.velocity[1] -= 1
-            elif symbol == self.keys["RIGHT"]:
-                self.player.velocity[1] += 1
-            elif symbol == self.keys["JUMP"]:
-                self.player.jump()
-            elif symbol == self.keys["CROUCH"]:
-                self.player.crouching = True
-            elif symbol == self.keys["FULLSCREEN"]:
-                self.set_fullscreen(not self.fullscreen)
-            elif symbol == self.keys["CP-R"]:
-                self.colorPicker.input(x=1)
-            elif symbol == self.keys["CP-L"]:
-                self.colorPicker.input(x=-1)
-            elif symbol == self.keys["CP-U"]:
-                self.colorPicker.input(y=1)
-            elif symbol == self.keys["CP-D"]:
-                self.colorPicker.input(y=-1)
-        
-        else: #not press / release
-            if symbol == self.keys["FWD"]:
-                self.player.velocity[0] += 1
-            elif symbol == self.keys["BWD"]:
-                self.player.velocity[0] -= 1
-            elif symbol == self.keys["LEFT"]:
-                self.player.velocity[1] += 1
-            elif symbol == self.keys["RIGHT"]:
-                self.player.velocity[1] -= 1
-            elif symbol == self.keys["CROUCH"]:
-                self.player.crouching = False
+            elif self.exclusive:
+                self.set_exclusive_mouse(False)
+            else:
+                self.close()
+        if not self.command.active:
+            if press:
+                if symbol == self.keys["FWD"]:
+                    self.player.velocity[0] -= 1
+                elif symbol == self.keys["BWD"]:
+                    self.player.velocity[0] += 1
+                elif symbol == self.keys["LEFT"]:
+                    self.player.velocity[1] -= 1
+                elif symbol == self.keys["RIGHT"]:
+                    self.player.velocity[1] += 1
+                elif symbol == self.keys["JUMP"]:
+                    self.player.jump()
+                elif symbol == self.keys["CROUCH"]:
+                    self.player.crouching = True
+                elif symbol == self.keys["FULLSCREEN"]:
+                    self.set_fullscreen(not self.fullscreen)
+                elif symbol == self.keys["CP-R"]:
+                    self.colorPicker.input(x=1)
+                elif symbol == self.keys["CP-L"]:
+                    self.colorPicker.input(x=-1)
+                elif symbol == self.keys["CP-U"]:
+                    self.colorPicker.input(y=1)
+                elif symbol == self.keys["CP-D"]:
+                    self.colorPicker.input(y=-1)
+                elif symbol == self.keys["CHAT"]:
+                    self.command.activate(chr(symbol))
+            
+            else: #not press / release
+                if symbol == self.keys["FWD"]:
+                    self.player.velocity[0] += 1
+                elif symbol == self.keys["BWD"]:
+                    self.player.velocity[0] -= 1
+                elif symbol == self.keys["LEFT"]:
+                    self.player.velocity[1] += 1
+                elif symbol == self.keys["RIGHT"]:
+                    self.player.velocity[1] -= 1
+                elif symbol == self.keys["CROUCH"]:
+                    self.player.crouching = False
+                
+    def handleCommands(self, c):
+        if c.startswith("/"):
+            c = c[1:].strip()
+            if c == "cheat":
+                self.cheat = not self.cheat
+            elif c.startswith("jump "):
+                if self.cheat:
+                    try:
+                        c = int(c[5:])
+                    except:
+                        return
+                    self.player.maxJumpCount = c
+            elif c == "kill":
+                self.player.damage(self.player.maxHealth*2)
+            elif c.startswith("damage "):
+                if self.cheat:
+                    try:
+                        c = int(c[7:])
+                    except:
+                        return
+                    self.player.damage(c)

@@ -1,5 +1,6 @@
 import legume
 import time
+import threading
 from shared import Messages
 
 import logging
@@ -13,8 +14,12 @@ class Server(object):
         self.players = []
         self.time_update = 1
         self.time_network = 1
+        self.commandThread = None
+        self.running = True
     
     def start(self):
+        self.commandThread = threading.Thread(target=self.consoleCommands)
+        self.commandThread.start()
         self._server = legume.Server()
         self._server.OnConnectRequest += self.connectHandler
         self._server.OnMessage += self.messageHandler
@@ -32,6 +37,7 @@ class Server(object):
             if t - self.last_update >= self.time_update:
                 self.update(t - self.last_update)
                 self.last_update = t
+                t = time.time()
             # Networking
             if t - self.last_network >= self.time_network:
                 self.updateNetwork(t - self.last_network)
@@ -60,3 +66,9 @@ class Server(object):
             self._server.send_message_to_all(msg)
         else:
             self._server.send_reliable_message_to_all(msg)
+            
+    def consoleCommands(self):
+        while self.running:
+            c = input(": ")
+            if c == "exit":
+                self.running = False

@@ -71,7 +71,6 @@ class BaseWindow(pyglet.window.Window):
     def on_draw(self):
         self.clear()
         self.set3d()
-        glColor3d(1, 1, 1)
         self.draw3d()
         self.set2d()
         self.draw2d()

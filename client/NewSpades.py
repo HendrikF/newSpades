@@ -8,6 +8,7 @@ from shared.ColorPicker import ColorPicker
 from client.Sounds import Sounds
 from shared.CommandLine import CommandLine
 from client.Networking import Networking
+import math
 
 import logging
 logger = logging.getLogger(__name__)
@@ -87,7 +88,7 @@ class NewSpades(BaseWindow):
             glTranslatef(self.width-self.colorPicker.width, 0, 0)
             self.colorPicker.draw()
             glPopMatrix()
-            
+        
         self.command.draw()
         
         glPushMatrix()
@@ -97,15 +98,18 @@ class NewSpades(BaseWindow):
     
     def draw3d(self):
         if not self.player.respawning:
-            x, y, z = self.player.eyePosition
-            dx, dy, dz = self.player.getSightVector()
-            gluLookAt(
-                x,      y-0.5,      z,     # the -0.5 are for the same fix as Player.eyeHeight
-                x+dx,   y+dy-0.5,   z+dz,  #
-                0,      1,          0
-            )
+            self.gluLookAt(self.player.eyePosition, self.player.orientation)
             self.map.draw()
             self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
+    
+    def gluLookAt(self, position, orientation):
+        """Performs the same as gluLookAt, but it has no issues when looking up or down... (nothing was rendered then)"""
+        # Haven't really thought about what this actually does :)
+        x, y = orientation
+        glRotatef(x, 0, 1, 0)
+        glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
+        x, y, z = position
+        glTranslatef(-x, -y+0.5, -z)
     
     def onResize(self, width, height):
         self.label.y = height

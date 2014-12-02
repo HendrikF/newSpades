@@ -5,6 +5,9 @@ from shared import Messages
 def radians(deg):
     return deg*0.01745329251994329577 #deg*PI/180
 
+def degrees(rad):
+    return rad/0.01745329251994329577 #deg/PI/180
+
 def correct(x):
     return 0 if abs(x) <= 0.000001 else x
 
@@ -158,7 +161,7 @@ class Player(object):
     def getMotionVector(self):
         if any(self.velocity):
             x = self.orientation[0]
-            x_angle = math.radians(x + math.degrees(math.atan2(self.velocity[0], self.velocity[1])))
+            x_angle = radians(x + degrees(math.atan2(self.velocity[0], self.velocity[1])))
             dx = math.cos(x_angle)
             dz = math.sin(x_angle)
         else:
@@ -170,12 +173,12 @@ class Player(object):
         # y ranges from -90 to 90, or -pi/2 to pi/2, so m ranges from 0 to 1 and
         # is 1 when looking ahead parallel to the ground and 0 when looking
         # straight up or down.
-        m = math.cos(math.radians(y))
+        m = math.cos(radians(y))
         # dy ranges from -1 to 1 and is -1 when looking straight down and 1 when
         # looking straight up.
-        dy = math.sin(math.radians(y))
-        dx = math.cos(math.radians(x - 90)) * m
-        dz = math.sin(math.radians(x - 90)) * m
+        dy = math.sin(radians(y))
+        dx = math.cos(radians(x - 90)) * m
+        dz = math.sin(radians(x - 90)) * m
         return (correct(dx), correct(dy), correct(dz))
     
     def __repr__(self):

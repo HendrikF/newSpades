@@ -224,3 +224,10 @@ class NewSpades(BaseWindow):
                     except:
                         return
                     self.player.damage(c)
+            elif c.startswith("connect "):
+                c = c[8:]
+                c = c.split()
+                self.network.connect(c[0], c[1])
+                self.network.start()
+            elif c == "disconnect":
+                self.network.stop()

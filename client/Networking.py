@@ -21,19 +21,24 @@ class Networking(object):
             else:
                 self.window.otherPlayers[args.username.value].updateFromMsg(args)
         else:
-            print('Unknown Message: %s' % args)
+            logger.debug('Unknown Message: %s', args)
             
     def connect(self, host, port):
-        self._client.connect((host, port))
+        if self._client.disconnected:
+            self._client.connect((host, port))
         
     def loop(self):
         while self.running:
             self._client.update()
             time.sleep(0.001)
+        self._client.disconnect()
+        self._client.update()
             
     def start(self):
-        self.thread = threading.Thread(target=self.loop)
-        self.thread.start()
+        if self.thread is None or not self.thread.isAlive():
+            self.running = True
+            self.thread = threading.Thread(target=self.loop)
+            self.thread.start()
         
     def stop(self):
         self.running = False

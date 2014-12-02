@@ -171,10 +171,11 @@ class Player(object):
                             if self.sounds != None and not self.respawning:
                                 self.sounds.play("land")
                         
+                        if self.dy < 0:
+                            # reset jumps if hitting ground
+                            self.jumpCount = 0
                         # stop falling / rising.
                         self.dy = 0
-                        # reset jumps
-                        self.jumpCount = 0
                     break
         return tuple(p)
     

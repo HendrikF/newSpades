@@ -65,6 +65,9 @@ class NewSpades(BaseWindow):
     def start(self):
         self.map.load()
         super(NewSpades, self).start()
+        
+    def cleanup(self):
+        self.network.stop()
     
     ###############
     # Rendering

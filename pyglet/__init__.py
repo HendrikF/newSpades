@@ -232,7 +232,7 @@ if sys.platform == 'cygwin':
 if sys.platform == 'win32':
     import ctypes
     try:
-        ctypes.cdll.LoadLibrary('avbin')
+        ctypes.cdll.LoadLibrary('avbin/avbin')
     except:
         pass
     

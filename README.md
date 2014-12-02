@@ -22,8 +22,19 @@ Requirements
 To run the game you need to install:
 
 * Python 3.2 or newer: https://www.python.org/download/
-* legume: https://bitbucket.org/reidyd/legume
+
+(We tested with 3.2 and 3.4)
 
 Thanks
 -------
 * https://github.com/fogleman/Minecraft
+
+Legal stuff
+------------
+NewSpades comes with a few libraries included.
+
+Library | License
+--------|--------
+[pyglet](http://pyglet.org/) | [3-clause-BSD](https://code.google.com/p/pyglet/source/browse/LICENSE)
+[AVbin](http://avbin.github.io/AVbin/Home/Home.html) | [GNU LGPL](https://github.com/AVbin/AVbin/blob/master/COPYING.LESSER)
+[legume](https://bitbucket.org/reidyd/legume) | [3-clause-BSD](https://bitbucket.org/reidyd/legume/src/2797680265901888c1d638a7852b961b5a9610dd/LICENSE)

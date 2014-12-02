@@ -29,9 +29,10 @@ class Player(object):
         # Static
         self._speed = 5
         self.maxFallSpeed = 50
-        self.gravity = 20
-        self.jumpHeight = 2.2
-        self.jumpSpeed = math.sqrt(2*self.gravity*self.jumpHeight)
+        self._gravity = 20
+        self.jumpSpeed = 0
+        self._jumpHeight = 0
+        self.jumpHeight = 2.2 # Trigger calculation of jumpSpeed
         self._height = 3
         self.armLength = 5
         self.maxHealth = 100
@@ -51,6 +52,25 @@ class Player(object):
     @property
     def speed(self):
         return self._speed
+    
+    @property
+    def jumpHeight(self):
+        return self._jumpHeight
+    @jumpHeight.setter
+    def jumpHeight(self, v):
+        self._jumpHeight = v
+        self._recalcJumpSpeed()
+    
+    @property
+    def gravity(self):
+        return self._gravity
+    @gravity.setter
+    def gravity(self, v):
+        self._gravity = v
+        self._recalcJumpSpeed()
+    
+    def _recalcJumpSpeed(self):
+        self.jumpSpeed = math.sqrt(2*self._gravity*self._jumpHeight)
     
     def updateFromMsg(self, msg):
         self.position = (msg.posx.value, msg.posy.value, msg.posz.value)

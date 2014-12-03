@@ -131,6 +131,7 @@ class ColorPicker(object):
             self.updateColor()
     
     def getRGB(self, s=None, v=None):
+        # https://de.wikipedia.org/wiki/HSV-Farbraum
         v = self.value      if v is None else v
         s = self.saturation if s is None else s
         if s == 0:
@@ -152,3 +153,26 @@ class ColorPicker(object):
             return (t, p, v)
         elif h == 5:
             return (v, p, q)
+    
+    def setRGB(self, color):
+        # https://de.wikipedia.org/wiki/HSV-Farbraum
+        r, g, b = color
+        mx = max(r, g, b)
+        mn = min(r, g, b)
+        n = mx - mn
+        if mx == mn:
+            h = 0
+        elif mx == r:
+            h = 60 * (    (g-b) / n)
+        elif mx == g:
+            h = 60 * (2 + (b-r) / n)
+        elif mx == b:
+            h = 60 * (4 + (r-g) / n)
+        if h < 0:
+            h += 360
+        s = 0 if mx == 0 else n/mx
+        v = mx
+        self.hue = h
+        self.saturation = s
+        self.value = v
+        self.updateColor()

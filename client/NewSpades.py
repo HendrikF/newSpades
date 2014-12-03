@@ -147,6 +147,8 @@ class NewSpades(BaseWindow):
             elif button == mouse.LEFT and block:
                 self.map.removeBlock(block)
                 self.sounds.play("build")
+            elif button == mouse.MIDDLE and block:
+                self.colorPicker.setRGB(self.map.world[block])
     
     def handleMouseMove(self, dx, dy):
         m = 0.1

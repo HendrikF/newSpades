@@ -94,8 +94,8 @@ class ModelEditor(BaseWindow):
         x, y, z = self.position
         dx, dy, dz = self.getSightVector()
         gluLookAt(
-            x,      y,      z,     # the -0.5 are for the same fix as Player.eyeHeight
-            x+dx,   y+dy,   z+dz,  #
+            x,      y,      z,
+            x+dx,   y+dy,   z+dz,
             0,      1,          0
         )
         glLineWidth(3)
@@ -144,6 +144,8 @@ class ModelEditor(BaseWindow):
                 self.model.addBlock(previous, self.colorPicker.getRGB())
         elif button == mouse.LEFT and block and self.model.size > 1:
             self.model.removeBlock(block)
+        elif button == mouse.MIDDLE and block:
+            self.colorPicker.setRGB(self.model.blocks[block])
     
     def handleMouseMove(self, dx, dy):
         m = 0.1

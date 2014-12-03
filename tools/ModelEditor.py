@@ -51,7 +51,7 @@ class ModelEditor(BaseWindow):
         self.orientation = [90, 0]
         self.armLength = 100
         
-        self.model = Model()
+        self.model = Model(scale=1)
         self.model.addBlock((0,0,0), (0,0,0))
         
         self.colorPicker = ColorPicker()

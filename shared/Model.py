@@ -1,5 +1,5 @@
-from pyglet.gl import *
 import pyglet
+from pyglet.gl import *
 import sqlite3
 
 import logging
@@ -15,10 +15,11 @@ FACES = [
 ]
 
 class Model(object):
-    def __init__(self):
+    def __init__(self, scale=0.1):
         self.blocks = {}
         self._blocks = {}
         self.batch = pyglet.graphics.Batch()
+        self.scale = scale
     
     @property
     def size(self):
@@ -48,7 +49,10 @@ class Model(object):
         return (pos in self.blocks)
     
     def draw(self):
+        glPushMatrix()
+        glScalef(self.scale, self.scale, self.scale)
         self.batch.draw()
+        glPopMatrix()
     
     def checkNeighbors(self, position):
         x, y, z = position

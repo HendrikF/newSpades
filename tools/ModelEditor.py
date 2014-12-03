@@ -91,13 +91,7 @@ class ModelEditor(BaseWindow):
         self.commandLine.draw()
     
     def draw3d(self):
-        x, y, z = self.position
-        dx, dy, dz = self.getSightVector()
-        gluLookAt(
-            x,      y,      z,
-            x+dx,   y+dy,   z+dz,
-            0,      1,          0
-        )
+        self.gluLookAt(self.position, self.orientation)
         glLineWidth(3)
         glBegin(GL_LINES)
         glColor3f(0.8,0,0)
@@ -115,6 +109,15 @@ class ModelEditor(BaseWindow):
         glVertex3f(0, 0,  1000)
         glEnd()
         self.model.draw()
+    
+    def gluLookAt(self, position, orientation):
+        """Performs the same as gluLookAt, but it has no issues when looking up or down... (nothing was rendered then)"""
+        # Haven't really thought about what this actually does :)
+        x, y = orientation
+        glRotatef(x, 0, 1, 0)
+        glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
+        x, y, z = position
+        glTranslatef(-x, -y, -z)
     
     def onResize(self, width, height):
         self.crosshair.x = (width-self.crosshair.width)/2

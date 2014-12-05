@@ -19,12 +19,12 @@ def sectorize(position):
     return (x, 0, z)
 
 FACES = [
-    ( 0, 1, 0),
-    ( 0,-1, 0),
-    (-1, 0, 0),
-    ( 1, 0, 0),
-    ( 0, 0, 1),
-    ( 0, 0,-1),
+    ( 0, 1, 0), # UP
+    ( 0, -1, 0), # DOWN
+    (-1, 0, 0), # FRONT
+    ( 1, 0, 0), # BACK
+    ( 0, 0, 1), # RIGHT
+    ( 0, 0, -1), # LEFT
 ]
 
 class Map(object):

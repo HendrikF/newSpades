@@ -47,7 +47,7 @@ class Player(object):
     @property
     def eyePosition(self):
         x, y, z = self.position
-        return (x, y+self.height, z) # should be 2.5 but you cannot build the block in eye-height ??
+        return (x, y+self.height-1, z) # should be 2.5 but you cannot build the block in eye-height ??
     
     @property
     def speed(self):
@@ -142,7 +142,7 @@ class Player(object):
         # have to count as a collision. If 0, touching terrain at all counts as
         # a collision. If .49, you sink into the ground, as if walking through
         # tall grass. If >= .5, you'll fall through the ground.
-        pad = 0.25
+        pad = 0
         p = list(position)
         np = (round(p[0]), round(p[1]), round(p[2]))
         for face in FACES:  # check all surrounding blocks
@@ -160,7 +160,7 @@ class Player(object):
                     if tuple(op) not in map.world:
                         continue
                     p[i] -= (d - pad) * face[i]
-                    if face == (0, -1, 0) or face == (0, 1, 0):
+                    if face == (0, 1, 0) or face == (0, -1, 0):
                         # You are colliding with the ground or ceiling
                         # get fall damage
                         if self.dy < -15: # ca 5 blocks falling

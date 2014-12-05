@@ -51,7 +51,7 @@ class Player(object):
     
     @property
     def speed(self):
-        return self._speed
+        return self._speed if not self.crouching else self._speed*0.7
     
     @property
     def jumpHeight(self):
@@ -90,8 +90,6 @@ class Player(object):
                 self.respawnTime = self.maxRespawnTime
                 if self.sounds != None:
                     self.sounds.play("death")
-                #self.position = (0, 2, 0)
-                #self.orientation = [90, 0]
             
     def respawn(self, time):
         if not self.respawning:

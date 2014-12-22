@@ -10,6 +10,9 @@ class BaseWindow(pyglet.window.Window):
         self.maxFPS = 60
         self.farplane = 100
         self._bgColor = (0.5, 0.69, 1, 1)
+        icon16 = pyglet.image.load('shared/resources/icon16.png')
+        icon32 = pyglet.image.load('shared/resources/icon32.png')
+        self.set_icon(icon16, icon32)
     
     def start(self):
         glClearColor(self._bgColor[0], self._bgColor[1], self._bgColor[2], self._bgColor[3])

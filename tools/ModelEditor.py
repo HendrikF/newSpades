@@ -178,6 +178,8 @@ class ModelEditor(BaseWindow):
             if press:
                 if symbol == key.H:
                     self.displayHelp = not self.displayHelp
+                elif symbol == key.C:
+                    print('(R, G, B):', self.colorPicker.getRGB())
                 elif symbol == self.keys["FWD"]:
                     self.velocity[0] -= 1
                 elif symbol == self.keys["BWD"]:
@@ -230,6 +232,13 @@ class ModelEditor(BaseWindow):
             except OSError:
                 pass
             self.model.save(text)
+        elif text.startswith('/color'):
+            def convert(x):
+                return int(x)/255
+            text = text[6:].strip().split()
+            for i in range(len(text)):
+                text[i] = convert(text[i])
+            self.colorPicker.setRGB(text)
     
     ###################
     # Stuff

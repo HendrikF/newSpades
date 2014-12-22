@@ -47,15 +47,18 @@ class Map(object):
         # save position of player
         self.currentSector = None
         self.dimensions = ((0, 0), (0, 0), (0, 0))
-        self.position = (0, 0)
         # map borders
         self.border_x = [-20, 70]
         self.border_y = [-20, 70]
         self.border_z = [-20, 70]
         self.border_dps = 100
         # MINIMAP
-        self.mmShown = {}
+        self.mmColors = {}
+        self.mmShown = set()
         self.mmBatch = pyglet.graphics.Batch()
+        self.mmSize = (50, 50)
+        self.mmResolution = 3
+        self.mmPosition = (0, 0)
     
     def load(self):
         self._load()
@@ -101,9 +104,9 @@ class Map(object):
         if position in self.world:
             self.removeBlock(position, immediate)
         self.world[position] = color
-        self.updateMinimap(position)
         self.sectors.setdefault(sectorize(position), []).append(position)
         self.calculateDimensions(position)
+        self.updateMinimap(position)
         if immediate:
             if self.exposed(position):
                 self.showBlock(position)
@@ -126,7 +129,6 @@ class Map(object):
     def update(self, position):
         """Checks whether the player moved to an other sector"""
         x, y, z = position
-        self.position = (x, z)
         self.process_queue()
         sector = sectorize(position)
         if sector != self.currentSector:
@@ -134,6 +136,7 @@ class Map(object):
             if self.currentSector is None:
                 self.process_entire_queue()
             self.currentSector = sector
+        self.moveMinimap(position)
     
     def draw(self):
         """Draws the map"""
@@ -355,24 +358,60 @@ class Map(object):
         return (0, 0, 0)
     
     def drawMinimap(self):
-        x, z = self.position
+        x, y = self.mmPosition
         glPushMatrix()
-        glTranslatef(-z, -x, 0)
+        r = self.mmResolution
+        glTranslatef(-r*x, -r*y, 0)
         self.mmBatch.draw()
         glPopMatrix()
     
+    def moveMinimap(self, pos3):
+        x, y, z = pos3
+        x, z = int(round(x)), int(round(z))
+        r = self.mmResolution
+        size = (
+            (self.mmSize[0]//2)//r, 
+            (self.mmSize[1]//2)//r)
+        new = set()
+        for dx in range(-size[0], size[0]):
+            for dy in range(-size[1], size[1]):
+                new.add((z+dx, x+dy))
+        show = new - self.mmShown
+        hide = self.mmShown - new
+        for pos in show:
+            self.showBlockOnMinimap(pos)
+        for pos in hide:
+            self.hideBlockOnMinimap(pos)
+        self.mmShown = new
+        pos2 = (z, x)
+        self.hideBlockOnMinimap(self.mmPosition)
+        self.showBlockOnMinimap(self.mmPosition)
+        self.hideBlockOnMinimap(pos2)
+        self.showBlockOnMinimap(pos2, (1,0,0))
+        self.mmPosition = pos2
+    
+    def showBlockOnMinimap(self, pos2, color=None):
+        x, y = pos2
+        c = self.getHighestBlocksColor(y, x) if color is None else color
+        r = self.mmResolution
+        self.mmColors[pos2] = self.mmBatch.add(4, GL_QUADS, None,
+            ('v2f', [r*x,r*y, (r+1)*x,r*y, (r+1)*x,(r+1)*y, r*x,(r+1)*y]),
+            ('c3f', c*4)
+        )
+    
+    def hideBlockOnMinimap(self, pos2):
+        if pos2 in self.mmColors:
+            self.mmColors.pop(pos2).delete()
+    
     def updateMinimap(self, pos3):
         x, y, z = pos3
-        pos2 = (x, z)
-        px, pz = self.position
-        if pos2 in self.mmShown:
-            self.mmShown.pop(pos2).delete()
-        c = self.getHighestBlocksColor(x, z)*4
-        r = 3
-        self.mmShown[pos2] = self.mmBatch.add(4, GL_QUADS, None,
-            ('v2f', [r*z,r*x, (r+1)*z,r*x, (r+1)*z,(r+1)*x, r*z,(r+1)*x]),
-            ('c3f', c)
-        )
+        pos2 = (int(round(z)), int(round(x)))
+        for i in range(2):
+            if abs(pos2[i] - self.mmPosition[i]) > self.mmSize[i]/self.mmResolution/2:
+                return
+        self.hideBlockOnMinimap(pos2)
+        self.showBlockOnMinimap(pos2)
+        self.mmShown.add(pos2)
 
 """
     (x+d|y+e|z-d) o------------------o (x+d|y+e|z+d)                                

@@ -8,6 +8,7 @@ from shared.ColorPicker import ColorPicker
 from client.Sounds import Sounds
 from shared.CommandLine import CommandLine
 from client.Networking import Networking
+from client.GuiManager import GuiManager
 import math
 
 import logging
@@ -62,6 +63,8 @@ class NewSpades(BaseWindow):
         self.otherPlayers = {}
         self.network = Networking(self)
         
+        self.gui = GuiManager()
+        
     def start(self):
         self.map.load()
         super(NewSpades, self).start()
@@ -98,6 +101,8 @@ class NewSpades(BaseWindow):
         glTranslatef(self.width-100, self.height-100, 0)
         self.map.drawMinimap()
         glPopMatrix()
+        
+        self.gui.draw()
     
     def draw3d(self):
         if not self.player.respawning:

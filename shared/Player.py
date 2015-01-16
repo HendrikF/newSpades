@@ -12,8 +12,9 @@ def correct(x):
     return 0 if abs(x) <= 0.000001 else x
 
 class Player(object):
-    def __init__(self, sounds=None, username=''):
+    def __init__(self, model, sounds=None, username=''):
         self.username = username
+        self.model = model
         
         # Dynamic
         self.velocity = [0, 0]

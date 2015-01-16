@@ -36,7 +36,10 @@ class NewSpades(BaseWindow):
         self.sounds = Sounds()
         
         self.map = Map(maxFPS=self.maxFPS, farplane=self.farplane)
-        self.player = Player(username='local', sounds=self.sounds)
+        
+        self.model = Model().load('model.nsmdl')
+        self.player = Player(self.model, username='local', sounds=self.sounds)
+        
         self.keys = {
             "FWD": key.W,
             "BWD": key.S,
@@ -65,8 +68,6 @@ class NewSpades(BaseWindow):
         self.network = Networking(self)
         
         self.gui = GuiManager()
-        
-        self.model = Model().load('model.nsmdl')
     
     def start(self):
         self.map.load()
@@ -111,10 +112,10 @@ class NewSpades(BaseWindow):
             self.gluLookAt(self.player.eyePosition, self.player.orientation)
             self.map.draw()
             self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
-            if len(self.otherPlayers) > 0:
+            for player in self.otherPlayers.values():
                 glPushMatrix()
-                glTranslatef(*self.otherPlayers[''].position)
-                self.model.draw()
+                glTranslatef(player.position[0], player.position[1], player.position[2])
+                player.model.draw()
                 glPopMatrix()
     
     def gluLookAt(self, position, orientation):

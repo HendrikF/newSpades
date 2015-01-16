@@ -14,7 +14,7 @@ class Networking(object):
         
     def on_message(self, sender, args):
         if legume.messages.message_factory.is_a(args, 'JoinMsg'):
-            self.window.otherPlayers[args.username.value] = Player(username=args.username.value)
+            self.window.otherPlayers[args.username.value] = Player(self.window.model, username=args.username.value)
         elif legume.messages.message_factory.is_a(args, 'PlayerUpdateMsg'):
             if args.username.value == self.window.player.username:
                 self.window.player.updateFromMsg(args)

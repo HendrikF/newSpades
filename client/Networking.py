@@ -21,7 +21,7 @@ class Networking(object):
             else:
                 self.window.otherPlayers[args.username.value].updateFromMsg(args)
         else:
-            logger.debug('Unknown Message: %s', args)
+            logger.error('Unknown Message: %s', args)
             
     def connect(self, host, port):
         if self._client.disconnected:

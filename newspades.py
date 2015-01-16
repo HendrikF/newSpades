@@ -16,4 +16,3 @@ if args.loglevel:
 newspades = NewSpades(width=800, height=600, caption='NewSpades', resizable=True)
 newspades.set_exclusive_mouse(True)
 newspades.start()
-newspades.cleanup()

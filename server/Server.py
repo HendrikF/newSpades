@@ -19,6 +19,7 @@ class Server(object):
     
     def start(self):
         self.commandThread = threading.Thread(target=self.consoleCommands)
+        self.commandThread.daemon = True
         self.commandThread.start()
         self._server = legume.Server()
         self._server.OnConnectRequest += self.connectHandler
@@ -29,22 +30,28 @@ class Server(object):
     
     def loop(self):
         self.running = True
-        self.last_update = 0
-        self.last_network = 0
+        t = time.time()
+        self.last_update = t
+        self.last_network = t
         while self.running:
+            wait = True
             # Physics
             t = time.time()
             if t - self.last_update >= self.time_update:
                 self.update(t - self.last_update)
                 self.last_update = t
-                t = time.time()
+                wait = False
             # Networking
+            # (Take time again, because update could take long)
+            t = time.time()
             if t - self.last_network >= self.time_network:
                 self.updateNetwork(t - self.last_network)
                 self.last_network = t
+                wait = False
             # Update legume-Server
             self._server.update()
-            time.sleep(0.001)
+            if wait:
+                time.sleep(min(self.time_update, self.time_network))
     
     def update(self, delta):
         pass
@@ -54,6 +61,12 @@ class Server(object):
     
     def connectHandler(self, sender, args):
         logger.info('Client connected: %s', sender.address)
+        msg = Messages.JoinMsg()
+        self.broadcastMessage(msg)
+        msg = Messages.PlayerUpdateMsg()
+        msg.posy.value = 4
+        msg.velx.value = 1
+        self.broadcastMessage(msg)
     
     def disconnectHandler(self, sender, args):
         logger.info('Client disconnected: %s', sender.address)
@@ -72,3 +85,5 @@ class Server(object):
             c = input(": ")
             if c == "exit":
                 self.running = False
+            elif c == "help":
+                print('Available Commands: help, exit')

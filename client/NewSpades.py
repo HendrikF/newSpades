@@ -9,6 +9,7 @@ from client.Sounds import Sounds
 from shared.CommandLine import CommandLine
 from client.Networking import Networking
 from client.GuiManager import GuiManager
+from shared.Model import Model
 import math
 
 import logging
@@ -35,7 +36,7 @@ class NewSpades(BaseWindow):
         self.sounds = Sounds()
         
         self.map = Map(maxFPS=self.maxFPS, farplane=self.farplane)
-        self.player = Player(sounds=self.sounds)
+        self.player = Player(username='local', sounds=self.sounds)
         self.keys = {
             "FWD": key.W,
             "BWD": key.S,
@@ -65,11 +66,11 @@ class NewSpades(BaseWindow):
         
         self.gui = GuiManager()
         
+        self.model = Model().load('model.nsmdl')
+    
     def start(self):
         self.map.load()
         super(NewSpades, self).start()
-        
-    def cleanup(self):
         self.network.stop()
     
     ###############
@@ -97,10 +98,11 @@ class NewSpades(BaseWindow):
         
         self.command.draw()
         
-        glPushMatrix()
-        glTranslatef(self.width-100, self.height-100, 0)
-        self.map.drawMinimap()
-        glPopMatrix()
+        # Minimap is too buggy / ugly :(
+        #glPushMatrix()
+        #glTranslatef(self.width-100, self.height-100, 0)
+        #self.map.drawMinimap()
+        #glPopMatrix()
         
         self.gui.draw()
     
@@ -109,6 +111,11 @@ class NewSpades(BaseWindow):
             self.gluLookAt(self.player.eyePosition, self.player.orientation)
             self.map.draw()
             self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
+            if len(self.otherPlayers) > 0:
+                glPushMatrix()
+                glTranslatef(*self.otherPlayers[''].position)
+                self.model.draw()
+                glPopMatrix()
     
     def gluLookAt(self, position, orientation):
         """Performs the same as gluLookAt, but it has no issues when looking up or down... (nothing was rendered then)"""
@@ -138,6 +145,8 @@ class NewSpades(BaseWindow):
     def updatePhysics(self, dt):
         self.player.move(dt, self.map)
         self.player.respawn(dt)
+        for player in self.otherPlayers.values():
+            player.move(dt, self.map)
     
     #########################
     # Client Interaction
@@ -242,6 +251,9 @@ class NewSpades(BaseWindow):
                 c = c[8:]
                 c = c.split()
                 self.network.connect(c[0], c[1])
+                self.network.start()
+            elif c == 'c':
+                self.network.connect('localhost', 55555)
                 self.network.start()
             elif c == "disconnect":
                 self.network.stop()

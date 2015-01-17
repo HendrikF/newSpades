@@ -1,3 +1,4 @@
+from pyglet.gl import *
 import math
 from shared.Map import FACES
 from shared import Messages
@@ -40,6 +41,15 @@ class Player(object):
         self.maxRespawnTime = 5
         self.maxJumpCount = 1
         self.sounds = sounds
+    
+    def draw(self):
+        glPushMatrix()
+        glTranslatef(self.position[0], self.position[1], self.position[2])
+        x, y = self.orientation
+        glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
+        glRotatef(x, 0, 1, 0)
+        self.model.draw()
+        glPopMatrix()
     
     @property
     def height(self):

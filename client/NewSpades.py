@@ -110,13 +110,11 @@ class NewSpades(BaseWindow):
     def draw3d(self):
         if not self.player.respawning:
             self.gluLookAt(self.player.eyePosition, self.player.orientation)
+            #self.gluLookAt((4, 20, 4), [135, -90])
             self.map.draw()
             self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
             for player in self.otherPlayers.values():
-                glPushMatrix()
-                glTranslatef(player.position[0], player.position[1], player.position[2])
-                player.model.draw()
-                glPopMatrix()
+                player.draw()
     
     def gluLookAt(self, position, orientation):
         """Performs the same as gluLookAt, but it has no issues when looking up or down... (nothing was rendered then)"""
@@ -217,13 +215,13 @@ class NewSpades(BaseWindow):
             
             else: #not press / release
                 if symbol == self.keys["FWD"]:
-                    self.player.velocity[0] += 1
+                    self.player.velocity[0] = 0
                 elif symbol == self.keys["BWD"]:
-                    self.player.velocity[0] -= 1
+                    self.player.velocity[0] = 0
                 elif symbol == self.keys["LEFT"]:
-                    self.player.velocity[1] += 1
+                    self.player.velocity[1] = 0
                 elif symbol == self.keys["RIGHT"]:
-                    self.player.velocity[1] -= 1
+                    self.player.velocity[1] = 0
                 elif symbol == self.keys["CROUCH"]:
                     self.player.crouching = False
                 

@@ -64,7 +64,7 @@ class Server(object):
         msg = Messages.JoinMsg()
         self.broadcastMessage(msg)
         msg = Messages.PlayerUpdateMsg()
-        msg.posy.value = 4
+        msg.posy.value = 2
         msg.velx.value = 1
         self.broadcastMessage(msg)
     

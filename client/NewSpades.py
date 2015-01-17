@@ -10,6 +10,7 @@ from shared.CommandLine import CommandLine
 from client.Networking import Networking
 from client.GuiManager import GuiManager
 from shared.Model import Model
+from shared import Messages
 import math
 
 import logging
@@ -137,6 +138,13 @@ class NewSpades(BaseWindow):
     
     def update(self, dt):
         self.map.update(self.player.position)
+        msg = Messages.PlayerUpdateMsg()
+        msg.posx.value, msg.posy.value, msg.posz.value = self.player.position
+        msg.velx.value, msg.velz.value = self.player.velocity
+        msg.vely.value = self.player.dy
+        msg.yaw.value, msg.pitch.value = self.player.orientation
+        msg.crouching.value = self.player.crouching
+        self.network.send(msg)
     
     ##############
     # Physics

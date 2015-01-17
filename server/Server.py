@@ -61,18 +61,18 @@ class Server(object):
     
     def connectHandler(self, sender, args):
         logger.info('Client connected: %s', sender.address)
-        msg = Messages.JoinMsg()
-        self.broadcastMessage(msg)
-        msg = Messages.PlayerUpdateMsg()
-        msg.posy.value = 2
-        msg.velx.value = 1
-        self.broadcastMessage(msg)
+        #msg = Messages.JoinMsg()
+        #self.broadcastMessage(msg)
+        #msg = Messages.PlayerUpdateMsg()
+        #msg.posy.value = 2
+        #msg.velx.value = 1
+        #self.broadcastMessage(msg)
     
     def disconnectHandler(self, sender, args):
         logger.info('Client disconnected: %s', sender.address)
     
     def messageHandler(self, sender, msg):
-        logger.debug('Recieved Message from %s: %s', sender.address, msg)
+        logger.info('Recieved Message from %s: %s', sender.address, msg)
     
     def broadcastMessage(self, msg, reliable=False):
         if not reliable:

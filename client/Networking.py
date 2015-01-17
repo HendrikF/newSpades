@@ -42,5 +42,9 @@ class Networking(object):
         
     def stop(self):
         self.running = False
-        
-        
+    
+    def send(self, msg, reliable=False):
+        try:
+            self._client.send_message(msg)
+        except:
+            pass

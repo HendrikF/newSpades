@@ -1,40 +1,33 @@
-import legume
+from transmitter.messages import Message
 
-class JoinMsg(legume.messages.BaseMessage):
+class JoinMsg(Message):
     """
     To Server: Client wants to join
     To Client: Another Client joined (PlayerUpdate must follow)
     """
-    MessageTypeID = legume.messages.BASE_MESSAGETYPEID_USER + 1
-    MessageValues = {
-        'username' : 'varstring'
+    msgID = 1
+    msgData = {
+        'username' : ('str', '')
     }
-    
-    def __repr__(self):
-        return '<JoinMsg{} ({})>'.format(self.MessageTypeID, self.username.value)
 
-class PlayerUpdateMsg(legume.messages.BaseMessage):
+class PlayerUpdateMsg(Message):
     """
     To Server: Player tells its state
     To Client: Update state of a player
     """
-    MessageTypeID = legume.messages.BASE_MESSAGETYPEID_USER + 2
-    MessageValues = {
-        'username'  : 'varstring',
-        'posx'      : 'float',
-        'posy'      : 'float',
-        'posz'      : 'float',
-        'velx'      : 'float',
-        'vely'      : 'float',
-        'velz'      : 'float',
-        'yaw'       : 'float',
-        'pitch'     : 'float',
-        #'roll'      : 'float',
-        'crouching' : 'bool'
+    msgID = 2
+    msgData = {
+        'username'  : ('str', ''),
+        'posx'      : ('float', 0),
+        'posy'      : ('float', 0),
+        'posz'      : ('float', 0),
+        'velx'      : ('float', 0),
+        'vely'      : ('float', 0),
+        'velz'      : ('float', 0),
+        'yaw'       : ('float', 0),
+        'pitch'     : ('float', 0),
+        'crouching' : ('bool', False)
     }
-    
-    def __repr__(self):
-        return '<PlayerUpdateMsg{} ({})>'.format(self.MessageTypeID, self.username.value)
 
-for c in (JoinMsg, PlayerUpdateMsg):
-    legume.messages.message_factory.add(c)
+def registerMessages(factory):
+    factory.add(JoinMsg, PlayerUpdateMsg)

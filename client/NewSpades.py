@@ -139,11 +139,11 @@ class NewSpades(BaseWindow):
     def update(self, dt):
         self.map.update(self.player.position)
         msg = Messages.PlayerUpdateMsg()
-        msg.posx.value, msg.posy.value, msg.posz.value = self.player.position
-        msg.velx.value, msg.velz.value = self.player.velocity
-        msg.vely.value = self.player.dy
-        msg.yaw.value, msg.pitch.value = self.player.orientation
-        msg.crouching.value = self.player.crouching
+        msg.posx, msg.posy, msg.posz = self.player.position
+        msg.velx, msg.velz = self.player.velocity
+        msg.vely = self.player.dy
+        msg.yaw, msg.pitch = self.player.orientation
+        msg.crouching = self.player.crouching
         self.network.send(msg)
     
     ##############

@@ -1,6 +1,6 @@
-import legume
 import time
 import threading
+import transmitter.general
 from shared import Messages
 
 import logging
@@ -21,11 +21,13 @@ class Server(object):
         self.commandThread = threading.Thread(target=self.consoleCommands)
         self.commandThread.daemon = True
         self.commandThread.start()
-        self._server = legume.Server()
-        self._server.OnConnectRequest += self.connectHandler
-        self._server.OnMessage += self.messageHandler
-        self._server.OnDisconnect += self.disconnectHandler
-        self._server.listen((self.addr, self.port))
+        self._server = transmitter.general.Server()
+        Messages.registerMessages(self._server.messageFactory)
+        self._server.onConnect.attach(self.onConnect)
+        self._server.onMessage.attach(self.onMessage)
+        self._server.onDisconnect.attach(self.onDisconnect)
+        self._server.bind(self.addr, self.port)
+        self._server.start()
         self.loop()
     
     def loop(self):
@@ -48,7 +50,7 @@ class Server(object):
                 self.updateNetwork(t - self.last_network)
                 self.last_network = t
                 wait = False
-            # Update legume-Server
+            # Update transmitter-Server
             self._server.update()
             if wait:
                 time.sleep(min(self.time_update, self.time_network))
@@ -59,26 +61,23 @@ class Server(object):
     def updateNetwork(self, delta):
         pass
     
-    def connectHandler(self, sender, args):
-        logger.info('Client connected: %s', sender.address)
+    def onConnect(self, peer):
+        logger.info('Client connected: %s', peer.addr)
         #msg = Messages.JoinMsg()
         #self.broadcastMessage(msg)
         #msg = Messages.PlayerUpdateMsg()
-        #msg.posy.value = 2
-        #msg.velx.value = 1
+        #msg.posy = 2
+        #msg.velx = 1
         #self.broadcastMessage(msg)
     
-    def disconnectHandler(self, sender, args):
-        logger.info('Client disconnected: %s', sender.address)
+    def onDisconnect(self, peer):
+        logger.info('Client disconnected: %s', peer.addr)
     
-    def messageHandler(self, sender, msg):
-        logger.info('Recieved Message from %s: %s', sender.address, msg)
+    def onMessage(self, msg, peer):
+        logger.info('Recieved Message from %s: %s', peer.addr, msg)
     
-    def broadcastMessage(self, msg, reliable=False):
-        if not reliable:
-            self._server.send_message_to_all(msg)
-        else:
-            self._server.send_reliable_message_to_all(msg)
+    def broadcastMessage(self, msg):
+        self._server.send(msg)
             
     def consoleCommands(self):
         while self.running:

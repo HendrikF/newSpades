@@ -37,5 +37,5 @@ Library | License
 --------|--------
 [pyglet](http://pyglet.org/) | [3-clause-BSD](https://code.google.com/p/pyglet/source/browse/LICENSE)
 [AVbin](http://avbin.github.io/AVbin/Home/Home.html) | [GNU LGPL](https://github.com/AVbin/AVbin/blob/master/COPYING.LESSER)
-[legume](https://bitbucket.org/reidyd/legume) | [3-clause-BSD](https://bitbucket.org/reidyd/legume/src/2797680265901888c1d638a7852b961b5a9610dd/LICENSE)
+[transmitter](https://github.com/HendrikF/transmitter) | [3-clause-BSD](https://github.com/HendrikF/transmitter/blob/master/LICENSE)
 [The Ubuntu Font](http://font.ubuntu.com/) | http://font.ubuntu.com/licence/

@@ -84,11 +84,11 @@ class Player(object):
         self.jumpSpeed = math.sqrt(2*self._gravity*self._jumpHeight)
     
     def updateFromMsg(self, msg):
-        self.position = (msg.posx.value, msg.posy.value, msg.posz.value)
-        self.velocity = [msg.velx.value, msg.velz.value]
-        self.dy = msg.vely.value
-        self.crouching = msg.crouching.value
-        self.orientation = [msg.yaw.value, msg.pitch.value]
+        self.position = (msg.posx, msg.posy, msg.posz)
+        self.velocity = [msg.velx, msg.velz]
+        self.dy = msg.vely
+        self.crouching = msg.crouching
+        self.orientation = [msg.yaw, msg.pitch]
     
     def damage(self, dmg):
         if not self.respawning:

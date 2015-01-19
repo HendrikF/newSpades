@@ -43,6 +43,7 @@ class Player(object):
         self.sounds = sounds
     
     def draw(self):
+        ### TODO ###
         glPushMatrix()
         glTranslatef(self.position[0], self.position[1], self.position[2])
         x, y = self.orientation
@@ -108,7 +109,7 @@ class Player(object):
         self.respawnTime -= time
         if self.respawnTime < 0:
             self.position = (0, 2, 0)
-            self.orientation = [90, 0]
+            self.orientation = [0, 0]
             self.dy = 0 # without this the player instantly dies if his corpse never hit the ground
             self.health = self.maxHealth
             self.respawning = False
@@ -190,10 +191,10 @@ class Player(object):
     
     def getMotionVector(self):
         if any(self.velocity):
-            x = self.orientation[0]
-            x_angle = radians(x + degrees(math.atan2(self.velocity[0], self.velocity[1])))
-            dx = math.cos(x_angle)
-            dz = math.sin(x_angle)
+            x = radians(self.orientation[0] - 90)
+            x += math.atan2(self.velocity[1], self.velocity[0])
+            dx = math.cos(x)
+            dz = math.sin(x)
         else:
             return (0, 0)
         return (correct(dx), correct(dz))

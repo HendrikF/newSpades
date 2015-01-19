@@ -80,8 +80,10 @@ class NewSpades(BaseWindow):
     
     def draw2d(self):
         x, y, z = self.player.position
-        self.label.text = '%02d (%.2f, %.2f, %.2f)' % (
-            pyglet.clock.get_fps(), x, y, z)
+        yaw, pitch = self.player.orientation
+        vx, vz = self.player.velocity
+        self.label.text = '%02d (%.2f, %.2f, %.2f) (%.2f, %.2f) (%.2f, %.2f)' % (
+            pyglet.clock.get_fps(), x, y, z, yaw, pitch, vx, vz)
         self.label.draw()
         self.crosshair.draw()
         
@@ -119,10 +121,9 @@ class NewSpades(BaseWindow):
     
     def gluLookAt(self, position, orientation):
         """Performs the same as gluLookAt, but it has no issues when looking up or down... (nothing was rendered then)"""
-        # Haven't really thought about what this actually does :)
         x, y = orientation
+        glRotatef(-y, 1, 0, 0)
         glRotatef(x, 0, 1, 0)
-        glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
         x, y, z = position
         glTranslatef(-x, -y+0.5, -z)
     
@@ -197,9 +198,9 @@ class NewSpades(BaseWindow):
         if not self.command.active:
             if press:
                 if symbol == self.keys["FWD"]:
-                    self.player.velocity[0] -= 1
-                elif symbol == self.keys["BWD"]:
                     self.player.velocity[0] += 1
+                elif symbol == self.keys["BWD"]:
+                    self.player.velocity[0] -= 1
                 elif symbol == self.keys["LEFT"]:
                     self.player.velocity[1] -= 1
                 elif symbol == self.keys["RIGHT"]:

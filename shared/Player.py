@@ -43,12 +43,13 @@ class Player(object):
         self.sounds = sounds
     
     def draw(self):
-        ### TODO ###
         glPushMatrix()
-        glTranslatef(self.position[0], self.position[1], self.position[2])
+        x, y, z = self.position
+        glTranslatef(x, y, z)
         x, y = self.orientation
-        glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
-        glRotatef(x, 0, 1, 0)
+        x -= 90
+        glRotatef(y, math.sin(radians(x)), 0, math.cos(radians(x)))
+        glRotatef(-x, 0, 1, 0)
         self.model.draw()
         glPopMatrix()
     

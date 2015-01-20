@@ -48,7 +48,7 @@ class Player(object):
         glTranslatef(x, y, z)
         x, y = self.orientation
         x -= 90
-        glRotatef(y, math.sin(radians(x)), 0, math.cos(radians(x)))
+        glRotatef(y, 0, 0, 1)
         glRotatef(-x, 0, 1, 0)
         self.model.draw()
         glPopMatrix()

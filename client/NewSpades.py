@@ -12,6 +12,7 @@ from client.GuiManager import GuiManager
 from shared.Model import Model
 from shared import Messages
 import math
+import time
 
 import logging
 logger = logging.getLogger(__name__)
@@ -67,6 +68,8 @@ class NewSpades(BaseWindow):
         
         self.otherPlayers = {}
         self.network = Networking(self)
+        self.last_network_update = 0
+        self.time_network_update = 0.050
         
         self.gui = GuiManager()
     
@@ -139,13 +142,10 @@ class NewSpades(BaseWindow):
     
     def update(self, dt):
         self.map.update(self.player.position)
-        msg = Messages.PlayerUpdateMsg()
-        msg.posx, msg.posy, msg.posz = self.player.position
-        msg.velx, msg.velz = self.player.velocity
-        msg.vely = self.player.dy
-        msg.yaw, msg.pitch = self.player.orientation
-        msg.crouching = self.player.crouching
-        self.network.send(msg)
+        if time.time() - self.last_network_update >= self.time_network_update:
+            msg = self.player.getUpdateMsg()
+            self.network.send(msg)
+            self.last_network_update = time.time()
     
     ##############
     # Physics
@@ -259,9 +259,10 @@ class NewSpades(BaseWindow):
                 c = c[8:]
                 c = c.split()
                 self.network.connect(c[0], c[1])
-                self.network.start()
-            elif c == 'c':
+                self.network.start(c[2] if len(c)>2 else '')
+            elif c.startswith('c '):
+                c = c[2:]
                 self.network.connect('localhost', 55555)
-                self.network.start()
+                self.network.start(c)
             elif c == "disconnect":
                 self.network.stop()

@@ -68,10 +68,11 @@ class NetworkEndpoint(object):
                 elif self.messageFactory.is_a(msg, 'TDisconnectMessage'):
                     self.onDisconnect(peer)
     
-    def send(self, message):
+    def send(self, message, exclude=[]):
         data = message.getBytes()
-        for peer in self.peers.values():
-            peer.send(data)
+        for _id, peer in self.peers.items():
+            if _id not in exclude:
+                peer.send(data)
     
     def sendTo(self, _id, message):
         try:

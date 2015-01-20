@@ -91,6 +91,16 @@ class Player(object):
         self.crouching = msg.crouching
         self.orientation = [msg.yaw, msg.pitch]
     
+    def getUpdateMsg(self):
+        msg = Messages.PlayerUpdateMsg()
+        msg.username = self.username
+        msg.posx, msg.posy, msg.posz = self.position
+        msg.velx, msg.velz = self.velocity
+        msg.vely = self.dy
+        msg.crouching = self.crouching
+        msg.yaw, msg.pitch = self.orientation
+        return msg
+    
     def damage(self, dmg):
         if not self.respawning:
             self.health -= dmg

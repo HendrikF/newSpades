@@ -2,6 +2,7 @@ import time
 import threading
 import transmitter.general
 from shared import Messages
+from shared.Player import Player
 
 import logging
 logger = logging.getLogger(__name__)
@@ -11,7 +12,7 @@ class Server(object):
         self.registry = registry
         self.addr = ''
         self.port = 55555
-        self.players = []
+        self.players = {}
         self.time_update = 1
         self.time_network = 1
         self.commandThread = None
@@ -59,25 +60,34 @@ class Server(object):
         pass
     
     def updateNetwork(self, delta):
-        pass
+        for username, player in self.players.items():
+            self._server.send(player.getUpdateMsg(), exclude=[player.peer.id])
     
     def onConnect(self, peer):
         logger.info('Client connected: %s', peer.addr)
-        #msg = Messages.JoinMsg()
-        #self.broadcastMessage(msg)
-        #msg = Messages.PlayerUpdateMsg()
-        #msg.posy = 2
-        #msg.velx = 1
-        #self.broadcastMessage(msg)
     
     def onDisconnect(self, peer):
         logger.info('Client disconnected: %s', peer.addr)
     
     def onMessage(self, msg, peer):
-        logger.info('Recieved Message from %s: %s', peer.addr, msg)
-    
-    def broadcastMessage(self, msg):
-        self._server.send(msg)
+        logger.info('Recieved Message: %s', msg)
+        if self._server.messageFactory.is_a(msg, 'JoinMsg'):
+            self.players[msg.username] = Player(None, username=msg.username)
+            self.players[msg.username].peer = peer
+            self._server.send(msg, exclude=[peer.id])
+            for player in self.players.values():
+                if player.peer.id == peer.id:
+                    continue
+                msg = Messages.JoinMsg()
+                msg.username = player.username
+                self._server.sendTo(peer.id, msg)
+        elif self._server.messageFactory.is_a(msg, 'PlayerUpdateMsg'):
+            try:
+                self.players[msg.username].updateFromMsg(msg)
+            except KeyError:
+                logger.error('Unknown username: %s', msg)
+        else:
+            logger.error('Unknown Message: %s', msg)
             
     def consoleCommands(self):
         while self.running:

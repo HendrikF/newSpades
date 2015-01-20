@@ -4,6 +4,9 @@ from transmitter.general import Client
 from shared import Messages
 from shared.Player import Player
 
+import logging
+logger = logging.getLogger(__name__)
+
 class Networking(object):
     def __init__(self, window):
         self._client = Client()
@@ -14,13 +17,17 @@ class Networking(object):
         self.thread = None
     
     def onMessage(self, msg, peer):
+        logger.info('Recieved Message: %s', msg)
         if self._client.messageFactory.is_a(msg, 'JoinMsg'):
             self.window.otherPlayers[msg.username] = Player(self.window.model, username=msg.username)
         elif self._client.messageFactory.is_a(msg, 'PlayerUpdateMsg'):
             if msg.username == self.window.player.username:
                 self.window.player.updateFromMsg(msg)
             else:
-                self.window.otherPlayers[msg.username].updateFromMsg(msg)
+                try:
+                    self.window.otherPlayers[msg.username].updateFromMsg(msg)
+                except KeyError:
+                    logger.error('Unknown username: %s', msg)
         else:
             logger.error('Unknown Message: %s', msg)
     
@@ -34,11 +41,16 @@ class Networking(object):
             time.sleep(0.001)
         self._client.stop()
     
-    def start(self):
+    def start(self, username=''):
         if self.thread is None or not self.thread.isAlive():
             self.running = True
             self.thread = threading.Thread(target=self.loop)
+            self.thread.daemon = True
             self.thread.start()
+            self.window.player.username = username
+            msg = Messages.JoinMsg()
+            msg.username = username
+            self.send(msg)
     
     def stop(self):
         self.running = False

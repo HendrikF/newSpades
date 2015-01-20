@@ -19,11 +19,14 @@ class Model(object):
         self.parts = {}
         self.scale = scale
     
-    def draw(self):
+    def draw(self, pitch=0):
         glPushMatrix()
         glScalef(self.scale, self.scale, self.scale)
-        for part in self.parts.values():
-            part.draw()
+        for t, part in self.parts.items():
+            if t == 'head':
+                part.draw(pitch=pitch)
+            else:
+                part.draw()
         glPopMatrix()
     
     """def save(self, fn):
@@ -58,9 +61,10 @@ class Part(object):
         self.blocks = {}
         self._blocks = {}
     
-    def draw(self):
+    def draw(self, pitch=0):
         glPushMatrix()
         glTranslatef(self.offset[0], self.offset[1], self.offset[2])
+        glRotatef(pitch, 0, 0, 1)
         self.batch.draw()
         glPopMatrix()
     

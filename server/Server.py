@@ -71,6 +71,9 @@ class Server(object):
         for username, player in self.players.items():
             if player.peer.id == peer.id:
                 self.players.pop(username)
+                msg = Messages.LeaveMsg()
+                msg.username = username
+                self._server.send(msg)
                 break
     
     def onMessage(self, msg, peer):

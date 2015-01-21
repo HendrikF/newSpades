@@ -28,6 +28,8 @@ class Networking(object):
                     self.window.otherPlayers[msg.username].updateFromMsg(msg)
                 except KeyError:
                     logger.error('Unknown username: %s', msg)
+        elif self._client.messageFactory.is_a(msg, 'LeaveMsg'):
+            self.window.otherPlayers.pop(msg.username)
         else:
             logger.error('Unknown Message: %s', msg)
     

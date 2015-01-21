@@ -29,5 +29,18 @@ class PlayerUpdateMsg(Message):
         'crouching' : ('bool', False)
     }
 
+class LeaveMsg(Message):
+    """
+    To Server: --
+    To Client: A Client left the game
+    """
+    msgID = 3
+    msgData = {
+        'username' : ('str', '')
+    }
+
 def registerMessages(factory):
-    factory.add(JoinMsg, PlayerUpdateMsg)
+    factory.add(
+        JoinMsg, 
+        PlayerUpdateMsg, 
+        LeaveMsg)

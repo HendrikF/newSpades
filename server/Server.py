@@ -13,8 +13,8 @@ class Server(object):
         self.addr = ''
         self.port = 55555
         self.players = {}
-        self.time_update = 1
-        self.time_network = 1
+        self.time_update = 0.01
+        self.time_network = 0.1
         self.commandThread = None
         self.running = True
     
@@ -37,6 +37,8 @@ class Server(object):
         self.last_update = t
         self.last_network = t
         while self.running:
+            # Update transmitter-Server
+            self._server.update()
             wait = True
             # Physics
             t = time.time()
@@ -51,8 +53,6 @@ class Server(object):
                 self.updateNetwork(t - self.last_network)
                 self.last_network = t
                 wait = False
-            # Update transmitter-Server
-            self._server.update()
             if wait:
                 time.sleep(min(self.time_update, self.time_network))
     
@@ -68,6 +68,10 @@ class Server(object):
     
     def onDisconnect(self, peer):
         logger.info('Client disconnected: %s', peer.addr)
+        for username, player in self.players.items():
+            if player.peer == peer:
+                self.players.pop(username)
+                break
     
     def onMessage(self, msg, peer):
         logger.info('Recieved Message: %s', msg)
@@ -88,7 +92,7 @@ class Server(object):
                 logger.error('Unknown username: %s', msg)
         else:
             logger.error('Unknown Message: %s', msg)
-            
+    
     def consoleCommands(self):
         while self.running:
             c = input(": ")

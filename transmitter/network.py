@@ -70,7 +70,7 @@ class NetworkEndpoint(object):
     
     def send(self, message, exclude=[]):
         data = message.getBytes()
-        for _id, peer in self.peers.items():
+        for _id, peer in list(self.peers.items()):
             if _id not in exclude:
                 peer.send(data)
     

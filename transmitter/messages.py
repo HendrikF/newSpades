@@ -76,7 +76,8 @@ class Message(object):
                 raise InvalidFieldFormat("type '{}' unknown".format(t))
     
     def __repr__(self):
-        return '<{} {}>'.format(self.__class__.__name__, self.msgData)
+        data = dict([(k, v[1]) for k, v in self.msgData.items()])
+        return '<{} {}>'.format(self.__class__.__name__, data)
 
 class MessageFactory(object):
     """A class that holds all the Message classes which can be received from the network"""

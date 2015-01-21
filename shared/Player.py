@@ -45,7 +45,7 @@ class Player(object):
     def draw(self):
         glPushMatrix()
         x, y, z = self.position
-        glTranslatef(x, y, z)
+        glTranslatef(x, y-1, z)
         x, y = self.orientation
         x -= 90
         glRotatef(-x, 0, 1, 0)

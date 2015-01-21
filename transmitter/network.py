@@ -6,6 +6,9 @@ from .messages import Message, MessageFactory
 from .error import *
 from .bytebuffer import ByteBuffer
 
+import logging
+logger = logging.getLogger(__name__)
+
 class NetworkEndpoint(object):
     """A NetworkEndpoint is a flexible interface for a Server and Client."""
     
@@ -148,7 +151,11 @@ class NetworkPeer(object):
     
     def send(self, data):
         if self.active:
-            return self.socket.send(data)
+            try:
+                return self.socket.send(data)
+            except socket.error as e:
+                logger.error("Can't write to socket of peer %s: %s", self, e)
+                self.stop()
         return False
     
     def stop(self, pop=True):

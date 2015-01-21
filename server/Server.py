@@ -69,7 +69,7 @@ class Server(object):
     def onDisconnect(self, peer):
         logger.info('Client disconnected: %s', peer.addr)
         for username, player in self.players.items():
-            if player.peer == peer:
+            if player.peer.id == peer.id:
                 self.players.pop(username)
                 break
     

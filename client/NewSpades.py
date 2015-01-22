@@ -258,7 +258,7 @@ class NewSpades(BaseWindow):
             elif c.startswith("connect "):
                 c = c[8:]
                 c = c.split()
-                self.network.connect(c[0], c[1])
+                self.network.connect(c[0], int(c[1]))
                 self.network.start(c[2] if len(c)>2 else '')
             elif c.startswith('c '):
                 c = c[2:]

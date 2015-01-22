@@ -1,5 +1,4 @@
 import struct
-from collections import OrderedDict
 from .error import *
 
 import logging
@@ -8,18 +7,11 @@ logger = logging.getLogger(__name__)
 class Message(object):
     """A Message is a packet of data which can be sent over the network.
     Every Message has a unique msgID and usually some fields of data of a special type and a default value.
-    Custom Messages have a msgID greater than 0."""
+    Custom Messages have a msgID >= 0."""
     msgID = 0
     msgData = {
         #'name': ('type', '(default)value')
     }
-    
-    def __init__(self):
-        # make ordered dict to have keys in a defined order, dict would be 'random'
-        msgData = OrderedDict(sorted(self.msgData.items()))
-        if self.msgID == 0:
-            logger.error('Message with id of 0 initialized, which is not allowed!')
-            raise InvalidMessageID('msgID 0 is not allowed')
     
     def __getattr__(self, name):
         try:
@@ -36,10 +28,17 @@ class Message(object):
             logger.error('Wanted to change nonexistent message key', name)
             raise InvalidMessageField("key '{}' not found".format(name))
     
+    def _items(self):
+        """Provides iterator access to msgData in sorted key order"""
+        # data have to be accessed sorted, because dict's key order is undefined !!
+        # But sender and receiver have to know the order of the keys
+        for key in sorted(list(self.msgData.keys())):
+            yield key, self.msgData[key]
+    
     def getBytes(self):
         format = '!Ql'
         values = [self.msgID]
-        for k, v in self.msgData.items():
+        for k, v in self._items():
             t = v[0]
             v = v[1]
             if t == 'int':      format += 'l'
@@ -60,7 +59,7 @@ class Message(object):
         return struct.pack(format, *values)
     
     def readFromByteBuffer(self, byteBuffer):
-        for k, v in self.msgData.items():
+        for k, v in self._items():
             t = v[0]
             if t == 'int':      self.__setattr__(k, byteBuffer.readStruct('l')[0])
             elif t == 'float':  self.__setattr__(k, byteBuffer.readStruct('d')[0])
@@ -76,7 +75,7 @@ class Message(object):
                 raise InvalidFieldFormat("type '{}' unknown".format(t))
     
     def __repr__(self):
-        data = dict([(k, v[1]) for k, v in self.msgData.items()])
+        data = [(k, v[1]) for k, v in self._items()]
         return '<{} {}>'.format(self.__class__.__name__, data)
 
 class MessageFactory(object):
@@ -116,7 +115,9 @@ class MessageFactory(object):
         return isinstance(message, self.getByName(name))
     
     def readMessage(self, byteBuffer):
+        # can we read the message length ?
         if len(byteBuffer) >= struct.calcsize('!Q'):
+            # can we read one complete message ?
             if len(byteBuffer) >= byteBuffer.readStruct('Q', peek=True)[0]:
                 # now remove size
                 byteBuffer.readStruct('Q')[0]

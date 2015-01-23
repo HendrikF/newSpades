@@ -1,5 +1,3 @@
-#pyglet.options['debug_gl'] = False
-
 from pyglet.gl import *
 import pyglet
 
@@ -12,7 +10,8 @@ class BaseWindow(pyglet.window.Window):
         self._bgColor = (0.5, 0.69, 1, 1)
         icon16 = pyglet.image.load('shared/resources/icon16.png')
         icon32 = pyglet.image.load('shared/resources/icon32.png')
-        self.set_icon(icon16, icon32)
+        icon64 = pyglet.image.load('shared/resources/icon64.png')
+        self.set_icon(icon16, icon32, icon64)
     
     def start(self):
         glClearColor(self._bgColor[0], self._bgColor[1], self._bgColor[2], self._bgColor[3])

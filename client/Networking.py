@@ -1,50 +1,61 @@
-import legume
 import time
 import threading
+from transmitter.general import Client
 from shared import Messages
 from shared.Player import Player
 
+import logging
+logger = logging.getLogger(__name__)
+
 class Networking(object):
     def __init__(self, window):
-        self._client = legume.Client()
-        self._client.OnMessage += self.on_message
+        self._client = Client()
+        Messages.registerMessages(self._client.messageFactory)
+        self._client.onMessage.attach(self.onMessage)
         self.window = window
         self.running = True
         self.thread = None
-        
-    def on_message(self, sender, args):
-        if legume.messages.message_factory.is_a(args, 'JoinMsg'):
-            self.window.otherPlayers[args.username.value] = Player(self.window.model, username=args.username.value)
-        elif legume.messages.message_factory.is_a(args, 'PlayerUpdateMsg'):
-            if args.username.value == self.window.player.username:
-                self.window.player.updateFromMsg(args)
+    
+    def onMessage(self, msg, peer):
+        logger.info('Recieved Message: %s', msg)
+        if self._client.messageFactory.is_a(msg, 'JoinMsg'):
+            self.window.otherPlayers[msg.username] = Player(self.window.model, username=msg.username)
+        elif self._client.messageFactory.is_a(msg, 'PlayerUpdateMsg'):
+            if msg.username == self.window.player.username:
+                self.window.player.updateFromMsg(msg)
             else:
-                self.window.otherPlayers[args.username.value].updateFromMsg(args)
+                try:
+                    self.window.otherPlayers[msg.username].updateFromMsg(msg)
+                except KeyError:
+                    logger.error('Unknown username: %s', msg)
+        elif self._client.messageFactory.is_a(msg, 'LeaveMsg'):
+            self.window.otherPlayers.pop(msg.username)
         else:
-            logger.error('Unknown Message: %s', args)
-            
+            logger.error('Unknown Message: %s', msg)
+    
     def connect(self, host, port):
-        if self._client.disconnected:
-            self._client.connect((host, port))
-        
+        self._client.connect(host, port)
+        self._client.start()
+    
     def loop(self):
         while self.running:
             self._client.update()
             time.sleep(0.001)
-        self._client.disconnect()
-        self._client.update()
-            
-    def start(self):
+        self._client.stop()
+    
+    def start(self, username=''):
         if self.thread is None or not self.thread.isAlive():
             self.running = True
             self.thread = threading.Thread(target=self.loop)
+            self.thread.daemon = True
             self.thread.start()
-        
+            self.window.player.username = username
+            msg = Messages.JoinMsg()
+            msg.username = username
+            self.send(msg)
+    
     def stop(self):
         self.running = False
     
-    def send(self, msg, reliable=False):
-        try:
-            self._client.send_message(msg)
-        except:
-            pass
+    def send(self, msg):
+        self._client.send(msg)

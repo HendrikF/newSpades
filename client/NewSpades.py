@@ -12,6 +12,7 @@ from client.GuiManager import GuiManager
 from shared.Model import Model
 from shared import Messages
 import math
+import time
 
 import logging
 logger = logging.getLogger(__name__)
@@ -67,6 +68,8 @@ class NewSpades(BaseWindow):
         
         self.otherPlayers = {}
         self.network = Networking(self)
+        self.last_network_update = 0
+        self.time_network_update = 0.050
         
         self.gui = GuiManager()
     
@@ -80,8 +83,10 @@ class NewSpades(BaseWindow):
     
     def draw2d(self):
         x, y, z = self.player.position
-        self.label.text = '%02d (%.2f, %.2f, %.2f)' % (
-            pyglet.clock.get_fps(), x, y, z)
+        yaw, pitch = self.player.orientation
+        vx, vz = self.player.velocity
+        self.label.text = '%02d (%.2f, %.2f, %.2f) (%.2f, %.2f) (%.2f, %.2f)' % (
+            pyglet.clock.get_fps(), x, y, z, yaw, pitch, vx, vz)
         self.label.draw()
         self.crosshair.draw()
         
@@ -119,10 +124,9 @@ class NewSpades(BaseWindow):
     
     def gluLookAt(self, position, orientation):
         """Performs the same as gluLookAt, but it has no issues when looking up or down... (nothing was rendered then)"""
-        # Haven't really thought about what this actually does :)
         x, y = orientation
+        glRotatef(-y, 1, 0, 0)
         glRotatef(x, 0, 1, 0)
-        glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
         x, y, z = position
         glTranslatef(-x, -y+0.5, -z)
     
@@ -138,13 +142,10 @@ class NewSpades(BaseWindow):
     
     def update(self, dt):
         self.map.update(self.player.position)
-        msg = Messages.PlayerUpdateMsg()
-        msg.posx.value, msg.posy.value, msg.posz.value = self.player.position
-        msg.velx.value, msg.velz.value = self.player.velocity
-        msg.vely.value = self.player.dy
-        msg.yaw.value, msg.pitch.value = self.player.orientation
-        msg.crouching.value = self.player.crouching
-        self.network.send(msg)
+        if time.time() - self.last_network_update >= self.time_network_update:
+            msg = self.player.getUpdateMsg()
+            self.network.send(msg)
+            self.last_network_update = time.time()
     
     ##############
     # Physics
@@ -197,9 +198,9 @@ class NewSpades(BaseWindow):
         if not self.command.active:
             if press:
                 if symbol == self.keys["FWD"]:
-                    self.player.velocity[0] -= 1
-                elif symbol == self.keys["BWD"]:
                     self.player.velocity[0] += 1
+                elif symbol == self.keys["BWD"]:
+                    self.player.velocity[0] -= 1
                 elif symbol == self.keys["LEFT"]:
                     self.player.velocity[1] -= 1
                 elif symbol == self.keys["RIGHT"]:
@@ -257,10 +258,11 @@ class NewSpades(BaseWindow):
             elif c.startswith("connect "):
                 c = c[8:]
                 c = c.split()
-                self.network.connect(c[0], c[1])
-                self.network.start()
-            elif c == 'c':
+                self.network.connect(c[0], int(c[1]))
+                self.network.start(c[2] if len(c)>2 else '')
+            elif c.startswith('c '):
+                c = c[2:]
                 self.network.connect('localhost', 55555)
-                self.network.start()
+                self.network.start(c)
             elif c == "disconnect":
                 self.network.stop()

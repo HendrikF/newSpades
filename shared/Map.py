@@ -69,6 +69,9 @@ class Map(object):
             self.addBlock((x, 1, 0), (1, 1, 0), immediate=False)
             for z in range(0, 50):
                 self.addBlock((x, 0, z), (0, 1, 0), immediate=False)
+        self.addBlock((1, 0, 0), (1, 0, 0), immediate=False)
+        self.addBlock((0, 1, 0), (0, 1, 0), immediate=False)
+        self.addBlock((0, 0, 1), (0, 0, 1), immediate=False)
     
     def recalculateDimensions(self):
         x1 = 0

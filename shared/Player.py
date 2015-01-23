@@ -44,11 +44,12 @@ class Player(object):
     
     def draw(self):
         glPushMatrix()
-        glTranslatef(self.position[0], self.position[1], self.position[2])
+        x, y, z = self.position
+        glTranslatef(x, y-1, z)
         x, y = self.orientation
-        glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
-        glRotatef(x, 0, 1, 0)
-        self.model.draw()
+        x -= 90
+        glRotatef(-x, 0, 1, 0)
+        self.model.draw(pitch=y)
         glPopMatrix()
     
     @property
@@ -84,11 +85,21 @@ class Player(object):
         self.jumpSpeed = math.sqrt(2*self._gravity*self._jumpHeight)
     
     def updateFromMsg(self, msg):
-        self.position = (msg.posx.value, msg.posy.value, msg.posz.value)
-        self.velocity = [msg.velx.value, msg.velz.value]
-        self.dy = msg.vely.value
-        self.crouching = msg.crouching.value
-        self.orientation = [msg.yaw.value, msg.pitch.value]
+        self.position = (msg.posx, msg.posy, msg.posz)
+        self.velocity = [msg.velx, msg.velz]
+        self.dy = msg.vely
+        self.crouching = msg.crouching
+        self.orientation = [msg.yaw, msg.pitch]
+    
+    def getUpdateMsg(self):
+        msg = Messages.PlayerUpdateMsg()
+        msg.username = self.username
+        msg.posx, msg.posy, msg.posz = self.position
+        msg.velx, msg.velz = self.velocity
+        msg.vely = self.dy
+        msg.crouching = self.crouching
+        msg.yaw, msg.pitch = self.orientation
+        return msg
     
     def damage(self, dmg):
         if not self.respawning:
@@ -108,7 +119,7 @@ class Player(object):
         self.respawnTime -= time
         if self.respawnTime < 0:
             self.position = (0, 2, 0)
-            self.orientation = [90, 0]
+            self.orientation = [0, 0]
             self.dy = 0 # without this the player instantly dies if his corpse never hit the ground
             self.health = self.maxHealth
             self.respawning = False
@@ -190,10 +201,10 @@ class Player(object):
     
     def getMotionVector(self):
         if any(self.velocity):
-            x = self.orientation[0]
-            x_angle = radians(x + degrees(math.atan2(self.velocity[0], self.velocity[1])))
-            dx = math.cos(x_angle)
-            dz = math.sin(x_angle)
+            x = radians(self.orientation[0] - 90)
+            x += math.atan2(self.velocity[1], self.velocity[0])
+            dx = math.cos(x)
+            dz = math.sin(x)
         else:
             return (0, 0)
         return (correct(dx), correct(dz))

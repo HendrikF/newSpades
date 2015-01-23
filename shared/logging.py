@@ -1,5 +1,11 @@
 import logging, logging.handlers
-import os, os.path
+import os, os.path, sys, traceback
+
+def _exceptionCallback(clas, instance, trace):
+    if clas != KeyboardInterrupt:
+        logging.getLogger().critical('Uncaught exception: %s (%s) TRACEBACK: %s', clas.__name__, instance, traceback.extract_tb(trace))
+    else:
+        sys.__excepthook__(clas, instance, trace)
 
 def setup(filename, level=None):
     loglevel = logging.WARNING if level is None else getattr(logging, level)
@@ -9,8 +15,8 @@ def setup(filename, level=None):
     
     consolehandler = logging.StreamHandler()
     consolehandler.setLevel(logging.DEBUG)
-    fileformatter = logging.Formatter('%(name)s\t%(levelname)s\t%(message)s')
-    consolehandler.setFormatter(fileformatter)
+    consoleformatter = logging.Formatter('%(name)s\t%(levelname)s\t%(message)s')
+    consolehandler.setFormatter(consoleformatter)
     logger.addHandler(consolehandler)
     
     if not os.path.exists('logs'):
@@ -27,8 +33,14 @@ def setup(filename, level=None):
             fileformatter = logging.Formatter('%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s')
             filehandler.setFormatter(fileformatter)
             logger.addHandler(filehandler)
+    
+    sys.excepthook = _exceptionCallback
 
 def setLogLevel(ll):
-    loglevel = getattr(logging, ll)
+    try:
+        loglevel = getattr(logging, ll)
+    except AttributeError as e:
+        logging.getLogger().error('Cant set loglevel %s: %s', ll, e)
+        return False
     logger = logging.getLogger()
     logger.setLevel(loglevel)

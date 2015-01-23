@@ -1,6 +1,4 @@
 import pyglet
-from pyglet.media import avbin
-
 
 class Sounds(object):
     def __init__(self):
@@ -14,8 +12,6 @@ class Sounds(object):
             "fallhurt": pyglet.resource.media("fallhurt.wav", streaming=False),
             "build": pyglet.resource.media("build.wav", streaming=False)
         }
-        
+    
     def play(self, name):
         self.sounds[name].play()
-        
-

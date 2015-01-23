@@ -3,6 +3,7 @@ import threading
 import transmitter.general
 from shared import Messages
 from shared.Player import Player
+import shared.logging
 
 import logging
 logger = logging.getLogger(__name__)
@@ -103,3 +104,6 @@ class Server(object):
                 self.running = False
             elif c == "help":
                 print('Available Commands: help, exit')
+            elif c.startswith('log '):
+                c = c[4:].strip()
+                shared.logging.setLogLevel(c)

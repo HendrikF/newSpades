@@ -165,7 +165,11 @@ class NetworkPeer(object):
     
     def _listen(self):
         while True:
-            data = self.socket.recv(1024)
+            try:
+                data = self.socket.recv(1024)
+            except socket.error as e:
+                logger.error('Connection reset to peer %s: %s', self, e)
+                break
             if not data:
                 break
             self.buffer.append(data)

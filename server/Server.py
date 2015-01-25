@@ -2,15 +2,13 @@ import time
 import threading
 import transmitter.general
 from shared import Messages
-from server.ServerPlayer import ServerPlayer
 import shared.logging
 
 import logging
 logger = logging.getLogger(__name__)
 
 class Server(object):
-    def __init__(self, registry):
-        self.registry = registry
+    def __init__(self):
         self.addr = ''
         self.port = 55555
         self.players = {}
@@ -80,6 +78,7 @@ class Server(object):
     def onMessage(self, msg, peer):
         logger.debug('Recieved Message from peer %s: %s', peer, msg)
         if self._server.messageFactory.is_a(msg, 'JoinMsg'):
+            ServerPlayer = self.registry('ServerPlayer')
             self.players[msg.username] = ServerPlayer(peer, username=msg.username)
             self._server.send(msg, exclude=[peer.id])
             for player in self.players.values():

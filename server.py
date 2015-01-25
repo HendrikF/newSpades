@@ -11,14 +11,14 @@ if args.loglevel:
     logging.setLogLevel(args.loglevel)
 
 from server.Registry import Registry
+registry = Registry()
 
 from server.Server import Server
-
-registry = Registry()
 registry('Server', Server)
+from server.ServerPlayer import ServerPlayer
+registry('ServerPlayer', ServerPlayer)
 
 # Load scripts here - give them the registry to read, inherit from and write their 'children' into
-# TODO: give registry automatically (e.g. wrapper)
 
-server = registry('Server')(registry)
+server = registry('Server')()
 server.start()

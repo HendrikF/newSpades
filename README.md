@@ -56,6 +56,10 @@ Thanks
 -------
 * https://github.com/fogleman/Minecraft (MIT-License)
 
+License
+--------
+NewSpades is released under the GNU GPLv3. See `LICENSE.md` and `GPLv3.md` for Details.
+
 Legal stuff
 ------------
 NewSpades comes with a few libraries included.

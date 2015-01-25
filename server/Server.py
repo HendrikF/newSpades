@@ -2,7 +2,7 @@ import time
 import threading
 import transmitter.general
 from shared import Messages
-from shared.Player import Player
+from server.ServerPlayer import ServerPlayer
 import shared.logging
 
 import logging
@@ -61,7 +61,7 @@ class Server(object):
         pass
     
     def updateNetwork(self, delta):
-        for username, player in self.players.items():
+        for player in self.players.values():
             self._server.send(player.getUpdateMsg(), exclude=[player.peer.id])
     
     def onConnect(self, peer):
@@ -78,10 +78,9 @@ class Server(object):
                 break
     
     def onMessage(self, msg, peer):
-        logger.info('Recieved Message: %s', msg)
+        logger.debug('Recieved Message from peer %s: %s', peer, msg)
         if self._server.messageFactory.is_a(msg, 'JoinMsg'):
-            self.players[msg.username] = Player(None, username=msg.username)
-            self.players[msg.username].peer = peer
+            self.players[msg.username] = ServerPlayer(peer, username=msg.username)
             self._server.send(msg, exclude=[peer.id])
             for player in self.players.values():
                 if player.peer.id == peer.id:

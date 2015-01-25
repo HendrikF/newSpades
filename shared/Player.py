@@ -1,4 +1,3 @@
-from pyglet.gl import *
 import math
 from shared.Map import FACES
 from shared import Messages
@@ -13,9 +12,8 @@ def correct(x):
     return 0 if abs(x) <= 0.000001 else x
 
 class Player(object):
-    def __init__(self, model, sounds=None, username=''):
+    def __init__(self, username=''):
         self.username = username
-        self.model = model
         
         # Dynamic
         self.velocity = [0, 0]
@@ -24,7 +22,6 @@ class Player(object):
         self.orientation = [90, 0]
         self.crouching = False
         self.health = 100
-        self.respawning = False
         self.respawnTime = 0
         self.jumpCount = 0
         
@@ -40,17 +37,6 @@ class Player(object):
         self.maxHealth = 100
         self.maxRespawnTime = 5
         self.maxJumpCount = 1
-        self.sounds = sounds
-    
-    def draw(self):
-        glPushMatrix()
-        x, y, z = self.position
-        glTranslatef(x, y-1, z)
-        x, y = self.orientation
-        x -= 90
-        glRotatef(-x, 0, 1, 0)
-        self.model.draw(pitch=y)
-        glPopMatrix()
     
     @property
     def height(self):
@@ -84,6 +70,10 @@ class Player(object):
     def _recalcJumpSpeed(self):
         self.jumpSpeed = math.sqrt(2*self._gravity*self._jumpHeight)
     
+    @property
+    def respawning(self):
+        return self.respawnTime > 0
+    
     def updateFromMsg(self, msg):
         self.position = (msg.posx, msg.posy, msg.posz)
         self.velocity = [msg.velx, msg.velz]
@@ -108,53 +98,50 @@ class Player(object):
                 self.health = self.maxHealth
             if self.health <= 0:
                 self.health = 0
-                self.respawning = True
                 self.respawnTime = self.maxRespawnTime
-                if self.sounds != None:
-                    self.sounds.play("death")
-            
+                self.playSound("death")
+    
     def respawn(self, time):
-        if not self.respawning:
-            return
-        self.respawnTime -= time
-        if self.respawnTime < 0:
-            self.position = (0, 2, 0)
-            self.orientation = [0, 0]
-            self.dy = 0 # without this the player instantly dies if his corpse never hit the ground
-            self.health = self.maxHealth
-            self.respawning = False
+        if self.respawning:
+            self.respawnTime -= time
+            if not self.respawning:
+                self.position = (0, 2, 0)
+                self.orientation = [90, 0]
+                self.dy = 0 # without this the player instantly dies if his corpse never hit the ground
+                self.health = self.maxHealth
     
     def jump(self):
-        if self.jumpCount < self.maxJumpCount and ((self.jumpCount==0 and self.dy==0) or self.jumpCount > 0):
-            self._jump()
-        elif self.jumpCount < self.maxJumpCount-1:
+        if self.canJump:
             self.jumpCount += 1
             self._jump()
     
+    @property
+    def canJump(self):
+        return not self.respawning and self.jumpCount < self.maxJumpCount and ((self.jumpCount==0 and self.dy==0) or self.jumpCount > 0)
+    
     def _jump(self):
         self.dy = self.jumpSpeed
-        if self.sounds != None and not self.respawning:
-            self.sounds.play("jump")
-        self.jumpCount += 1
+        self.playSound("jump")
     
-    def move(self, time, map):
+    def update(self, time, map):
         x, y, z = self.position
+        dx, dz = self.calcMovement(time)
+        dy = self.calcGravity(time)
+        self.position = self.calcCollision((x+dx, y+dy, z+dz), map)
+        self.respawn(time)
+    
+    def calcMovement(self, time):
         dx, dz = self.getMotionVector()
         d = self.speed * time
-        dx, dz = dx*d, dz*d
-        # GRAVITY
+        return dx*d, dz*d
+    
+    def calcGravity(self, time):
         self.dy -= time * self.gravity
         self.dy = max(self.dy, -self.maxFallSpeed)
-        dy = self.dy * time
-        # COLLIDE
-        self.position = self._collide((x+dx, y+dy, z+dz), map)
-        # DAMAGE
-        self._boundaryDamage(time, map)
+        return self.dy * time
     
-    def _boundaryDamage(self, time, map):
-        x, y, z = self.position
-        if  (x < map.border_x[0] or x > map.border_x[1] or y < map.border_y[0] or y > map.border_y[1] or z < map.border_z[0] or z > map.border_z[1]) and map.border_dps > 0:
-            self.damage(map.border_dps*time)
+    def calcCollision(self, position, map):
+        return self._collide(position, map)
     
     def _collide(self, position, map):
         """Checks if the player is colliding with any blocks in the world and returns its position"""
@@ -185,12 +172,11 @@ class Player(object):
                         # get fall damage
                         if self.dy < -15: # ca 5 blocks falling
                             self.damage((-self.dy-15)*3) # maxFallSpeed = 50 --> (50 - 15)*3 = 35*3 = 105 -> dead
-                            if self.sounds != None and not self.respawning:
-                                self.sounds.play("fallhurt")
+                            if not self.respawning:
+                                self.playSound("fallhurt")
                         elif self.dy < -7:
-                            if self.sounds != None and not self.respawning:
-                                self.sounds.play("land")
-                        
+                            if not self.respawning:
+                                self.playSound("land")
                         if self.dy < 0:
                             # reset jumps if hitting ground
                             self.jumpCount = 0
@@ -200,6 +186,7 @@ class Player(object):
         return tuple(p)
     
     def getMotionVector(self):
+        """Returns the motion vector in world coordinates"""
         if any(self.velocity):
             x = radians(self.orientation[0] - 90)
             x += math.atan2(self.velocity[1], self.velocity[0])
@@ -210,6 +197,7 @@ class Player(object):
         return (correct(dx), correct(dz))
     
     def getSightVector(self):
+        """Returns the vector the player is looking along"""
         x, y = self.orientation
         # y ranges from -90 to 90, or -pi/2 to pi/2, so m ranges from 0 to 1 and
         # is 1 when looking ahead parallel to the ground and 0 when looking
@@ -222,5 +210,9 @@ class Player(object):
         dz = math.sin(radians(x - 90)) * m
         return (correct(dx), correct(dy), correct(dz))
     
+    def playSound(self, name):
+        """To be implemented in the client (server would be too noisy :))"""
+        pass
+    
     def __repr__(self):
-        return '<Player ({}) at (x{}, y{}, z{})>'.format(self.username, *self.position)
+        return '<{} ({}) at (x{}, y{}, z{})>'.format(self.__class__.__name__, self.username, *self.position)

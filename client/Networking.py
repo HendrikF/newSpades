@@ -2,7 +2,7 @@ import time
 import threading
 from transmitter.general import Client
 from shared import Messages
-from shared.Player import Player
+from client.RemotePlayer import RemotePlayer
 
 import logging
 logger = logging.getLogger(__name__)
@@ -17,9 +17,9 @@ class Networking(object):
         self.thread = None
     
     def onMessage(self, msg, peer):
-        logger.info('Recieved Message: %s', msg)
+        logger.debug('Recieved Message: %s', msg)
         if self._client.messageFactory.is_a(msg, 'JoinMsg'):
-            self.window.otherPlayers[msg.username] = Player(self.window.model, username=msg.username)
+            self.window.otherPlayers[msg.username] = RemotePlayer(self.window.model, self.window.sounds, username=msg.username)
         elif self._client.messageFactory.is_a(msg, 'PlayerUpdateMsg'):
             if msg.username == self.window.player.username:
                 self.window.player.updateFromMsg(msg)
@@ -27,11 +27,11 @@ class Networking(object):
                 try:
                     self.window.otherPlayers[msg.username].updateFromMsg(msg)
                 except KeyError:
-                    logger.error('Unknown username: %s', msg)
+                    logger.error('Unknown username (peer: %s) : %s', msg)
         elif self._client.messageFactory.is_a(msg, 'LeaveMsg'):
             self.window.otherPlayers.pop(msg.username)
         else:
-            logger.error('Unknown Message: %s', msg)
+            logger.error('Unknown Message from peer %s: %s', peer, msg)
     
     def connect(self, host, port):
         self._client.connect(host, port)

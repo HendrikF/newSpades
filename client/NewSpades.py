@@ -3,7 +3,7 @@ from pyglet.gl import *
 from pyglet.window import key, mouse
 from shared.BaseWindow import BaseWindow
 from shared.Map import Map
-from shared.Player import Player
+from client.ClientPlayer import ClientPlayer
 from shared.ColorPicker import ColorPicker
 from client.Sounds import Sounds
 from shared.CommandLine import CommandLine
@@ -40,7 +40,7 @@ class NewSpades(BaseWindow):
         self.map = Map(maxFPS=self.maxFPS, farplane=self.farplane)
         
         self.model = Model().load('model.nsmdl')
-        self.player = Player(self.model, username='local', sounds=self.sounds)
+        self.player = ClientPlayer(self.model, self.sounds, username='local')
         
         self.keys = {
             "FWD": key.W,
@@ -116,7 +116,6 @@ class NewSpades(BaseWindow):
     def draw3d(self):
         if not self.player.respawning:
             self.gluLookAt(self.player.eyePosition, self.player.orientation)
-            #self.gluLookAt((4, 20, 4), [135, -90])
             self.map.draw()
             self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
             for player in self.otherPlayers.values():
@@ -142,19 +141,19 @@ class NewSpades(BaseWindow):
     
     def update(self, dt):
         self.map.update(self.player.position)
-        if time.time() - self.last_network_update >= self.time_network_update:
+        t = time.time()
+        if t - self.last_network_update >= self.time_network_update:
             msg = self.player.getUpdateMsg()
             self.network.send(msg)
-            self.last_network_update = time.time()
+            self.last_network_update = t
     
     ##############
     # Physics
     
     def updatePhysics(self, dt):
-        self.player.move(dt, self.map)
-        self.player.respawn(dt)
+        self.player.update(dt, self.map)
         for player in self.otherPlayers.values():
-            player.move(dt, self.map)
+            player.update(dt, self.map)
     
     #########################
     # Client Interaction

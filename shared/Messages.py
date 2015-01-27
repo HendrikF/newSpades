@@ -12,7 +12,7 @@ class JoinMsg(Message):
 
 class PlayerUpdateMsg(Message):
     """
-    To Server: Player tells its state
+    To Server: Player tells its state (Server MUST IGNORE the username (security issue))
     To Client: Update state of a player
     """
     msgID = 2
@@ -39,8 +39,37 @@ class LeaveMsg(Message):
         'username' : ('str', '')
     }
 
+class BlockBuildMsg(Message):
+    """
+    To Server: .. obvious I think
+    To Client: ..
+    """
+    msgID = 4
+    msgData = {
+        'x' : ('int', 0),
+        'y' : ('int', 0),
+        'z' : ('int', 0),
+        'r' : ('float', 0),
+        'g' : ('float', 0),
+        'b' : ('float', 0)
+    }
+
+class BlockBreakMsg(Message):
+    """
+    To Server: .. obvious I think
+    To Client: ..
+    """
+    msgID = 5
+    msgData = {
+        'x' : ('int', 0),
+        'y' : ('int', 0),
+        'z' : ('int', 0)
+    }
+
 def registerMessages(factory):
     factory.add(
         JoinMsg, 
         PlayerUpdateMsg, 
-        LeaveMsg)
+        LeaveMsg, 
+        BlockBuildMsg, 
+        BlockBreakMsg)

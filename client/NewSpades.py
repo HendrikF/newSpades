@@ -2,14 +2,15 @@ import pyglet
 from pyglet.gl import *
 from pyglet.window import key, mouse
 from shared.BaseWindow import BaseWindow
-from shared.Map import Map
 from client.ClientPlayer import ClientPlayer
-from shared.ColorPicker import ColorPicker
+from client.RemotePlayer import RemotePlayer
+from shared.Map import Map
 from client.Sounds import Sounds
-from shared.CommandLine import CommandLine
-from client.Networking import Networking
-from client.GuiManager import GuiManager
 from shared.Model import Model
+from shared.CommandLine import CommandLine
+from shared.ColorPicker import ColorPicker
+from client.GuiManager import GuiManager
+from transmitter.general import Client
 from shared import Messages
 import math
 import time
@@ -66,17 +67,17 @@ class NewSpades(BaseWindow):
         self.command = CommandLine(10, 50, 500, self.handleCommands)
         self.push_handlers(self.command)
         
+        self.gui = GuiManager()
+        
         self.otherPlayers = {}
-        self.network = Networking(self)
         self.last_network_update = 0
         self.time_network_update = 0.050
-        
-        self.gui = GuiManager()
+        self.prepareNetworking()
     
     def start(self):
         self.map.load()
         super(NewSpades, self).start()
-        self.network.stop()
+        self._client.stop()
     
     ###############
     # Rendering
@@ -139,16 +140,17 @@ class NewSpades(BaseWindow):
         self.respawnTimeLabel.x = self.width/2
         self.respawnTimeLabel.y=self.height/4
     
+    ##############
+    # Physics
+    
     def update(self, dt):
+        self._client.update()
         self.map.update(self.player.position)
         t = time.time()
         if t - self.last_network_update >= self.time_network_update:
             msg = self.player.getUpdateMsg()
-            self.network.send(msg)
+            self.send(msg)
             self.last_network_update = t
-    
-    ##############
-    # Physics
     
     def updatePhysics(self, dt):
         self.player.update(dt, self.map)
@@ -161,12 +163,19 @@ class NewSpades(BaseWindow):
     def handleMousePress(self, x, y, button, modifiers):
         if not self.player.respawning:
             block, previous = self.map.getBlocksLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
-            if button == mouse.RIGHT:
-                if previous:
-                    self.map.addBlock(previous, self.colorPicker.getRGB())
-                    self.sounds.play("build")
+            if button == mouse.RIGHT and previous:
+                color = self.colorPicker.getRGB()
+                self.map.addBlock(previous, color)
+                msg = Messages.BlockBuildMsg()
+                msg.x, msg.y, msg.z = previous
+                msg.r, msg.g, msg.b = color
+                self.send(msg)
+                self.sounds.play("build")
             elif button == mouse.LEFT and block:
                 self.map.removeBlock(block)
+                msg = Messages.BlockBreakMsg()
+                msg.x, msg.y, msg.z = block
+                self.send(msg)
                 self.sounds.play("build")
             elif button == mouse.MIDDLE and block:
                 self.colorPicker.setRGB(self.map.world[block])
@@ -257,11 +266,49 @@ class NewSpades(BaseWindow):
             elif c.startswith("connect "):
                 c = c[8:]
                 c = c.split()
-                self.network.connect(c[0], int(c[1]))
-                self.network.start(c[2] if len(c)>2 else '')
+                self.connect(c[0], int(c[1]), username=(c[2] if len(c)>2 else ''))
             elif c.startswith('c '):
                 c = c[2:]
-                self.network.connect('localhost', 55555)
-                self.network.start(c)
-            elif c == "disconnect":
-                self.network.stop()
+                self.connect('localhost', 55555, username=c)
+    
+    #########################
+    # Networking
+    
+    def prepareNetworking(self):
+        self._client = Client()
+        Messages.registerMessages(self._client.messageFactory)
+        self._client.onMessage.attach(self.onMessage)
+    
+    def onMessage(self, msg, peer):
+        logger.debug('Received Message from peer %s: %s', peer, msg)
+        if self._client.messageFactory.is_a(msg, 'JoinMsg'):
+            if msg.username not in self.otherPlayers:
+                self.otherPlayers[msg.username] = RemotePlayer(self.model, self.sounds, username=msg.username)
+            else:
+                logger.warning('Received JoinMsg for existent Player! %s %s', peer, msg)
+        elif self._client.messageFactory.is_a(msg, 'PlayerUpdateMsg'):
+            if msg.username == self.player.username:
+                self.player.updateFromMsg(msg)
+            else:
+                try:
+                    self.otherPlayers[msg.username].updateFromMsg(msg)
+                except KeyError:
+                    logger.warning('Unknown username (peer: %s) : %s', peer, msg)
+        elif self._client.messageFactory.is_a(msg, 'LeaveMsg'):
+            self.otherPlayers.pop(msg.username)
+        elif self._client.messageFactory.is_a(msg, 'BlockBuildMsg'):
+            self.map.addBlock((msg.x, msg.y, msg.z), (msg.r, msg.g, msg.b))
+        elif self._client.messageFactory.is_a(msg, 'BlockBreakMsg'):
+            self.map.removeBlock((msg.x, msg.y, msg.z))
+        else:
+            logger.warning('Unknown Message from peer %s: %s', peer, msg)
+    
+    def connect(self, host, port, username=''):
+        self._client.connect(host, port)
+        self._client.start()
+        self.player.username = username
+        self.send(Messages.JoinMsg(username=username))
+    
+    def send(self, msg):
+        logger.debug('Sending message: %s', msg)
+        self._client.send(msg)

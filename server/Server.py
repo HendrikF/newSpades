@@ -63,37 +63,48 @@ class Server(object):
             self._server.send(player.getUpdateMsg(), exclude=[player.peer.id])
     
     def onConnect(self, peer):
-        logger.info('Client connected: %s', peer.addr)
+        logger.info('Client connected: %s', peer)
     
     def onDisconnect(self, peer):
-        logger.info('Client disconnected: %s', peer.addr)
-        for username, player in self.players.items():
-            if player.peer.id == peer.id:
-                self.players.pop(username)
-                msg = Messages.LeaveMsg()
-                msg.username = username
-                self._server.send(msg)
-                break
+        logger.info('Client disconnected: %s', peer)
+        player = self.getPlayerFromPeer(peer)
+        if player:
+            self.players.pop(player.username)
+            self._server.send(Messages.LeaveMsg(username=player.username))
     
     def onMessage(self, msg, peer):
         logger.debug('Recieved Message from peer %s: %s', peer, msg)
+        
         if self._server.messageFactory.is_a(msg, 'JoinMsg'):
-            ServerPlayer = self.registry('ServerPlayer')
-            self.players[msg.username] = ServerPlayer(peer, username=msg.username)
-            self._server.send(msg, exclude=[peer.id])
-            for player in self.players.values():
-                if player.peer.id == peer.id:
-                    continue
-                msg = Messages.JoinMsg()
-                msg.username = player.username
-                self._server.sendTo(peer.id, msg)
+            if msg.username not in self.players:
+                ServerPlayer = self.registry('ServerPlayer')
+                self.players[msg.username] = ServerPlayer(peer, username=msg.username)
+                # tell the others that this player joined
+                self._server.send(msg, exclude=[peer.id])
+                # tell him which players are already there
+                for player in self.players.values():
+                    if player.peer.id == peer.id:
+                        continue
+                    self._server.sendTo(peer.id, Messages.JoinMsg(username=player.username))
+            else:
+                logger.warning('Received JoinMsg for existent Player! %s %s', peer, msg)
+        
         elif self._server.messageFactory.is_a(msg, 'PlayerUpdateMsg'):
-            try:
-                self.players[msg.username].updateFromMsg(msg)
-            except KeyError:
-                logger.error('Unknown username: %s', msg)
+            # peer is only allowed to update his own player !
+            player = self.getPlayerFromPeer(peer)
+            if player:
+                player.updateFromMsg(msg)
+            else:
+                logger.warning('Peer is no Player but sent PlayerUpdate: %s - %s', peer, msg)
+        
+        elif self._server.messageFactory.is_a(msg, 'BlockBuildMsg'):
+            self._server.send(msg, exclude=[peer.id])
+        
+        elif self._server.messageFactory.is_a(msg, 'BlockBreakMsg'):
+            self._server.send(msg, exclude=[peer.id])
+        
         else:
-            logger.error('Unknown Message: %s', msg)
+            logger.warning('Unknown Message: %s', msg)
     
     def consoleCommands(self):
         while self.running:
@@ -105,3 +116,9 @@ class Server(object):
             elif c.startswith('log '):
                 c = c[4:].strip()
                 shared.logging.setLogLevel(c)
+    
+    def getPlayerFromPeer(self, peer):
+        for player in self.players.values():
+            if player.peer.id == peer.id:
+                return player
+        return False

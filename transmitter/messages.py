@@ -13,6 +13,10 @@ class Message(object):
         #'name': ('type', '(default)value')
     }
     
+    def __init__(self, **data):
+        for key, value in data.items():
+            self.__setattr__(key, value)
+    
     def __getattr__(self, name):
         try:
             return self.msgData[name][1]

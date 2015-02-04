@@ -72,7 +72,9 @@ class NewSpades(BaseWindow):
         self.otherPlayers = {}
         self.last_network_update = 0
         self.time_network_update = 0.050
-        self.prepareNetworking()
+        self._client = Client()
+        Messages.registerMessages(self._client.messageFactory)
+        self._client.onMessage.attach(self.onMessage)
     
     def start(self):
         self.map.load()
@@ -138,7 +140,7 @@ class NewSpades(BaseWindow):
         self.deathScreen.y = self.height*3/4
         self.healthLabel.x = self.width/2
         self.respawnTimeLabel.x = self.width/2
-        self.respawnTimeLabel.y=self.height/4
+        self.respawnTimeLabel.y = self.height/4
     
     ##############
     # Physics
@@ -273,11 +275,6 @@ class NewSpades(BaseWindow):
     
     #########################
     # Networking
-    
-    def prepareNetworking(self):
-        self._client = Client()
-        Messages.registerMessages(self._client.messageFactory)
-        self._client.onMessage.attach(self.onMessage)
     
     def onMessage(self, msg, peer):
         logger.debug('Received Message from peer %s: %s', peer, msg)

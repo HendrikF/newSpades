@@ -4,8 +4,7 @@ import os, os.path, sys, traceback
 def _exceptionCallback(clas, instance, trace):
     if clas != KeyboardInterrupt:
         logging.getLogger().critical('Uncaught exception: %s (%s) TRACEBACK: %s', clas.__name__, instance, traceback.extract_tb(trace))
-    else:
-        sys.__excepthook__(clas, instance, trace)
+    sys.__excepthook__(clas, instance, trace)
 
 def setup(filename, level=None):
     loglevel = logging.WARNING if level is None else getattr(logging, level)
@@ -37,6 +36,7 @@ def setup(filename, level=None):
     sys.excepthook = _exceptionCallback
 
 def setLogLevel(ll):
+    ll = ll.upper()
     try:
         loglevel = getattr(logging, ll)
     except AttributeError as e:

@@ -15,12 +15,13 @@ FACES = [
 ]
 
 class Model(object):
-    def __init__(self, scale=0.1, offset=(0,0,0)):
+    def __init__(self, scale=0.1, offset=(0,0,0), progressbar=None):
         self.blocks = {}
         self._blocks = {}
         self.batch = pyglet.graphics.Batch()
         self.scale = scale
         self.offset = offset
+        self.progressbar = progressbar
     
     @property
     def size(self):
@@ -164,10 +165,20 @@ class Model(object):
                 logger.warn('Number rows inserted (%s) did not match the number of blocks (%s)', (inserted, self.size))
     
     def load(self, fn, progressbar=None):
+        # this adds always a total of 1 to the progressbar
         conn = sqlite3.connect(fn)
         c = conn.cursor()
+        if self.progressbar:
+            step = 0
+            c.execute('SELECT COUNT(*) AS num FROM blocks')
+            for num, in c:
+                step = 1/num
+                break
         c.execute('SELECT x, y, z, r, g, b FROM blocks ORDER BY x, y, z')
         for x, y, z, r, g, b in c:
+            if self.progressbar:
+                self.progressbar.step(step)
+                self.progressbar.update()
             self.addBlock((x, y, z), (r, g, b))
         c.close()
         conn.close()

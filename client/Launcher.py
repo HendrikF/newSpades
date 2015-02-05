@@ -37,6 +37,9 @@ class Launcher(Frame):
         self.username.insert(0, 'Greenhorn')
         self.username.grid(column=1, row=2)
         
+        self.progressbar = Progressbar(self, maximum=6)
+        self.progressbar.grid(column=0, row=3, columnspan=3, sticky=E+W)
+        
         self.master.bind('<Escape>', self.close, True)
         self.master.bind('<Return>', self.connect, True)
         self.addr.bind('<Return>', self.connect, True)
@@ -51,7 +54,7 @@ class Launcher(Frame):
     
     def connect(self, *args):
         logger.info('Starting in online mode')
-        newspades = NewSpades(width=800, height=600, caption='NewSpades', resizable=True, visible=False)
+        newspades = NewSpades(progressbar=self.progressbar, width=800, height=600, caption='NewSpades', resizable=True, visible=False)
         host, port, username = self.addr.get().strip(), int(self.port.get()), self.username.get().strip()
         import socket
         try:
@@ -67,8 +70,9 @@ class Launcher(Frame):
     
     def offline(self, *args):
         logger.info('Starting in offline mode')
-        newspades = NewSpades(width=800, height=600, caption='NewSpades', resizable=True)
+        newspades = NewSpades(progressbar=self.progressbar, width=800, height=600, caption='NewSpades', resizable=True, visible=False)
         newspades.set_exclusive_mouse(True)
+        newspades.set_visible()
         self.close()
         newspades.start()
     

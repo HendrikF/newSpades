@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class NewSpades(BaseWindow):
     ##################
     # General stuff
-    def __init__(self, loadLater=False, *args, **kw):
+    def __init__(self, progressbar=None, *args, **kw):
         super(NewSpades, self).__init__(*args, **kw)
         self.label = pyglet.text.Label('', font_name='Ubuntu', font_size=10,
             x=10, y=self.height, anchor_x='left', anchor_y='top',
@@ -40,8 +40,15 @@ class NewSpades(BaseWindow):
         
         self.map = Map(maxFPS=self.maxFPS, farplane=self.farplane)
         
-        if not loadLater:
-            self.load()
+        self.model = {
+            'head': Model(offset=(0, 20, 0), progressbar=progressbar).load('head.nsmdl'),
+            'body': Model(offset=(0, 10, 0), progressbar=progressbar).load('body.nsmdl'),
+            'arml': Model(offset=(0, 10,-7), progressbar=progressbar).load('arm.nsmdl'),
+            'armr': Model(offset=(0, 10, 7), progressbar=progressbar).load('arm.nsmdl'),
+            'legl': Model(offset=(0,  0,-2), progressbar=progressbar).load('leg.nsmdl'),
+            'legr': Model(offset=(0,  0, 2), progressbar=progressbar).load('leg.nsmdl')
+        }
+        self.player = ClientPlayer(self.model, self.sounds, username='local')
         
         self.keys = {
             "FWD": key.W,
@@ -75,19 +82,6 @@ class NewSpades(BaseWindow):
         self._client = Client()
         Messages.registerMessages(self._client.messageFactory)
         self._client.onMessage.attach(self.onMessage)
-    
-    def load(self, progressbar=None):
-        """Performs time consuming operations"""
-        # progressbar from tkinter
-        self.model = {
-            'head': Model(offset=(0, 20, 0)).load('head.nsmdl'),
-            'body': Model(offset=(0, 10, 0)).load('body.nsmdl'),
-            'arml': Model(offset=(0, 10,-7)).load('arm.nsmdl'),
-            'armr': Model(offset=(0, 10, 7)).load('arm.nsmdl'),
-            'legl': Model(offset=(0,  0,-2)).load('leg.nsmdl'),
-            'legr': Model(offset=(0,  0, 2)).load('leg.nsmdl')
-        }
-        self.player = ClientPlayer(self.model, self.sounds, username='local')
     
     def start(self):
         self.map.load()

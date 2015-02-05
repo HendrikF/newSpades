@@ -75,11 +75,12 @@ class Player(object):
         return self.respawnTime > 0
     
     def updateFromMsg(self, msg):
-        self.position = (msg.posx, msg.posy, msg.posz)
-        self.velocity = [msg.velx, msg.velz]
-        self.dy = msg.vely
-        self.crouching = msg.crouching
-        self.orientation = [msg.yaw, msg.pitch]
+        if msg.username == self.username:
+            self.position = (msg.posx, msg.posy, msg.posz)
+            self.velocity = [msg.velx, msg.velz]
+            self.dy = msg.vely
+            self.crouching = msg.crouching
+            self.orientation = [msg.yaw, msg.pitch]
     
     def getUpdateMsg(self):
         msg = Messages.PlayerUpdateMsg()

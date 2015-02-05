@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/python3
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -6,10 +6,10 @@ parser.add_argument('--no-sw', dest='no_shadow_window', action='store_true', hel
 parser.add_argument('-l', '--loglevel', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help='Set the severity threshold of logged messages')
 args = parser.parse_args()
 
-from shared import logging
-logging.setup('newspades')
+import shared.logging
+shared.logging.setup('newspades')
 if args.loglevel:
-    logging.setLogLevel(args.loglevel)
+    shared.logging.setLogLevel(args.loglevel)
 
 if args.no_shadow_window:
     import pyglet
@@ -17,7 +17,7 @@ if args.no_shadow_window:
     import logging
     logging.getLogger().info('Running without shadow window')
 
-from client.NewSpades import NewSpades
-newspades = NewSpades(width=800, height=600, caption='NewSpades', resizable=True)
-newspades.set_exclusive_mouse(True)
-newspades.start()
+from client.Launcher import Launcher
+
+launcher = Launcher()
+launcher.mainloop()

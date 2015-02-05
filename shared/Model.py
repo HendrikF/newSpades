@@ -163,7 +163,7 @@ class Model(object):
             if inserted != self.size:
                 logger.warn('Number rows inserted (%s) did not match the number of blocks (%s)', (inserted, self.size))
     
-    def load(self, fn):
+    def load(self, fn, progressbar=None):
         conn = sqlite3.connect(fn)
         c = conn.cursor()
         c.execute('SELECT x, y, z, r, g, b FROM blocks ORDER BY x, y, z')

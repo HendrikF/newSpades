@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class NewSpades(BaseWindow):
     ##################
     # General stuff
-    def __init__(self, *args, **kw):
+    def __init__(self, loadLater=False, *args, **kw):
         super(NewSpades, self).__init__(*args, **kw)
         self.label = pyglet.text.Label('', font_name='Ubuntu', font_size=10,
             x=10, y=self.height, anchor_x='left', anchor_y='top',
@@ -40,15 +40,8 @@ class NewSpades(BaseWindow):
         
         self.map = Map(maxFPS=self.maxFPS, farplane=self.farplane)
         
-        self.model = {
-            'head': Model(offset=(0, 20, 0)).load('head.nsmdl'),
-            'body': Model(offset=(0, 10, 0)).load('body.nsmdl'),
-            'arml': Model(offset=(0, 10,-7)).load('arm.nsmdl'),
-            'armr': Model(offset=(0, 10, 7)).load('arm.nsmdl'),
-            'legl': Model(offset=(0,  0,-2)).load('leg.nsmdl'),
-            'legr': Model(offset=(0,  0, 2)).load('leg.nsmdl')
-        }
-        self.player = ClientPlayer(self.model, self.sounds, username='local')
+        if not loadLater:
+            self.load()
         
         self.keys = {
             "FWD": key.W,
@@ -79,7 +72,22 @@ class NewSpades(BaseWindow):
         self.otherPlayers = {}
         self.last_network_update = 0
         self.time_network_update = 0.050
-        self.prepareNetworking()
+        self._client = Client()
+        Messages.registerMessages(self._client.messageFactory)
+        self._client.onMessage.attach(self.onMessage)
+    
+    def load(self, progressbar=None):
+        """Performs time consuming operations"""
+        # progressbar from tkinter
+        self.model = {
+            'head': Model(offset=(0, 20, 0)).load('head.nsmdl'),
+            'body': Model(offset=(0, 10, 0)).load('body.nsmdl'),
+            'arml': Model(offset=(0, 10,-7)).load('arm.nsmdl'),
+            'armr': Model(offset=(0, 10, 7)).load('arm.nsmdl'),
+            'legl': Model(offset=(0,  0,-2)).load('leg.nsmdl'),
+            'legr': Model(offset=(0,  0, 2)).load('leg.nsmdl')
+        }
+        self.player = ClientPlayer(self.model, self.sounds, username='local')
     
     def start(self):
         self.map.load()
@@ -145,7 +153,7 @@ class NewSpades(BaseWindow):
         self.deathScreen.y = self.height*3/4
         self.healthLabel.x = self.width/2
         self.respawnTimeLabel.x = self.width/2
-        self.respawnTimeLabel.y=self.height/4
+        self.respawnTimeLabel.y = self.height/4
     
     ##############
     # Physics
@@ -280,11 +288,6 @@ class NewSpades(BaseWindow):
     
     #########################
     # Networking
-    
-    def prepareNetworking(self):
-        self._client = Client()
-        Messages.registerMessages(self._client.messageFactory)
-        self._client.onMessage.attach(self.onMessage)
     
     def onMessage(self, msg, peer):
         logger.debug('Received Message from peer %s: %s', peer, msg)

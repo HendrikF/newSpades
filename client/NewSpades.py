@@ -40,7 +40,14 @@ class NewSpades(BaseWindow):
         
         self.map = Map(maxFPS=self.maxFPS, farplane=self.farplane)
         
-        self.model = Model().load('model.nsmdl')
+        self.model = {
+            'head': Model(offset=(0, 20, 0)).load('head.nsmdl'),
+            'body': Model(offset=(0, 10, 0)).load('body.nsmdl'),
+            'arml': Model(offset=(0, 10,-7)).load('arm.nsmdl'),
+            'armr': Model(offset=(0, 10, 7)).load('arm.nsmdl'),
+            'legl': Model(offset=(0,  0,-2)).load('leg.nsmdl'),
+            'legr': Model(offset=(0,  0, 2)).load('leg.nsmdl')
+        }
         self.player = ClientPlayer(self.model, self.sounds, username='local')
         
         self.keys = {

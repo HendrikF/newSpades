@@ -15,58 +15,16 @@ FACES = [
 ]
 
 class Model(object):
-    def __init__(self, scale=0.1):
-        self.parts = {}
-        self.scale = scale
-    
-    def draw(self, pitch=0):
-        glPushMatrix()
-        glScalef(self.scale, self.scale, self.scale)
-        for t, part in self.parts.items():
-            if t == 'head':
-                part.draw(pitch=pitch)
-            else:
-                part.draw()
-        glPopMatrix()
-    
-    """def save(self, fn):
-        with sqlite3.connect(fn) as conn:
-            conn.execute('CREATE TABLE blocks (id INTEGER PRIMARY KEY, x REAL, y REAL, z REAL, r REAL, g REAL, b REAL)')
-            inserted = 0
-            for pos in self.blocks:
-                x, y, z = pos
-                r, g, b = self.blocks[pos]
-                inserted += conn.execute('INSERT INTO blocks (id, x, y, z, r, g, b) VALUES (NULL, ?, ?, ?, ?, ?, ?)', (x, y, z, r, g, b)).rowcount
-            #if inserted != self.size:
-            #    logger.warn('Number rows inserted (%s) did not match the number of blocks (%s)', (inserted, self.size))"""
-    
-    def load(self, fn):
-        conn = sqlite3.connect(fn)
-        c = conn.cursor()
-        c.execute("SELECT type, offx, offy, offz FROM parts")
-        for t, ox, oy, oz in c:
-            self.parts[t] = Part((ox, oy, oz))
-        for name, part in self.parts.items():
-            c.execute("SELECT x, y, z, r, g, b FROM parts LEFT JOIN blocks ON blocks.part = parts.id WHERE parts.type = ? ORDER BY x, y, z", [name])
-            for x, y, z, r, g, b in c:
-                part.addBlock((x, y, z), (r, g, b))
-        c.close()
-        conn.close()
-        return self
-
-class Part(object):
-    def __init__(self, offset):
-        self.offset = offset
-        self.batch = pyglet.graphics.Batch()
+    def __init__(self, scale=0.1, offset=(0,0,0)):
         self.blocks = {}
         self._blocks = {}
+        self.batch = pyglet.graphics.Batch()
+        self.scale = scale
+        self.offset = offset
     
-    def draw(self, pitch=0):
-        glPushMatrix()
-        glTranslatef(self.offset[0], self.offset[1], self.offset[2])
-        glRotatef(pitch, 0, 0, 1)
-        self.batch.draw()
-        glPopMatrix()
+    @property
+    def size(self):
+        return len(self.blocks)
     
     def addBlock(self, pos, color, cn=True):
         self.blocks[pos] = color
@@ -77,16 +35,28 @@ class Part(object):
             ('v3f/static', vertex_data),
             ('c3f/static', color_data)
         )
-        #if cn:
-        #    self.checkNeighbors(pos)
+        if cn:
+            self.checkNeighbors(pos)
     
     def removeBlock(self, pos, cn=True):
         del self.blocks[pos]
         self._blocks[pos].delete()
         del self._blocks[pos]
-        #if cn:
-        #    # cn avoids 'infinite' recursion
-        #    self.checkNeighbors(pos)
+        if cn:
+            # cn avoids 'infinite' recursion
+            self.checkNeighbors(pos)
+    
+    def contains(self, pos):
+        return (pos in self.blocks)
+    
+    def draw(self, pitch=0):
+        glPushMatrix()
+        glScalef(self.scale, self.scale, self.scale)
+        glTranslatef(self.offset[0], self.offset[1], self.offset[2])
+        if pitch != 0:
+            glRotatef(pitch, 0, 0, 1)
+        self.batch.draw()
+        glPopMatrix()
     
     def checkNeighbors(self, position):
         x, y, z = position
@@ -98,6 +68,14 @@ class Part(object):
                     pos = (x + dx, y + dy, z + dz)
                     if pos in self.blocks:
                         self.updateBlock(pos)
+    
+    def exposed(self, position):
+        """Returns whether a block must be rendered (True when not covered on all 6 sides)"""
+        x, y, z = position
+        for dx, dy, dz in FACES:
+            if (x + dx, y + dy, z + dz) not in self.blocks:
+                return True
+        return False
     
     def updateBlock(self, pos):
         color = self.blocks[pos]
@@ -163,7 +141,7 @@ class Part(object):
                 (x+0.5, y+0.5, z-0.5)
             ]
         ]
-        return sum([0.15 if pos in self.blocks else 0.25 for pos in m[f]])
+        return sum([0 if pos in self.blocks else 0.25 for pos in m[f]])
     
     def vertexColors(self, x, y, z, vertex_data):
         """For each vertex look which lightlevel it has and modify its color"""
@@ -173,3 +151,25 @@ class Part(object):
             ll = self.getLightLevel(vertex_data[i*3:i*3+3], i//4)
             color_data.extend((r*ll, g*ll, b*ll))
         return color_data
+    
+    def save(self, fn):
+        with sqlite3.connect(fn) as conn:
+            conn.execute('CREATE TABLE blocks (id INTEGER PRIMARY KEY, x REAL, y REAL, z REAL, r REAL, g REAL, b REAL)')
+            inserted = 0
+            for pos in self.blocks:
+                x, y, z = pos
+                r, g, b = self.blocks[pos]
+                inserted += conn.execute('INSERT INTO blocks (id, x, y, z, r, g, b) VALUES (NULL, ?, ?, ?, ?, ?, ?)', (x, y, z, r, g, b)).rowcount
+            if inserted != self.size:
+                logger.warn('Number rows inserted (%s) did not match the number of blocks (%s)', (inserted, self.size))
+    
+    def load(self, fn):
+        conn = sqlite3.connect(fn)
+        c = conn.cursor()
+        c.execute('SELECT x, y, z, r, g, b FROM blocks ORDER BY x, y, z')
+        for x, y, z, r, g, b in c:
+            self.addBlock((x, y, z), (r, g, b))
+        c.close()
+        conn.close()
+        # makes it possible to do m=Model().load(...)
+        return self

@@ -15,7 +15,11 @@ class ClientPlayer(Player):
         x, y = self.orientation
         x -= 90
         glRotatef(-x, 0, 1, 0)
-        self.model.draw(pitch=y)
+        for name, part in self.model.items():
+            if name == 'head':
+                part.draw(pitch=y)
+            else:
+                part.draw()
         glPopMatrix()
     
     def playSound(self, name):

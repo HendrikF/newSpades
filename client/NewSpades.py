@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class NewSpades(BaseWindow):
     ##################
     # General stuff
-    def __init__(self, *args, **kw):
+    def __init__(self, loadLater=False, *args, **kw):
         super(NewSpades, self).__init__(*args, **kw)
         self.label = pyglet.text.Label('', font_name='Ubuntu', font_size=10,
             x=10, y=self.height, anchor_x='left', anchor_y='top',
@@ -40,8 +40,8 @@ class NewSpades(BaseWindow):
         
         self.map = Map(maxFPS=self.maxFPS, farplane=self.farplane)
         
-        self.model = Model().load('model.nsmdl')
-        self.player = ClientPlayer(self.model, self.sounds, username='local')
+        if not loadLater:
+            self.load()
         
         self.keys = {
             "FWD": key.W,
@@ -75,6 +75,12 @@ class NewSpades(BaseWindow):
         self._client = Client()
         Messages.registerMessages(self._client.messageFactory)
         self._client.onMessage.attach(self.onMessage)
+    
+    def load(self, progressbar=None):
+        """Performs time consuming operations"""
+        # progressbar from tkinter
+        self.model = Model().load('model.nsmdl', progressbar)
+        self.player = ClientPlayer(self.model, self.sounds, username='local')
     
     def start(self):
         self.map.load()

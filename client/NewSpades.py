@@ -71,8 +71,7 @@ class NewSpades(BaseWindow):
         self.colorPicker = ColorPicker()
         
         self.cheat = False
-        self.command = CommandLine(10, 50, 500, self.handleCommands)
-        self.push_handlers(self.command)
+        self.command = CommandLine(10, 50, self.width*0.9, self.handleCommands)
         
         self.gui = GuiManager(self)
         
@@ -114,7 +113,8 @@ class NewSpades(BaseWindow):
             self.colorPicker.draw()
             glPopMatrix()
         
-        self.command.draw()
+        if self.command.active:
+            self.command.draw()
         
         # Minimap is too buggy / ugly :(
         #glPushMatrix()
@@ -171,6 +171,8 @@ class NewSpades(BaseWindow):
     # Client Interaction
     
     def handleMousePress(self, x, y, button, modifiers):
+        if self.command.active:
+            return self.command.on_mouse_press(x, y, button, modifiers)
         if not self.player.respawning:
             block, previous = self.map.getBlocksLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
             if button == mouse.RIGHT and previous:
@@ -203,54 +205,77 @@ class NewSpades(BaseWindow):
         elif self.player.orientation[1] > 90:
             self.player.orientation[1] = 90
     
+    def handleMouseScroll(self, x, y, dx, dy):
+        print('Scroll {} {}'.format(dx, dy))
+        if self.command.active:
+            self.command.on_mouse_scroll(x, y, dx, dy)
+    
     def handleKeyboard(self, symbol, modifiers, press):
         if press and symbol == key.ESCAPE:
             if self.command.active:
-                self.command.deactivate()
+                self.command.active = False
             elif self.fullscreen:
                 self.set_fullscreen(False)
             elif self.exclusive:
                 self.set_exclusive_mouse(False)
             else:
                 self.close()
-        if not self.command.active:
-            if press:
-                if symbol == self.keys["FWD"]:
-                    self.player.velocity[0] += 1
-                elif symbol == self.keys["BWD"]:
-                    self.player.velocity[0] -= 1
-                elif symbol == self.keys["LEFT"]:
-                    self.player.velocity[1] -= 1
-                elif symbol == self.keys["RIGHT"]:
-                    self.player.velocity[1] += 1
-                elif symbol == self.keys["JUMP"]:
-                    self.player.jump()
-                elif symbol == self.keys["CROUCH"]:
-                    self.player.crouching = True
-                elif symbol == self.keys["FULLSCREEN"]:
-                    self.set_fullscreen(not self.fullscreen)
-                elif symbol == self.keys["CP-R"]:
-                    self.colorPicker.input(x=1)
-                elif symbol == self.keys["CP-L"]:
-                    self.colorPicker.input(x=-1)
-                elif symbol == self.keys["CP-U"]:
-                    self.colorPicker.input(y=1)
-                elif symbol == self.keys["CP-D"]:
-                    self.colorPicker.input(y=-1)
-                elif symbol == self.keys["CHAT"]:
-                    self.command.activate(chr(symbol))
-            
-            else: #not press / release
-                if symbol == self.keys["FWD"]:
-                    self.player.velocity[0] = 0
-                elif symbol == self.keys["BWD"]:
-                    self.player.velocity[0] = 0
-                elif symbol == self.keys["LEFT"]:
-                    self.player.velocity[1] = 0
-                elif symbol == self.keys["RIGHT"]:
-                    self.player.velocity[1] = 0
-                elif symbol == self.keys["CROUCH"]:
-                    self.player.crouching = False
+        if self.command.active:
+            return True
+        if press:
+            if symbol == self.keys["FWD"]:
+                self.player.velocity[0] += 1
+            elif symbol == self.keys["BWD"]:
+                self.player.velocity[0] -= 1
+            elif symbol == self.keys["LEFT"]:
+                self.player.velocity[1] -= 1
+            elif symbol == self.keys["RIGHT"]:
+                self.player.velocity[1] += 1
+            elif symbol == self.keys["JUMP"]:
+                self.player.jump()
+            elif symbol == self.keys["CROUCH"]:
+                self.player.crouching = True
+            elif symbol == self.keys["FULLSCREEN"]:
+                self.set_fullscreen(not self.fullscreen)
+            elif symbol == self.keys["CP-R"]:
+                self.colorPicker.input(x=1)
+            elif symbol == self.keys["CP-L"]:
+                self.colorPicker.input(x=-1)
+            elif symbol == self.keys["CP-U"]:
+                self.colorPicker.input(y=1)
+            elif symbol == self.keys["CP-D"]:
+                self.colorPicker.input(y=-1)
+        
+        else: #not press / release
+            if symbol == self.keys["FWD"]:
+                self.player.velocity[0] = 0
+            elif symbol == self.keys["BWD"]:
+                self.player.velocity[0] = 0
+            elif symbol == self.keys["LEFT"]:
+                self.player.velocity[1] = 0
+            elif symbol == self.keys["RIGHT"]:
+                self.player.velocity[1] = 0
+            elif symbol == self.keys["CROUCH"]:
+                self.player.crouching = False
+    
+    def handleText(self, text):
+        if self.command.active:
+            self.command.on_text(text)
+        else:
+            if text == chr(self.keys["CHAT"]):
+                self.command.active = True
+    
+    def handleTextMotion(self, motion, select):
+        if self.command.active:
+            self.command.on_text_motion(motion, select)
+    
+    def handleTextMotionSelect(self, motion):
+        if self.command.active:
+            self.command.on_text_motion_select(motion)
+    
+    def handleMouseDrag(self, x, y, dx, dy, buttons, modifiers):
+        if self.command.active:
+            self.command.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
                 
     def handleCommands(self, c):
         if c.startswith("/"):

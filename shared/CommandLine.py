@@ -19,8 +19,6 @@ class CommandLine(object):
         self.caret = pyglet.text.caret.Caret(self.layout, batch=self.batch)
         self.active = False
         self.callback = callback
-        # when cmdLine is opened, a key is pressed and will reach us, so we have to ignore this once
-        self.charToIgnore = ''
         self.boxPadding = 3
         self.boxVertexList = None
         self.updateBox()
@@ -33,7 +31,7 @@ class CommandLine(object):
             if len(content) > 0:
                 self.callback(content)
             self.clear()
-            self.deactivate()
+            self.active = False
     
     def clear(self):
         self.document.text = ''
@@ -79,8 +77,7 @@ class CommandLine(object):
         return self.document.text
     
     def draw(self):
-        if self.active:
-            self.batch.draw()
+        self.batch.draw()
     
     def updateBox(self):
         if self.boxVertexList != None:
@@ -92,44 +89,20 @@ class CommandLine(object):
             ('c3f/static', [0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0])
         )
     
-    def activate(self, charToIgnore=''):
-        self.active = True
-        self.charToIgnore = charToIgnore
-    
-    def deactivate(self):
-        self.active = False
-    
     def on_text(self, text):
-        if self.active:
-            if text == self.charToIgnore:
-                self.charToIgnore = ''
-            else:
-                self.caret.on_text(text)
+        self.caret.on_text(text)
     
     def on_text_motion(self, motion, select=False):
-        if self.active:
-            self.caret.on_text_motion(motion, select)
+        self.caret.on_text_motion(motion, select)
     
     def on_text_motion_select(self, motion):
-        if self.active:
-            self.caret.on_text_motion_select(motion)
+        self.caret.on_text_motion_select(motion)
     
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
-        if self.active:
-            self.caret.on_mouse_scroll(x, y, scroll_x, scroll_y)
+        self.caret.on_mouse_scroll(x, y, scroll_x, scroll_y)
     
     def on_mouse_press(self, x, y, button, modifiers):
-        if self.active:
-            self.caret.on_mouse_press(x, y, button, modifiers)
+        self.caret.on_mouse_press(x, y, button, modifiers)
     
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        if self.active:
-            self.caret.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
-    
-    """def on_activate(self):
-        if self.active:
-            self.caret.on_activate()
-    
-    def on_deactivate(self):
-        if self.active:
-            self.caret.on_deactivate()"""
+        self.caret.on_mouse_drag(x, y, dx, dy, buttons, modifiers)

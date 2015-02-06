@@ -46,11 +46,31 @@ class BaseWindow(pyglet.window.Window):
         if self.exclusive:
             self.handleMouseMove(dx, dy)
     
+    def on_mouse_scroll(self, x, y, dx, dy):
+        if self.exclusive:
+            self.handleMouseScroll(x, y, dx, dy)
+    
     def on_key_press(self, symbol, modifiers):
         self.handleKeyboard(symbol, modifiers, True)
     
     def on_key_release(self, symbol, modifiers):
         self.handleKeyboard(symbol, modifiers, False)
+    
+    def on_text(self, text):
+        if self.exclusive:
+            self.handleText(text)
+    
+    def on_text_motion(self, motion, select=False):
+        if self.exclusive:
+            self.handleTextMotion(motion, select)
+    
+    def on_text_motion_select(self, motion):
+        if self.exclusive:
+            self.handleTextMotionSelect(motion)
+    
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        if self.exclusive:
+            self.handleMouseDrag(x, y, dx, dy, buttons, modifiers)
     
     def set2d(self):
         width, height = self.get_size()
@@ -108,8 +128,23 @@ class BaseWindow(pyglet.window.Window):
     def handleMouseMove(self, dx, dy):
         pass
     
+    def handleMouseScroll(self, dx, dy):
+        pass
+    
     def handleKeyboard(self, symbol, modifiers, press):
         pass
     
     def onResize(self, width, height):
+        pass
+    
+    def handleText(self, text):
+        pass
+    
+    def handleTextMotion(self, motion, select):
+        pass
+    
+    def handleTextMotionSelect(self, motion):
+        pass
+    
+    def handleMouseDrag(self, x, y, dx, dy, buttons, modifiers):
         pass

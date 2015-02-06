@@ -13,7 +13,7 @@ class Server(object):
         self.port = 55555
         self.players = {}
         self.time_update = 0.01
-        self.time_network = 0.1
+        self.time_network = 0.05
         self.commandThread = None
         self.running = True
     
@@ -87,7 +87,8 @@ class Server(object):
                         continue
                     self._server.sendTo(peer.id, Messages.JoinMsg(username=player.username))
             else:
-                logger.warning('Received JoinMsg for existent Player! %s %s', peer, msg)
+                logger.warning('Received JoinMsg for existent Player! %s %s - Disconnecting him!', peer, msg)
+                peer.stop()
         
         elif self._server.messageFactory.is_a(msg, 'PlayerUpdateMsg'):
             # peer is only allowed to update his own player !

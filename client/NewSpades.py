@@ -74,7 +74,7 @@ class NewSpades(BaseWindow):
         self.command = CommandLine(10, 50, 500, self.handleCommands)
         self.push_handlers(self.command)
         
-        self.gui = GuiManager()
+        self.gui = GuiManager(self)
         
         self.otherPlayers = {}
         self.last_network_update = 0
@@ -82,6 +82,7 @@ class NewSpades(BaseWindow):
         self._client = Client()
         Messages.registerMessages(self._client.messageFactory)
         self._client.onMessage.attach(self.onMessage)
+        self._client.onDisconnect.attach(self.onDisconnect)
     
     def start(self):
         self.map.load()
@@ -143,11 +144,11 @@ class NewSpades(BaseWindow):
         self.label.y = height
         self.crosshair.x = (width-self.crosshair.width)/2
         self.crosshair.y = (height-self.crosshair.height)/2
-        self.deathScreen.x = self.width/2
-        self.deathScreen.y = self.height*3/4
-        self.healthLabel.x = self.width/2
-        self.respawnTimeLabel.x = self.width/2
-        self.respawnTimeLabel.y = self.height/4
+        self.deathScreen.x = width/2
+        self.deathScreen.y = height*3/4
+        self.healthLabel.x = width/2
+        self.respawnTimeLabel.x = width/2
+        self.respawnTimeLabel.y = height/4
     
     ##############
     # Physics
@@ -306,6 +307,10 @@ class NewSpades(BaseWindow):
             self.map.removeBlock((msg.x, msg.y, msg.z))
         else:
             logger.warning('Unknown Message from peer %s: %s', peer, msg)
+    
+    def onDisconnect(self, peer):
+        logger.info('Disconnected from server!')
+        self.gui.update(-1, text="{.align 'center'}{color (255,0,0,255)}{bold True}We're disconnected!", x=0.5, y=0.5, anchor_x=self.gui.CENTER, anchor_y=self.gui.CENTER)
     
     def connect(self, host, port, username=''):
         self._client.connect(host, port)

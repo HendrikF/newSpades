@@ -1,6 +1,7 @@
 import pyglet
 from pyglet.gl import *
-import sqlite3
+import os
+import struct
 
 import logging
 logger = logging.getLogger(__name__)
@@ -154,33 +155,36 @@ class Model(object):
         return color_data
     
     def save(self, fn):
-        with sqlite3.connect(fn) as conn:
-            conn.execute('CREATE TABLE blocks (id INTEGER PRIMARY KEY, x REAL, y REAL, z REAL, r REAL, g REAL, b REAL)')
-            inserted = 0
-            for pos in self.blocks:
-                x, y, z = pos
-                r, g, b = self.blocks[pos]
-                inserted += conn.execute('INSERT INTO blocks (id, x, y, z, r, g, b) VALUES (NULL, ?, ?, ?, ?, ?, ?)', (x, y, z, r, g, b)).rowcount
-            if inserted != self.size:
-                logger.warn('Number rows inserted (%s) did not match the number of blocks (%s)', (inserted, self.size))
+        with open(fn, 'wb') as f:
+            for (x, y, z), (r, g, b) in self.blocks.items():
+                f.write(struct.pack('!lllfff', int(x), int(y), int(z), r, g, b))
+    
+    def clear(self):
+        self.blocks = {}
+        for vertex in self._blocks.values():
+            vertex.delete()
+        self._blocks = {}
     
     def load(self, fn, progressbar=None):
-        # this adds always a total of 1 to the progressbar
-        conn = sqlite3.connect(fn)
-        c = conn.cursor()
+        # (this adds always a total of 1 to the progressbar)
+        # size of file must be a multiple of !lllfff (xyzrgb)
+        filesize = os.stat(fn).st_size
+        size = struct.calcsize('!lllfff')
+        if filesize % size != 0:
+            logger.error("Cant't read file '%s': Size of file (%s) ins't a multiple of one entry (%s)", fn, filesize, size)
+            raise TypeError("Cant't read file '%s': Size of file (%s) ins't a multiple of one entry (%s)" % (fn, filesize, size))
+        self.clear()
         if self.progressbar:
-            step = 0
-            c.execute('SELECT COUNT(*) AS num FROM blocks')
-            for num, in c:
-                step = 1/num
-                break
-        c.execute('SELECT x, y, z, r, g, b FROM blocks ORDER BY x, y, z')
-        for x, y, z, r, g, b in c:
-            if self.progressbar:
-                self.progressbar.step(step)
-                self.progressbar.update()
-            self.addBlock((x, y, z), (r, g, b))
-        c.close()
-        conn.close()
+            step = size / filesize
+        with open(fn, 'rb') as f:
+            while True:
+                data = f.read(size)
+                if not data:
+                    break
+                x, y, z, r, g, b = struct.unpack('!lllfff', data)
+                self.addBlock((x, y, z), (r, g, b))
+                if self.progressbar:
+                    self.progressbar.step(step)
+                    self.progressbar.update()
         # makes it possible to do m=Model().load(...)
         return self

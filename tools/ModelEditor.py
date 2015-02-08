@@ -55,8 +55,7 @@ class ModelEditor(BaseWindow):
         self.model.addBlock((0,0,0), (0,0,0))
         
         self.colorPicker = ColorPicker()
-        self.commandLine = CommandLine(10, 50, 500, self.handleCommands)
-        self.push_handlers(self.commandLine)
+        self.command = CommandLine(10, 50, self.width*0.9, self.handleCommands)
     
     def start(self):
         if len(sys.argv) > 1:
@@ -88,7 +87,8 @@ class ModelEditor(BaseWindow):
         
         self.helpLabel.draw()
         
-        self.commandLine.draw()
+        if self.command.active:
+            self.command.draw()
     
     def draw3d(self):
         self.gluLookAt(self.position, self.orientation)
@@ -141,6 +141,8 @@ class ModelEditor(BaseWindow):
     # Client Interaction
     
     def handleMousePress(self, x, y, button, modifiers):
+        if self.command.active:
+            return self.command.on_mouse_press(x, y, button, modifiers)
         block, previous = self.getBlocksLookingAt(self.position, self.getSightVector(), self.armLength)
         if button == mouse.RIGHT:
             if previous:
@@ -149,6 +151,10 @@ class ModelEditor(BaseWindow):
             self.model.removeBlock(block)
         elif button == mouse.MIDDLE and block:
             self.colorPicker.setRGB(self.model.blocks[block])
+    
+    def handleMouseScroll(self, x, y, dx, dy):
+        if self.command.active:
+            self.command.on_mouse_scroll(x, y, dx, dy)
     
     def handleMouseMove(self, dx, dy):
         m = 0.1
@@ -165,62 +171,76 @@ class ModelEditor(BaseWindow):
     
     def handleKeyboard(self, symbol, modifiers, press):
         if press and symbol == key.ESCAPE:
-            self.set_fullscreen(False)
-            if self.commandLine.active:
-                self.commandLine.deactivate()
+            if self.command.active:
+                self.command.active = False
+            elif self.fullscreen:
+                self.set_fullscreen(False)
             elif self.exclusive:
                 self.set_exclusive_mouse(False)
             else:
                 self.close()
-            return pyglet.event.EVENT_HANDLED
+        if self.command.active:
+            return True
+        if press:
+            if symbol == key.H:
+                self.displayHelp = not self.displayHelp
+            elif symbol == key.C:
+                print('(R, G, B):', self.colorPicker.getRGB())
+            elif symbol == self.keys["FWD"]:
+                self.velocity[0] -= 1
+            elif symbol == self.keys["BWD"]:
+                self.velocity[0] += 1
+            elif symbol == self.keys["LEFT"]:
+                self.velocity[1] -= 1
+            elif symbol == self.keys["RIGHT"]:
+                self.velocity[1] += 1
+            elif symbol == self.keys["UP"]:
+                self.dy += 1
+            elif symbol == self.keys["DOWN"]:
+                self.dy -= 1
+            elif symbol == self.keys["FULLSCREEN"]:
+                self.set_fullscreen(not self.fullscreen)
+            elif symbol == self.keys["CP-R"]:
+                self.colorPicker.input(x=1)
+            elif symbol == self.keys["CP-L"]:
+                self.colorPicker.input(x=-1)
+            elif symbol == self.keys["CP-U"]:
+                self.colorPicker.input(y=1)
+            elif symbol == self.keys["CP-D"]:
+                self.colorPicker.input(y=-1)
         
-        if not self.commandLine.active:
-            if press:
-                if symbol == key.H:
-                    self.displayHelp = not self.displayHelp
-                elif symbol == key.C:
-                    print('(R, G, B):', self.colorPicker.getRGB())
-                elif symbol == self.keys["FWD"]:
-                    self.velocity[0] -= 1
-                elif symbol == self.keys["BWD"]:
-                    self.velocity[0] += 1
-                elif symbol == self.keys["LEFT"]:
-                    self.velocity[1] -= 1
-                elif symbol == self.keys["RIGHT"]:
-                    self.velocity[1] += 1
-                elif symbol == self.keys["UP"]:
-                    self.dy += 1
-                elif symbol == self.keys["DOWN"]:
-                    self.dy -= 1
-                elif symbol == self.keys["FULLSCREEN"]:
-                    self.set_fullscreen(not self.fullscreen)
-                elif symbol == self.keys["CP-R"]:
-                    self.colorPicker.input(x=1)
-                elif symbol == self.keys["CP-L"]:
-                    self.colorPicker.input(x=-1)
-                elif symbol == self.keys["CP-U"]:
-                    self.colorPicker.input(y=1)
-                elif symbol == self.keys["CP-D"]:
-                    self.colorPicker.input(y=-1)
-                elif symbol == self.keys["CHAT"]:
-                    self.commandLine.activate(chr(symbol))
-                
-                #if symbol == key.S and modifiers&key.MOD_CTRL:
-                #    self.model.save('model.nsmdl')
-            
-            else: #not press / release
-                if symbol == self.keys["FWD"]:
-                    self.velocity[0] += 1
-                elif symbol == self.keys["BWD"]:
-                    self.velocity[0] -= 1
-                elif symbol == self.keys["LEFT"]:
-                    self.velocity[1] += 1
-                elif symbol == self.keys["RIGHT"]:
-                    self.velocity[1] -= 1
-                elif symbol == self.keys["UP"]:
-                    self.dy -= 1
-                elif symbol == self.keys["DOWN"]:
-                    self.dy += 1
+        else: #not press / release
+            if symbol == self.keys["FWD"]:
+                self.velocity[0] += 1
+            elif symbol == self.keys["BWD"]:
+                self.velocity[0] -= 1
+            elif symbol == self.keys["LEFT"]:
+                self.velocity[1] += 1
+            elif symbol == self.keys["RIGHT"]:
+                self.velocity[1] -= 1
+            elif symbol == self.keys["UP"]:
+                self.dy -= 1
+            elif symbol == self.keys["DOWN"]:
+                self.dy += 1
+    
+    def handleText(self, text):
+        if self.command.active:
+            self.command.on_text(text)
+        else:
+            if text == chr(self.keys["CHAT"]):
+                self.command.active = True
+    
+    def handleTextMotion(self, motion, select):
+        if self.command.active:
+            self.command.on_text_motion(motion, select)
+    
+    def handleTextMotionSelect(self, motion):
+        if self.command.active:
+            self.command.on_text_motion_select(motion)
+    
+    def handleMouseDrag(self, x, y, dx, dy, buttons, modifiers):
+        if self.command.active:
+            self.command.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
     
     def handleCommands(self, text):
         if text.startswith('/save'):

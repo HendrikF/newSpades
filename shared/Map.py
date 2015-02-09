@@ -28,15 +28,17 @@ class Map(object):
         self.addBlock((0, 1, 0), (0, 1, 0), immediate=False)
         self.addBlock((0, 0, 1), (0, 0, 1), immediate=False)
     
-    def addBlock(self, position, color):
+    def addBlock(self, position, color, immediate=True):
         """Adds a block to the map"""
-        if position in self.world:
-            self.removeBlock(position)
+        self.removeBlock(position)
         self.world[position] = color
     
-    def removeBlock(self, position):
+    def removeBlock(self, position, immediate=True):
         """Removes a block from the map"""
-        del self.world[position]
+        try:
+            self.world.pop(position)
+        except KeyError:
+            pass
     
     def getBlocksLookingAt(self, position, vector, maxDistance):
         """Returns which blocks the player is looking at"""

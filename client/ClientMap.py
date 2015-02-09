@@ -54,7 +54,10 @@ class ClientMap(Map):
     def removeBlock(self, position, immediate=True):
         """Removes a block from the map"""
         super(ClientMap, self).removeBlock(position)
-        self.sectors[sectorize(position)].remove(position)
+        try:
+            self.sectors[sectorize(position)].remove(position)
+        except (KeyError, ValueError):
+            pass
         self.updateMinimap(position)
         if immediate:
             if position in self.shown:
@@ -141,14 +144,20 @@ class ClientMap(Map):
         )
     
     def hideBlock(self, position, immediate=True):
-        self.shown.pop(position)
+        try:
+            self.shown.pop(position)
+        except KeyError:
+            pass
         if immediate:
             self._hideBlock(position)
         else:
             self._enqueue(self._hideBlock, position)
     
     def _hideBlock(self, position):
-        self._shown.pop(position).delete()
+        try:
+            self._shown.pop(position).delete()
+        except KeyError:
+            pass
     
     def updateBlock(self, position):
         """Call this to update the shadows of a block"""

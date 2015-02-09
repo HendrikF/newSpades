@@ -4,7 +4,7 @@ from pyglet.window import key, mouse
 from shared.BaseWindow import BaseWindow
 from client.ClientPlayer import ClientPlayer
 from client.RemotePlayer import RemotePlayer
-from shared.Map import Map
+from client.ClientMap import ClientMap
 from client.Sounds import Sounds
 from shared.Model import Model
 from shared.CommandLine import CommandLine
@@ -38,7 +38,7 @@ class NewSpades(BaseWindow):
             
         self.sounds = Sounds()
         
-        self.map = Map(maxFPS=self.maxFPS, farplane=self.farplane)
+        self.map = ClientMap(maxFPS=self.maxFPS, farplane=self.farplane)
         
         self.model = {
             'head': Model(offset=(0, 20, 0), progressbar=progressbar).load('head.nsmdl'),

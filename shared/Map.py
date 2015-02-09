@@ -1,9 +1,5 @@
-from random import randrange
-from math import ceil
 from collections import deque
-import random
 import time
-import math
 from pyglet.gl import *
 import pyglet
 

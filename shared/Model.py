@@ -171,8 +171,8 @@ class Model(object):
         filesize = os.stat(fn).st_size
         size = struct.calcsize('!lllfff')
         if filesize % size != 0:
-            logger.error("Cant't read file '%s': Size of file (%s) ins't a multiple of one entry (%s)", fn, filesize, size)
-            raise TypeError("Cant't read file '%s': Size of file (%s) ins't a multiple of one entry (%s)" % (fn, filesize, size))
+            logger.error("Cant't read file '%s': Size of file (%s) isn't a multiple of one entry (%s)", fn, filesize, size)
+            raise TypeError("Cant't read file '%s': Size of file (%s) isn't a multiple of one entry (%s)" % (fn, filesize, size))
         self.clear()
         if self.progressbar:
             step = size / filesize

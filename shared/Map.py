@@ -30,7 +30,8 @@ class Map(object):
     
     def addBlock(self, position, color, immediate=True):
         """Adds a block to the map"""
-        self.removeBlock(position)
+        if position in self.world:
+            self.removeBlock(position)
         self.world[position] = color
     
     def removeBlock(self, position, immediate=True):

@@ -22,7 +22,25 @@ class ModelEditor(BaseWindow):
         self.helpLabel = pyglet.text.Label('Press H for help', font_name='Ubuntu', font_size=10,
             x=0, y=0, anchor_x='left', anchor_y='bottom',
             color=(200, 0, 0, 255))
-        self.helpText = pyglet.text.HTMLLabel('<h1>Model Editor - NewSpades</h1><h2>Keys</h2><p>WASD: Move<br>Left Shift: Move Down<br>Space: Move Up<br>Arrows: Select Color<br>F11: Toggle Fullscreen<br>ESC: Release mouse/Exit Fullscreen/Quit Editor<br>T: Turn Command line on (/save &lt;modelname&gt; to <b>save</b>)<br>H: Toggle this help text</p>', x=50, width=800, multiline=True, anchor_y='top')
+        self.helpText = pyglet.text.HTMLLabel("""
+            <h1>Model Editor - NewSpades</h1>
+                <h2>Loading of files</h2>
+                    <p>Give the filename as the first command line option</p>
+                <h2>Keys</h2>
+                    <p>WASD: Move
+                    <br>Left Shift: Move Down
+                    <br>Space: Move Up
+                    <br>Arrows: Select Color
+                    <br>F11: Toggle Fullscreen
+                    <br>ESC: Release mouse/Exit Fullscreen/Quit Editor
+                    <br>T: Turn Command line on
+                    <br>C: Output selected color to command line (in 0..1 and 0..255 range)
+                    <br>H: Toggle this help text</p>
+                <h2>Command line commands</h2>
+                    <p>/save &lt;modelname&gt; (Always overwrites existing files)
+                    <br>/color 255 255 255 (Sets colorpicker to this color)
+                    <br>/replace 255 255 255 (Replaces selected color with this color)</p>
+            """, x=50, width=self.width-100, y=-20, multiline=True, anchor_y='top')
         self.helpText.font_name = 'Ubuntu'
         self.keys = {
             'FWD': key.W,
@@ -185,7 +203,9 @@ class ModelEditor(BaseWindow):
             if symbol == key.H:
                 self.displayHelp = not self.displayHelp
             elif symbol == key.C:
-                print('(R, G, B):', self.colorPicker.getRGB())
+                c = self.colorPicker.getRGB()
+                print('(R, G, B):', c)
+                print('(R, G, B):', (c[0]*255, c[1]*255, c[2]*255))
             elif symbol == self.keys["FWD"]:
                 self.velocity[0] -= 1
             elif symbol == self.keys["BWD"]:
@@ -253,12 +273,21 @@ class ModelEditor(BaseWindow):
                 pass
             self.model.save(text)
         elif text.startswith('/color'):
-            def convert(x):
-                return int(x)/255
-            text = text[6:].strip().split()
-            for i in range(len(text)):
-                text[i] = convert(text[i])
+            r, g, b = text[6:].strip().split()
+            text = (int(r)/255, int(g)/255, int(b)/255)
             self.colorPicker.setRGB(text)
+        elif text.startswith('/replace'):
+            try:
+                r, g, b = text[8:].strip().split()
+                targetColor = (int(r)/255, int(g)/255, int(b)/255)
+            except Exception as e:
+                print('Cant replace color:', e)
+            else:
+                oldColor = self.colorPicker.getRGB()
+                for pos, col in self.model.blocks.items():
+                    if col == oldColor:
+                        self.model.removeBlock(pos, cn=False)
+                        self.model.addBlock(pos, targetColor, cn=False)
     
     ###################
     # Stuff

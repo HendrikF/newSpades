@@ -8,11 +8,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Launcher(Frame):
-    def __init__(self, master=None):
+    def __init__(self, master=None, **kw):
         Frame.__init__(self, master)
         # http://stackoverflow.com/a/4140988/3447531
         # %P = value of the entry if the edit is allowed
         self._validatePort = (self.master.register(self.validatePort), '%P')
+        # For Auto-connect
+        self.presets = kw
         self.build()
     
     def build(self):
@@ -26,15 +28,15 @@ class Launcher(Frame):
         Label(self, text='Username').grid(column=0, row=2)
         
         self.addr = Entry(self, justify=CENTER)
-        self.addr.insert(0, 'localhost')
+        self.addr.insert(0, self.presets.get('host', 'localhost'))
         self.addr.grid(column=0, row=1)
         
         self.port = Entry(self, justify=CENTER, validate=ALL, validatecommand=self._validatePort)
-        self.port.insert(0, '55555')
+        self.port.insert(0, self.presets.get('port', '55555'))
         self.port.grid(column=1, row=1)
         
         self.username = Entry(self, justify=CENTER)
-        self.username.insert(0, 'Greenhorn')
+        self.username.insert(0, self.presets.get('username', 'Greenhorn'))
         self.username.grid(column=1, row=2)
         
         self.progressbar = Progressbar(self, maximum=6)

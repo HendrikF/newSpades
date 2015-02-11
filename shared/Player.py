@@ -15,27 +15,90 @@ class Player(object):
     def __init__(self, username=''):
         self.username = username
         
-        self.dx = 0
-        self.dy = 0
-        self.dz = 0
+        self._dx = 0
+        self._dy = 0
+        self._dz = 0
         self.position = (0, 2, 0)
-        self.yaw   = 90
-        self.pitch = 0
-        self.crouching = False
+        self._yaw   = 90
+        self._pitch = 0
+        self._crouching = False
         
         self._speed = 5
-        self.maxFallSpeed = 50
-        self.gravity = 20
+        self._maxFallSpeed = 50
+        self._gravity = 20
         self._height = 3
-        self.armLength = 5
+        self._armLength = 5
+    
+    @property
+    def dx(self):
+        return self._dx
+    @dx.setter
+    def dx(self, v):
+        self._dx = v
+    
+    @property
+    def dy(self):
+        return self._dy
+    @dy.setter
+    def dy(self, v):
+        self._dy = v
+    
+    @property
+    def dz(self):
+        return self._dz
+    @dz.setter
+    def dz(self, v):
+        self._dz = v
+    
+    @property
+    def yaw(self):
+        return self._yaw
+    @yaw.setter
+    def yaw(self, v):
+        self._yaw = v
+    
+    @property
+    def pitch(self):
+        return self._pitch
+    @pitch.setter
+    def pitch(self, v):
+        self._pitch = v
+    
+    @property
+    def crouching(self):
+        return self._crouching
+    @crouching.setter
+    def crouching(self, v):
+        self._crouching = v
     
     @property
     def speed(self):
         return self._speed if not self.crouching else self._speed*0.7
     
     @property
+    def maxFallSpeed(self):
+        return self._maxFallSpeed
+    @maxFallSpeed.setter
+    def maxFallSpeed(self, v):
+        self._maxFallSpeed = v
+    
+    @property
+    def gravity(self):
+        return self._gravity
+    @gravity.setter
+    def gravity(self, v):
+        self._gravity = v
+    
+    @property
     def height(self):
         return self._height if not self.crouching else self._height-1
+    
+    @property
+    def armLength(self):
+        return self._armLength
+    @armLength.setter
+    def armLength(self, v):
+        self._armLength = v
     
     @property
     def eyePosition(self):
@@ -58,8 +121,7 @@ class Player(object):
         return dx*d, dz*d
     
     def calcGravity(self, time):
-        self.dy -= time * self.gravity
-        self.dy = max(self.dy, -self.maxFallSpeed)
+        self.dy = max(self.dy - time*self.gravity, -self.maxFallSpeed)
         return self.dy * time
     
     def calcCollision(self, position, map):

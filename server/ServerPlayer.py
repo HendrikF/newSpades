@@ -4,45 +4,21 @@ import time
 import math
 
 class ServerPlayer(Player):
+    """When some properties of this class get updated, a Message is sent to the client"""
     def __init__(self, peer, *args, **kw):
         self.peer = peer
         
-        self._dx = 0
-        #self._dy = 0
-        self._dz = 0
-        self._position = (0,0,0)
-        self._yaw = 0
-        self._pitch = 0
-        self._crouching = False
+        super().__init__(*args, **kw)
         
-        self._maxFallSpeed = 0
-        self._gravity = 0
-        self._armLength = 0
-        
-        self._health = 100
-        self._respawnTime = 0
+        self.health = 100
+        self.respawnTime = 0
         self.jumpSpeed = 0
-        self._jumpHeight = 0
         self.jumpHeight = 2.2 # Trigger calculation of jumpSpeed
         
         self.maxHealth = 100
         self.maxRespawnTime = 5
         self.jumpCount = 0
         self.maxJumpCount = 1
-        
-        super().__init__(*args, **kw)
-        
-        self._dx = self.dx
-        #self._dy = self.dy
-        self._dz = self.dz
-        self._position = self.position
-        self._yaw = self.yaw
-        self._pitch = self.pitch
-        self._crouching = self.crouching
-        
-        self._maxFallSpeed = self.maxFallSpeed
-        self._gravity = self.gravity
-        self._armLength = self.armLength
     
     def applyUpdate(self, key, value):
         setattr(self, key, value)
@@ -56,15 +32,7 @@ class ServerPlayer(Player):
             self.sendUpdate('dx', v)
         self._dx = v
     
-    #@property
-    #def dy(self):
-    #    return self._dy
-    #@dy.setter
-    #def dy(self, v):
-    #    # TODO: listen here for fall damage
-    #    if v != self._dy:
-    #        self.sendUpdate('dy', v)
-    #    self._dy = v
+    # dy is not sent when updated, because of extreme network spam when accelerating !!
     
     @property
     def dz(self):
@@ -76,21 +44,12 @@ class ServerPlayer(Player):
         self._dz = v
     
     @property
-    def position(self):
-        return self._position
-    @position.setter
-    def position(self, v):
-        self._position = v
-    
-    @property
     def yaw(self):
         return self._yaw
     @yaw.setter
     def yaw(self, v):
-        if v < 0:
-            v += 360
-        elif v >= 360:
-            v -= 360
+        if v < 0:       v += 360
+        elif v >= 360:  v -= 360
         if v != self._yaw:
             self.sendUpdate('yaw', v)
         self._yaw = v
@@ -100,10 +59,8 @@ class ServerPlayer(Player):
         return self._pitch
     @pitch.setter
     def pitch(self, v):
-        if v < -90:
-            v = -90
-        elif v > 90:
-            v = 90
+        if v < -90:     v = -90
+        elif v > 90:    v = 90
         if v != self._pitch:
             self.sendUpdate('pitch', v)
         self._pitch = v
@@ -148,20 +105,6 @@ class ServerPlayer(Player):
         self._armLength = v
     
     @property
-    def health(self):
-        return self._health
-    @health.setter
-    def health(self, v):
-        self._health = v
-    
-    @property
-    def respawnTime(self):
-        return self._respawnTime
-    @respawnTime.setter
-    def respawnTime(self, v):
-        self._respawnTime = v
-    
-    @property
     def jumpHeight(self):
         return self._jumpHeight
     @jumpHeight.setter
@@ -179,7 +122,7 @@ class ServerPlayer(Player):
         self._recalcJumpSpeed()
     
     def _recalcJumpSpeed(self):
-        self.jumpSpeed = math.sqrt(2*self.gravity*self._jumpHeight)
+        self.jumpSpeed = math.sqrt(2*self._gravity*self._jumpHeight)
     
     @property
     def respawning(self):

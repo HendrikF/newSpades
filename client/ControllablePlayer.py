@@ -6,31 +6,21 @@ class ControllablePlayer(DrawablePlayer):
     def __init__(self, endpoint, *args, **kw):
         self.endpoint = endpoint
         
-        self._dx = 0
-        self._dz = 0
-        self._yaw = 0
-        self._pitch = 0
-        self._crouching = 0
-        
         super().__init__(*args, **kw)
-        
-        self._dx = self.dx
-        self._dz = self.dz
-        self._yaw = self.yaw
-        self._pitch = self.pitch
-        self._crouching = self.crouching
     
     def applyUpdate(self, key, value):
+        """When server sends updates, dont use the public API, which would contact the server (recursion)"""
         if key in ('dx', 'dy', 'dz', 'yaw', 'pitch'):
             return
-        #if key == 'dy':
-        #    self.dy = value
         setattr(self, '_'+key, value)
     
     def updateFromMsg(self, msg):
         self.position = (msg.x, msg.y, msg.z)
         self.dy = msg.dy
         self._crouching = msg.crouching
+    
+    # User input (dx, dz, yaw, pitch, crouching) is sent to server, when updated
+    # => We use properties to catch the updates
     
     @property
     def dx(self):
@@ -55,10 +45,8 @@ class ControllablePlayer(DrawablePlayer):
         return self._yaw
     @yaw.setter
     def yaw(self, v):
-        if v < 0:
-            v += 360
-        elif v >= 360:
-            v -= 360
+        if v < 0:       v += 360
+        elif v >= 360:  v -= 360
         if v != self._yaw:
             self.sendUpdate('yaw', v)
         self._yaw = v
@@ -68,10 +56,8 @@ class ControllablePlayer(DrawablePlayer):
         return self._pitch
     @pitch.setter
     def pitch(self, v):
-        if v < -90:
-            v = -90
-        elif v > 90:
-            v = 90
+        if v < -90:     v = -90
+        elif v > 90:    v = 90
         if v != self._pitch:
             self.sendUpdate('pitch', v)
         self._pitch = v

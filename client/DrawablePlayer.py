@@ -12,13 +12,14 @@ class DrawablePlayer(Player):
         setattr(self, key, value)
     
     def updateFromMsg(self, msg):
+        # dont use properties -> faster
         self.position = (msg.x, msg.y, msg.z)
-        self.dx = msg.dx
-        self.dy = msg.dy
-        self.dz = msg.dz
-        self.yaw = msg.yaw
-        self.pitch = msg.pitch
-        self.crouching = msg.crouching
+        self._dx = msg.dx
+        self._dy = msg.dy
+        self._dz = msg.dz
+        self._yaw = msg.yaw
+        self._pitch = msg.pitch
+        self._crouching = msg.crouching
     
     def draw(self):
         glPushMatrix()

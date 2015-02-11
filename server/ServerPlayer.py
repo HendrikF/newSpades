@@ -1,14 +1,226 @@
 from shared.Player import Player
+from shared import Messages
+import time
+import math
 
 class ServerPlayer(Player):
-    """Extends shared.Player.Player by applyBoundaryDamage() and peer"""
     def __init__(self, peer, *args, **kw):
-        super(ServerPlayer, self).__init__(*args, **kw)
         self.peer = peer
+        
+        self._dx = 0
+        #self._dy = 0
+        self._dz = 0
+        self._position = (0,0,0)
+        self._yaw = 0
+        self._pitch = 0
+        self._crouching = False
+        
+        self._maxFallSpeed = 0
+        self._gravity = 0
+        self._armLength = 0
+        
+        self._health = 100
+        self._respawnTime = 0
+        self.jumpSpeed = 0
+        self._jumpHeight = 0
+        self.jumpHeight = 2.2 # Trigger calculation of jumpSpeed
+        
+        self.maxHealth = 100
+        self.maxRespawnTime = 5
+        self.jumpCount = 0
+        self.maxJumpCount = 1
+        
+        super().__init__(*args, **kw)
+        
+        self._dx = self.dx
+        #self._dy = self.dy
+        self._dz = self.dz
+        self._position = self.position
+        self._yaw = self.yaw
+        self._pitch = self.pitch
+        self._crouching = self.crouching
+        
+        self._maxFallSpeed = self.maxFallSpeed
+        self._gravity = self.gravity
+        self._armLength = self.armLength
+    
+    def applyUpdate(self, key, value):
+        setattr(self, key, value)
+    
+    @property
+    def dx(self):
+        return self._dx
+    @dx.setter
+    def dx(self, v):
+        if v != self._dx:
+            self.sendUpdate('dx', v)
+        self._dx = v
+    
+    #@property
+    #def dy(self):
+    #    return self._dy
+    #@dy.setter
+    #def dy(self, v):
+    #    # TODO: listen here for fall damage
+    #    if v != self._dy:
+    #        self.sendUpdate('dy', v)
+    #    self._dy = v
+    
+    @property
+    def dz(self):
+        return self._dz
+    @dz.setter
+    def dz(self, v):
+        if v != self._dz:
+            self.sendUpdate('dz', v)
+        self._dz = v
+    
+    @property
+    def position(self):
+        return self._position
+    @position.setter
+    def position(self, v):
+        self._position = v
+    
+    @property
+    def yaw(self):
+        return self._yaw
+    @yaw.setter
+    def yaw(self, v):
+        if v < 0:
+            v += 360
+        elif v >= 360:
+            v -= 360
+        if v != self._yaw:
+            self.sendUpdate('yaw', v)
+        self._yaw = v
+    
+    @property
+    def pitch(self):
+        return self._pitch
+    @pitch.setter
+    def pitch(self, v):
+        if v < -90:
+            v = -90
+        elif v > 90:
+            v = 90
+        if v != self._pitch:
+            self.sendUpdate('pitch', v)
+        self._pitch = v
+    
+    @property
+    def crouching(self):
+        return self._crouching
+    @crouching.setter
+    def crouching(self, v):
+        if v != self._crouching:
+            self.sendUpdate('crouching', v)
+        self._crouching = v
+    
+    @Player.speed.setter
+    def speed(self, v):
+        if v != self._speed:
+            self.sendUpdate('speed', v)
+        self._speed = v
+    
+    @property
+    def maxFallSpeed(self):
+        return self._maxFallSpeed
+    @maxFallSpeed.setter
+    def maxFallSpeed(self, v):
+        if v != self._maxFallSpeed:
+            self.sendUpdate('maxFallSpeed', v)
+        self._maxFallSpeed = v
+    
+    @Player.height.setter
+    def height(self, v):
+        if v != self._height:
+            self.sendUpdate('height', v)
+        self._height = v
+    
+    @property
+    def armLength(self):
+        return self._armLength
+    @armLength.setter
+    def armLength(self, v):
+        if v != self._armLength:
+            self.sendUpdate('armLength', v)
+        self._armLength = v
+    
+    @property
+    def health(self):
+        return self._health
+    @health.setter
+    def health(self, v):
+        self._health = v
+    
+    @property
+    def respawnTime(self):
+        return self._respawnTime
+    @respawnTime.setter
+    def respawnTime(self, v):
+        self._respawnTime = v
+    
+    @property
+    def jumpHeight(self):
+        return self._jumpHeight
+    @jumpHeight.setter
+    def jumpHeight(self, v):
+        self._jumpHeight = v
+        self._recalcJumpSpeed()
+    
+    @property
+    def gravity(self):
+        return self._gravity
+    @gravity.setter
+    def gravity(self, v):
+        self.sendUpdate('gravity', v)
+        self._gravity = v
+        self._recalcJumpSpeed()
+    
+    def _recalcJumpSpeed(self):
+        self.jumpSpeed = math.sqrt(2*self.gravity*self._jumpHeight)
+    
+    @property
+    def respawning(self):
+        return self.respawnTime > 0
+    
+    def damage(self, dmg):
+        self.health -= dmg
+        if self.health > self.maxHealth:
+            self.health = self.maxHealth
+        if self.health <= 0:
+            self.health = 0
+            self.respawnTime = self.maxRespawnTime
+            self.playSound("death")
+    
+    def respawn(self, time):
+        if self.respawning:
+            self.respawnTime -= time
+            if not self.respawning:
+                self.position = (0, 2, 0)
+                self.yaw = 90
+                self.pitch = 0
+                self.dy = 0 # without this the player instantly dies if his corpse never hit the ground
+                self.health = self.maxHealth
+    
+    def jump(self):
+        if self.canJump:
+            self.jumpCount += 1
+            self._jump()
+    
+    @property
+    def canJump(self):
+        return not self.respawning and self.jumpCount < self.maxJumpCount and ((self.jumpCount==0 and self.dy==0) or self.jumpCount > 0)
+    
+    def _jump(self):
+        self.dy = self.jumpSpeed
+        self.playSound("jump")
     
     def update(self, time, map):
-        super(ServerPlayer, self).update(time, map)
-        self.applyBoundaryDamage(time, map)
+        super().update(time, map)
+        self.respawn(time)
+        #self.applyBoundaryDamage(time, map)
     
     def applyBoundaryDamage(self, time, map):
         if map.border_dps == 0:
@@ -18,3 +230,9 @@ class ServerPlayer(Player):
             map.border_y[0] > y > map.border_y[1] or \
             map.border_z[0] > z > map.border_z[1]:
             self.damage(map.border_dps*time)
+    
+    def playSound(self, name):
+        pass
+    
+    def sendUpdate(self, key, value):
+        self.peer.endpoint.send(Messages.Update(username=self.username, key=key, value=value))

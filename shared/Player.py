@@ -15,28 +15,23 @@ class Player(object):
     def __init__(self, username=''):
         self.username = username
         
-        # Dynamic
-        self.velocity = [0, 0]
+        self.dx = 0
         self.dy = 0
+        self.dz = 0
         self.position = (0, 2, 0)
-        self.orientation = [90, 0]
+        self.yaw   = 90
+        self.pitch = 0
         self.crouching = False
-        self.health = 100
-        self.respawnTime = 0
-        self.jumpCount = 0
         
-        # Static
         self._speed = 5
         self.maxFallSpeed = 50
-        self._gravity = 20
-        self.jumpSpeed = 0
-        self._jumpHeight = 0
-        self.jumpHeight = 2.2 # Trigger calculation of jumpSpeed
+        self.gravity = 20
         self._height = 3
         self.armLength = 5
-        self.maxHealth = 100
-        self.maxRespawnTime = 5
-        self.maxJumpCount = 1
+    
+    @property
+    def speed(self):
+        return self._speed if not self.crouching else self._speed*0.7
     
     @property
     def height(self):
@@ -47,89 +42,15 @@ class Player(object):
         x, y, z = self.position
         return (x, y+self.height-1, z) # should be 2.5 but you cannot build the block in eye-height ??
     
-    @property
-    def speed(self):
-        return self._speed if not self.crouching else self._speed*0.7
-    
-    @property
-    def jumpHeight(self):
-        return self._jumpHeight
-    @jumpHeight.setter
-    def jumpHeight(self, v):
-        self._jumpHeight = v
-        self._recalcJumpSpeed()
-    
-    @property
-    def gravity(self):
-        return self._gravity
-    @gravity.setter
-    def gravity(self, v):
-        self._gravity = v
-        self._recalcJumpSpeed()
-    
-    def _recalcJumpSpeed(self):
-        self.jumpSpeed = math.sqrt(2*self._gravity*self._jumpHeight)
-    
-    @property
-    def respawning(self):
-        return self.respawnTime > 0
-    
-    def updateFromMsg(self, msg):
-        if msg.username == self.username:
-            self.position = (msg.posx, msg.posy, msg.posz)
-            self.velocity = [msg.velx, msg.velz]
-            self.dy = msg.vely
-            self.crouching = msg.crouching
-            self.orientation = [msg.yaw, msg.pitch]
-    
-    def getUpdateMsg(self):
-        msg = Messages.PlayerUpdateMsg()
-        msg.username = self.username
-        msg.posx, msg.posy, msg.posz = self.position
-        msg.velx, msg.velz = self.velocity
-        msg.vely = self.dy
-        msg.crouching = self.crouching
-        msg.yaw, msg.pitch = self.orientation
-        return msg
-    
-    def damage(self, dmg):
-        if not self.respawning:
-            self.health -= dmg
-            if self.health > self.maxHealth:
-                self.health = self.maxHealth
-            if self.health <= 0:
-                self.health = 0
-                self.respawnTime = self.maxRespawnTime
-                self.playSound("death")
-    
-    def respawn(self, time):
-        if self.respawning:
-            self.respawnTime -= time
-            if not self.respawning:
-                self.position = (0, 2, 0)
-                self.orientation = [90, 0]
-                self.dy = 0 # without this the player instantly dies if his corpse never hit the ground
-                self.health = self.maxHealth
-    
     def jump(self):
-        if self.canJump:
-            self.jumpCount += 1
-            self._jump()
-    
-    @property
-    def canJump(self):
-        return not self.respawning and self.jumpCount < self.maxJumpCount and ((self.jumpCount==0 and self.dy==0) or self.jumpCount > 0)
-    
-    def _jump(self):
-        self.dy = self.jumpSpeed
-        self.playSound("jump")
+        # TODO: Tell server
+        pass
     
     def update(self, time, map):
         x, y, z = self.position
         dx, dz = self.calcMovement(time)
         dy = self.calcGravity(time)
         self.position = self.calcCollision((x+dx, y+dy, z+dz), map)
-        self.respawn(time)
     
     def calcMovement(self, time):
         dx, dz = self.getMotionVector()
@@ -170,17 +91,6 @@ class Player(object):
                     p[i] -= (d - pad) * face[i]
                     if face == (0, 1, 0) or face == (0, -1, 0):
                         # You are colliding with the ground or ceiling
-                        # get fall damage
-                        if self.dy < -15: # ca 5 blocks falling
-                            self.damage((-self.dy-15)*3) # maxFallSpeed = 50 --> (50 - 15)*3 = 35*3 = 105 -> dead
-                            if not self.respawning:
-                                self.playSound("fallhurt")
-                        elif self.dy < -7:
-                            if not self.respawning:
-                                self.playSound("land")
-                        if self.dy < 0:
-                            # reset jumps if hitting ground
-                            self.jumpCount = 0
                         # stop falling / rising.
                         self.dy = 0
                     break
@@ -188,9 +98,9 @@ class Player(object):
     
     def getMotionVector(self):
         """Returns the motion vector in world coordinates"""
-        if any(self.velocity):
-            x = radians(self.orientation[0] - 90)
-            x += math.atan2(self.velocity[1], self.velocity[0])
+        if any((self.dx, self.dz)):
+            x = radians(self.yaw - 90)
+            x += math.atan2(self.dz, self.dx)
             dx = math.cos(x)
             dz = math.sin(x)
         else:
@@ -199,20 +109,15 @@ class Player(object):
     
     def getSightVector(self):
         """Returns the vector the player is looking along"""
-        x, y = self.orientation
-        # y ranges from -90 to 90, or -pi/2 to pi/2, so m ranges from 0 to 1 and
-        # is 1 when looking ahead parallel to the ground and 0 when looking
-        # straight up or down.
-        m = math.cos(radians(y))
-        # dy ranges from -1 to 1 and is -1 when looking straight down and 1 when
-        # looking straight up.
-        dy = math.sin(radians(y))
-        dx = math.cos(radians(x - 90)) * m
-        dz = math.sin(radians(x - 90)) * m
+        yawMin90Rad = radians(self.yaw - 90)
+        pitchRad = radians(self.pitch)
+        m = math.cos(pitchRad)
+        dy = math.sin(pitchRad)
+        dx = math.cos(yawMin90Rad) * m
+        dz = math.sin(yawMin90Rad) * m
         return (correct(dx), correct(dy), correct(dz))
     
     def playSound(self, name):
-        """To be implemented in the client (server would be too noisy :))"""
         pass
     
     def __repr__(self):

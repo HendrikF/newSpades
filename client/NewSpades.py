@@ -2,8 +2,8 @@ import pyglet
 from pyglet.gl import *
 from pyglet.window import key, mouse
 from shared.BaseWindow import BaseWindow
-from client.ClientPlayer import ClientPlayer
-from client.RemotePlayer import RemotePlayer
+from client.ControllablePlayer import ControllablePlayer
+from client.DrawablePlayer import DrawablePlayer
 from client.ClientMap import ClientMap
 from client.Sounds import Sounds
 from shared.Model import Model
@@ -26,16 +26,16 @@ class NewSpades(BaseWindow):
         self.label = pyglet.text.Label('', font_name='Ubuntu', font_size=10,
             x=10, y=self.height, anchor_x='left', anchor_y='top',
             color=(0, 0, 0, 255))
-        self.deathScreen = pyglet.text.Label('YOU DIED!', font_name='Ubuntu', font_size=50,
-            x=self.width/2, y=self.height*3/4, anchor_x='center', anchor_y='center',
-            color=(255, 0, 0, 255))
-        self.healthLabel = pyglet.text.Label('100', font_name='Ubuntu', font_size=10,
-            x=self.width/2, y=10, anchor_x='center', anchor_y='bottom',
-            color=(0, 0, 0, 255))
-        self.respawnTimeLabel = pyglet.text.Label('', font_name='Ubuntu', font_size=20,
-            x=self.width/2, y=self.height/4, anchor_x='center', anchor_y='center',
-            color=(255, 0, 0, 255))
-            
+        
+        #self.last_complete_network_update = 0
+        #self.time_complete_network_update = 1
+        self.otherPlayers = {}
+        
+        self._client = Client()
+        Messages.registerMessages(self._client.messageFactory)
+        self._client.onMessage.attach(self.onMessage)
+        self._client.onDisconnect.attach(self.onDisconnect)
+        
         self.sounds = Sounds()
         
         self.map = ClientMap(maxFPS=self.maxFPS, farplane=self.farplane)
@@ -48,7 +48,7 @@ class NewSpades(BaseWindow):
             'legl': Model(offset=(0,  0,-2), progressbar=progressbar).load('leg.nsmdl'),
             'legr': Model(offset=(0,  0, 2), progressbar=progressbar).load('leg.nsmdl')
         }
-        self.player = ClientPlayer(self.model, self.sounds, username='local')
+        self.player = ControllablePlayer(self._client, self.model, self.sounds, username='local')
         
         self.keys = {
             "FWD": key.W,
@@ -74,14 +74,6 @@ class NewSpades(BaseWindow):
         self.command = CommandLine(10, 50, self.width*0.9, self.handleCommands)
         
         self.gui = GuiManager(self)
-        
-        self.otherPlayers = {}
-        self.last_network_update = 0
-        self.time_network_update = 0.050
-        self._client = Client()
-        Messages.registerMessages(self._client.messageFactory)
-        self._client.onMessage.attach(self.onMessage)
-        self._client.onDisconnect.attach(self.onDisconnect)
     
     def start(self):
         self.map.load()
@@ -93,25 +85,17 @@ class NewSpades(BaseWindow):
     
     def draw2d(self):
         x, y, z = self.player.position
-        yaw, pitch = self.player.orientation
-        vx, vz = self.player.velocity
+        yaw, pitch = self.player.yaw, self.player.pitch
+        vx, vz = self.player.dx, self.player.dz
         self.label.text = '%02d (%.2f, %.2f, %.2f) (%.2f, %.2f) (%.2f, %.2f)' % (
             pyglet.clock.get_fps(), x, y, z, yaw, pitch, vx, vz)
         self.label.draw()
         self.crosshair.draw()
         
-        self.healthLabel.text = '%d' % (self.player.health)
-        self.healthLabel.draw()
-        
-        if self.player.respawning:
-            self.deathScreen.draw()
-            self.respawnTimeLabel.text = '%d' % (self.player.respawnTime+1) # +1 so it does not display 0 as respawn time for a second
-            self.respawnTimeLabel.draw()
-        else:
-            glPushMatrix()
-            glTranslatef(self.width-self.colorPicker.width, 0, 0)
-            self.colorPicker.draw()
-            glPopMatrix()
+        glPushMatrix()
+        glTranslatef(self.width-self.colorPicker.width, 0, 0)
+        self.colorPicker.draw()
+        glPopMatrix()
         
         if self.command.active:
             self.command.draw()
@@ -125,12 +109,11 @@ class NewSpades(BaseWindow):
         self.gui.draw()
     
     def draw3d(self):
-        if not self.player.respawning:
-            self.gluLookAt(self.player.eyePosition, self.player.orientation)
-            self.map.draw()
-            self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
-            for player in self.otherPlayers.values():
-                player.draw()
+        self.gluLookAt(self.player.eyePosition, (self.player.yaw, self.player.pitch))
+        self.map.draw()
+        self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
+        for player in self.otherPlayers.values():
+            player.draw()
     
     def gluLookAt(self, position, orientation):
         """Performs the same as gluLookAt, but it has no issues when looking up or down... (nothing was rendered then)"""
@@ -144,11 +127,6 @@ class NewSpades(BaseWindow):
         self.label.y = height
         self.crosshair.x = (width-self.crosshair.width)/2
         self.crosshair.y = (height-self.crosshair.height)/2
-        self.deathScreen.x = width/2
-        self.deathScreen.y = height*3/4
-        self.healthLabel.x = width/2
-        self.respawnTimeLabel.x = width/2
-        self.respawnTimeLabel.y = height/4
     
     ##############
     # Physics
@@ -156,11 +134,10 @@ class NewSpades(BaseWindow):
     def update(self, dt):
         self._client.update()
         self.map.update(self.player.position)
-        t = time.time()
-        if t - self.last_network_update >= self.time_network_update:
-            msg = self.player.getUpdateMsg()
-            self.send(msg)
-            self.last_network_update = t
+        #t = time.clock()
+        #if t - self.last_complete_network_update >= self.time_complete_network_update:
+        #    self.last_network_update = t
+        #    self._client.send(Messages.PlayerUpdate(dx=self.dx, dz=self.dz, yaw=self.yaw, pitch=self.pitch, crouching=self.crouching))
     
     def updatePhysics(self, dt):
         self.player.update(dt, self.map)
@@ -173,37 +150,26 @@ class NewSpades(BaseWindow):
     def handleMousePress(self, x, y, button, modifiers):
         if self.command.active:
             return self.command.on_mouse_press(x, y, button, modifiers)
-        if not self.player.respawning:
-            block, previous = self.map.getBlocksLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
-            if button == mouse.RIGHT and previous:
-                color = self.colorPicker.getRGB()
-                self.map.addBlock(previous, color)
-                msg = Messages.BlockBuildMsg()
-                msg.x, msg.y, msg.z = previous
-                msg.r, msg.g, msg.b = color
-                self.send(msg)
-                self.sounds.play("build")
-            elif button == mouse.LEFT and block:
-                self.map.removeBlock(block)
-                msg = Messages.BlockBreakMsg()
-                msg.x, msg.y, msg.z = block
-                self.send(msg)
-                self.sounds.play("build")
-            elif button == mouse.MIDDLE and block:
-                self.colorPicker.setRGB(self.map.world[block])
+        block, previous = self.map.getBlocksLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
+        if button == mouse.RIGHT and previous:
+            color = self.colorPicker.getRGB()
+            self.map.addBlock(previous, color)
+            msg = Messages.BlockBuildMsg()
+            msg.x, msg.y, msg.z = previous
+            msg.r, msg.g, msg.b = color
+            self._client.send(msg)
+        elif button == mouse.LEFT and block:
+            self.map.removeBlock(block)
+            msg = Messages.BlockBreakMsg()
+            msg.x, msg.y, msg.z = block
+            self._client.send(msg)
+        elif button == mouse.MIDDLE and block:
+            self.colorPicker.setRGB(self.map.world[block])
     
     def handleMouseMove(self, dx, dy):
         m = 0.1
-        self.player.orientation[0] += dx * m
-        self.player.orientation[1] += dy * m
-        if self.player.orientation[0] < 0:
-            self.player.orientation[0] += 360
-        elif self.player.orientation[0] >= 360:
-            self.player.orientation[0] -= 360
-        if self.player.orientation[1] < -90:
-            self.player.orientation[1] = -90
-        elif self.player.orientation[1] > 90:
-            self.player.orientation[1] = 90
+        self.player.yaw += dx * m
+        self.player.pitch += dy * m
     
     def handleMouseScroll(self, x, y, dx, dy):
         print('Scroll {} {}'.format(dx, dy))
@@ -224,13 +190,13 @@ class NewSpades(BaseWindow):
             return True
         if press:
             if symbol == self.keys["FWD"]:
-                self.player.velocity[0] += 1
+                self.player.dx += 1
             elif symbol == self.keys["BWD"]:
-                self.player.velocity[0] -= 1
+                self.player.dx -= 1
             elif symbol == self.keys["LEFT"]:
-                self.player.velocity[1] -= 1
+                self.player.dz -= 1
             elif symbol == self.keys["RIGHT"]:
-                self.player.velocity[1] += 1
+                self.player.dz += 1
             elif symbol == self.keys["JUMP"]:
                 self.player.jump()
             elif symbol == self.keys["CROUCH"]:
@@ -248,13 +214,13 @@ class NewSpades(BaseWindow):
         
         else: #not press / release
             if symbol == self.keys["FWD"]:
-                self.player.velocity[0] = 0
+                self.player.dx = 0
             elif symbol == self.keys["BWD"]:
-                self.player.velocity[0] = 0
+                self.player.dx = 0
             elif symbol == self.keys["LEFT"]:
-                self.player.velocity[1] = 0
+                self.player.dz = 0
             elif symbol == self.keys["RIGHT"]:
-                self.player.velocity[1] = 0
+                self.player.dz = 0
             elif symbol == self.keys["CROUCH"]:
                 self.player.crouching = False
     
@@ -280,25 +246,7 @@ class NewSpades(BaseWindow):
     def handleCommands(self, c):
         if c.startswith("/"):
             c = c[1:].strip()
-            if c == "cheat":
-                self.cheat = not self.cheat
-            elif c.startswith("jump "):
-                if self.cheat:
-                    try:
-                        c = int(c[5:])
-                    except:
-                        return
-                    self.player.maxJumpCount = c
-            elif c == "kill":
-                self.player.damage(self.player.maxHealth*2)
-            elif c.startswith("damage "):
-                if self.cheat:
-                    try:
-                        c = int(c[7:])
-                    except:
-                        return
-                    self.player.damage(c)
-            elif c.startswith("connect "):
+            if c.startswith("connect "):
                 c = c[8:]
                 c = c.split()
                 self.connect(c[0], int(c[1]), username=(c[2] if len(c)>2 else ''))
@@ -313,19 +261,31 @@ class NewSpades(BaseWindow):
         logger.debug('Received Message from peer %s: %s', peer, msg)
         if self._client.messageFactory.is_a(msg, 'JoinMsg'):
             if msg.username not in self.otherPlayers:
-                self.otherPlayers[msg.username] = RemotePlayer(self.model, self.sounds, username=msg.username)
+                self.otherPlayers[msg.username] = DrawablePlayer(self.model, self.sounds, username=msg.username)
             else:
                 logger.warning('Received JoinMsg for existent Player! %s %s', peer, msg)
-        elif self._client.messageFactory.is_a(msg, 'PlayerUpdateMsg'):
-            if msg.username == self.player.username:
-                self.player.updateFromMsg(msg)
-            else:
-                try:
-                    self.otherPlayers[msg.username].updateFromMsg(msg)
-                except KeyError:
-                    logger.warning('Unknown username (peer: %s) : %s', peer, msg)
         elif self._client.messageFactory.is_a(msg, 'LeaveMsg'):
             self.otherPlayers.pop(msg.username)
+        elif self._client.messageFactory.is_a(msg, 'Update'):
+            if msg.username == self.player.username:
+                player = self.player
+            else:
+                try:
+                    player = self.otherPlayers[msg.username]
+                except KeyError:
+                    logger.warning('Update with unknown username from peer %s: %s', peer, msg)
+                    return
+            player.applyUpdate(msg.key, msg.value)
+        elif self._client.messageFactory.is_a(msg, 'CompleteUpdate'):
+            if msg.username == self.player.username:
+                player = self.player
+            else:
+                try:
+                    player = self.otherPlayers[msg.username]
+                except KeyError:
+                    logger.warning('CompleteUpdate with unknown username from peer %s: %s', peer, msg)
+                    return
+            player.updateFromMsg(msg)
         elif self._client.messageFactory.is_a(msg, 'BlockBuildMsg'):
             self.map.addBlock((msg.x, msg.y, msg.z), (msg.r, msg.g, msg.b))
         elif self._client.messageFactory.is_a(msg, 'BlockBreakMsg'):
@@ -341,8 +301,10 @@ class NewSpades(BaseWindow):
         self._client.connect(host, port)
         self._client.start()
         self.player.username = username
-        self.send(Messages.JoinMsg(username=username))
+        self._client.send(Messages.JoinMsg(username=username))
     
-    def send(self, msg):
-        logger.debug('Sending message: %s', msg)
+    def sendUpdateMessage(self, msg):
+        #t = time.time()
+        #if t - self.last_network_update >= self.time_network_update:
+        #    self.last_network_update = t
         self._client.send(msg)

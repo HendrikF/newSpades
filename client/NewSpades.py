@@ -296,9 +296,3 @@ class NewSpades(BaseWindow):
         self._client.start()
         self.player.username = username
         self._client.send(Messages.JoinMsg(username=username))
-    
-    def sendUpdateMessage(self, msg):
-        #t = time.time()
-        #if t - self.last_network_update >= self.time_network_update:
-        #    self.last_network_update = t
-        self._client.send(msg)

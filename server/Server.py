@@ -56,7 +56,7 @@ class Server(object):
                 self.last_network = t
                 wait = False
             if wait:
-                time.sleep(min(self.time_update, self.time_network))
+                time.sleep(0.001)
     
     def update(self, delta):
         for player in self.players.values():
@@ -91,6 +91,7 @@ class Server(object):
         
         if self._server.messageFactory.is_a(msg, 'JoinMsg'):
             if msg.username not in self.players:
+                logger.info('Player %s joined', msg.username)
                 ServerPlayer = self.registry('ServerPlayer')
                 self.players[msg.username] = ServerPlayer(peer, username=msg.username)
                 # tell the others that this player joined

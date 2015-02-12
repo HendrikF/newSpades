@@ -31,8 +31,8 @@ class DrawablePlayer(Player):
     
     def interpolateTo(self, pos):
         distance = (pos[0]-self.position[0])**2 + (pos[1]-self.position[1])**2 + (pos[2]-self.position[2])**2
-        if distance >= 0.5**2:
-            logger.info('Interpolating positions')
+        if distance >= 0.3**2:
+            logger.info('Interpolating positions of %s', self)
             self.positionToInterpolateTo = pos
             self.interpolating = self.interpolationTime
         else:

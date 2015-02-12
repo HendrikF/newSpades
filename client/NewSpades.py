@@ -181,20 +181,16 @@ class NewSpades(BaseWindow):
             else:
                 self.close()
         if self.command.active:
-            return True
+            return
         if press:
             if symbol == self.keys["FWD"]:
                 self.player.dx += 1
-                print('FWD')
             elif symbol == self.keys["BWD"]:
                 self.player.dx -= 1
-                print('BWD')
             elif symbol == self.keys["LEFT"]:
                 self.player.dz -= 1
-                print('LEFT')
             elif symbol == self.keys["RIGHT"]:
                 self.player.dz += 1
-                print('RIGHT')
             elif symbol == self.keys["JUMP"]:
                 self.player.jump()
             elif symbol == self.keys["CROUCH"]:
@@ -213,16 +209,12 @@ class NewSpades(BaseWindow):
         else: #not press / release
             if symbol == self.keys["FWD"]:
                 self.player.dx = 0
-                print('--FWD')
             elif symbol == self.keys["BWD"]:
                 self.player.dx = 0
-                print('--BWD')
             elif symbol == self.keys["LEFT"]:
                 self.player.dz = 0
-                print('--LEFT')
             elif symbol == self.keys["RIGHT"]:
                 self.player.dz = 0
-                print('--RIGHT')
             elif symbol == self.keys["CROUCH"]:
                 self.player.crouching = False
     

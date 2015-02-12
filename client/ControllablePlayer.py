@@ -9,17 +9,18 @@ class ControllablePlayer(DrawablePlayer):
         super().__init__(*args, **kw)
     
     def applyUpdate(self, key, value):
-        """When server sends updates, dont use the public API, which would contact the server (recursion)"""
-        if key in ('dx', 'dy', 'dz', 'yaw', 'pitch'):
+        """When server sends updates, dont use the public API, which would contact the server (recursion) (we use _key)
+        We dont accept these updates from server, because we control us"""
+        if key in ('dx', 'dy', 'dz', 'yaw', 'pitch', 'crouching'):
             return
         setattr(self, '_'+key, value)
     
     def updateFromMsg(self, msg):
-        self.position = (msg.x, msg.y, msg.z)
-        self.dy = msg.dy
-        self._crouching = msg.crouching
+        """We only accept these to avoid confusion"""
+        self.interpolateTo((msg.x, msg.y, msg.z))
+        self._dy = msg.dy
     
-    # User input (dx, dz, yaw, pitch, crouching) is sent to server, when updated
+    # User input (dx, dz, yaw, pitch, crouching) is sent to server when updated
     # => We use properties to catch the updates
     
     @property

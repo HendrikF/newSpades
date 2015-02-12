@@ -1,6 +1,5 @@
 from shared.Player import Player
 from shared import Messages
-import time
 import math
 
 class ServerPlayer(Player):
@@ -21,7 +20,12 @@ class ServerPlayer(Player):
         self.maxJumpCount = 1
     
     def applyUpdate(self, key, value):
+        """Here we use the public API to apply the updates, because
+        we have to send the updates for THIS client to ALL clients"""
         setattr(self, key, value)
+    
+    # User properties are sent to clients when updated
+    # => We use properties to catch the updates
     
     @property
     def dx(self):

@@ -1,6 +1,5 @@
 import math
 from shared.Map import FACES
-from shared import Messages
 
 def radians(deg):
     return deg*0.01745329251994329577 #deg*PI/180
@@ -110,25 +109,29 @@ class Player(object):
         pass
     
     def update(self, time, map):
+        """Updates the players fallspeed and its position"""
         x, y, z = self.position
         dx, dz = self.calcMovement(time)
-        dy = self.calcGravity(time)
+        self.dy = self.calcFallSpeed(time)
+        dy = self.dy * time
         self.position = self.calcCollision((x+dx, y+dy, z+dz), map)
     
     def calcMovement(self, time):
+        """Return the current vector of horizontal movement (dx, dz)"""
         dx, dz = self.getMotionVector()
         d = self.speed * time
         return dx*d, dz*d
     
-    def calcGravity(self, time):
-        self.dy = max(self.dy - time*self.gravity, -self.maxFallSpeed)
-        return self.dy * time
+    def calcFallSpeed(self, time):
+        """Returns the accelerated fallspeed of the player"""
+        return max(self.dy - self.gravity * time, -self.maxFallSpeed)
     
     def calcCollision(self, position, map):
         return self._collide(position, map)
     
     def _collide(self, position, map):
-        """Checks if the player is colliding with any blocks in the world and returns its position"""
+        """Checks if the player is colliding with any blocks in the world and returns its position.
+        This resets the fallspeed of the player when necessary!"""
         # How much overlap with a dimension of a surrounding block you need to
         # have to count as a collision. If 0, touching terrain at all counts as
         # a collision. If .49, you sink into the ground, as if walking through

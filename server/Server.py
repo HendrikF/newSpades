@@ -109,12 +109,6 @@ class Server(object):
             player = self.getPlayerFromPeer(peer)
             if player:
                 player.applyUpdate(msg.key, msg.value)
-                """player.dx = msg.dx
-                player.dy = msg.dy
-                player.dz = msg.dz
-                player.yaw = msg.yaw
-                player.pitch = msg.pitch
-                player.crouching = msg.crouching"""
             else:
                 logger.warning('Peer is no Player but sent PlayerUpdate: %s - %s', peer, msg)
         
@@ -123,6 +117,11 @@ class Server(object):
         
         elif self._server.messageFactory.is_a(msg, 'BlockBreakMsg'):
             self._server.send(msg, exclude=[peer.id])
+        
+        elif self._server.messageFactory.is_a(msg, 'CompleteUpdate'):
+            pass
+            # we dont accept CompleteUpdates from clients
+            # with this elif we simply avoid the following warning
         
         else:
             logger.warning('Unknown Message: %s', msg)

@@ -27,8 +27,6 @@ class NewSpades(BaseWindow):
             x=10, y=self.height, anchor_x='left', anchor_y='top',
             color=(0, 0, 0, 255))
         
-        #self.last_complete_network_update = 0
-        #self.time_complete_network_update = 1
         self.otherPlayers = {}
         
         self._client = Client()
@@ -134,10 +132,6 @@ class NewSpades(BaseWindow):
     def update(self, dt):
         self._client.update()
         self.map.update(self.player.position)
-        #t = time.clock()
-        #if t - self.last_complete_network_update >= self.time_complete_network_update:
-        #    self.last_network_update = t
-        #    self._client.send(Messages.PlayerUpdate(dx=self.dx, dz=self.dz, yaw=self.yaw, pitch=self.pitch, crouching=self.crouching))
     
     def updatePhysics(self, dt):
         self.player.update(dt, self.map)
@@ -191,12 +185,16 @@ class NewSpades(BaseWindow):
         if press:
             if symbol == self.keys["FWD"]:
                 self.player.dx += 1
+                print('FWD')
             elif symbol == self.keys["BWD"]:
                 self.player.dx -= 1
+                print('BWD')
             elif symbol == self.keys["LEFT"]:
                 self.player.dz -= 1
+                print('LEFT')
             elif symbol == self.keys["RIGHT"]:
                 self.player.dz += 1
+                print('RIGHT')
             elif symbol == self.keys["JUMP"]:
                 self.player.jump()
             elif symbol == self.keys["CROUCH"]:
@@ -215,12 +213,16 @@ class NewSpades(BaseWindow):
         else: #not press / release
             if symbol == self.keys["FWD"]:
                 self.player.dx = 0
+                print('--FWD')
             elif symbol == self.keys["BWD"]:
                 self.player.dx = 0
+                print('--BWD')
             elif symbol == self.keys["LEFT"]:
                 self.player.dz = 0
+                print('--LEFT')
             elif symbol == self.keys["RIGHT"]:
                 self.player.dz = 0
+                print('--RIGHT')
             elif symbol == self.keys["CROUCH"]:
                 self.player.crouching = False
     

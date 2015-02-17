@@ -2,6 +2,7 @@ import time
 import threading
 import transmitter.general
 from shared import Messages
+from server import registry
 import shared.logging
 
 import logging
@@ -77,7 +78,7 @@ class Server(object):
         
         if self._server.messageFactory.is_a(msg, 'JoinMsg'):
             if msg.username not in self.players:
-                ServerPlayer = self.registry('ServerPlayer')
+                ServerPlayer = registry.get('ServerPlayer')
                 self.players[msg.username] = ServerPlayer(peer, username=msg.username)
                 # tell the others that this player joined
                 self._server.send(msg, exclude=[peer.id])

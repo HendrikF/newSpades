@@ -5,11 +5,13 @@ Please add such a documentation to every script, so people know what it does.
 """
 # Import config when needed
 from server.config import config
+# Import registry which contains all classes
+from server import registry
 
 # every script needs this method
-def applyScript(registry):
+def applyScript():
     # take the class you want to extend
-    Server = registry('Server')
+    Server = registry.get('Server')
     # inherit from it
     class HelloServer(Server):
         def start(self, *args, **kw):
@@ -20,4 +22,4 @@ def applyScript(registry):
             # dont forget to call the original function
             super().start(*args, **kw)
     # put the class back
-    registry('Server', HelloServer)
+    registry.add('Server', HelloServer)

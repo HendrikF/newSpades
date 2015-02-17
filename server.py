@@ -36,13 +36,12 @@ if args.create_config:
 
 from importlib import import_module
 
-from server.Registry import Registry
-registry = Registry()
+from server import registry
 
 from server.Server import Server
-registry('Server', Server)
+registry.add('Server', Server)
 from server.ServerPlayer import ServerPlayer
-registry('ServerPlayer', ServerPlayer)
+registry.add('ServerPlayer', ServerPlayer)
 
 # scripts will be a reference to the config entry
 scripts = config.get('scripts', [])
@@ -57,10 +56,10 @@ for script in scripts[:]:
 
 for module in scriptModules:
     logger.info('Loading script %s', module.__name__.replace('scripts.', ''))
-    module.applyScript(registry)
+    module.applyScript()
 
 ################
 # Start server
 
-server = registry('Server')()
+server = registry.get('Server')()
 server.start()

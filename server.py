@@ -25,7 +25,7 @@ logger = logging.getLogger()
 #########################
 # Write and load config
 
-from server.config import config
+from server import config
 
 if args.create_config:
     # config created by importing config, we can exit
@@ -37,6 +37,11 @@ if args.create_config:
 from importlib import import_module
 
 from server import registry
+
+from server.Server import Server
+registry.add('Server', Server)
+from server.ServerPlayer import ServerPlayer
+registry.add('ServerPlayer', ServerPlayer)
 
 # scripts will be a reference to the config entry
 scripts = config.get('scripts', [])

@@ -4,7 +4,7 @@ Example script demonstrating how to write scripts.
 Please add such a documentation to every script, so people know what it does.
 """
 # Import config when needed
-from server.config import config
+from server import config
 # Import registry which contains all classes
 from server import registry
 

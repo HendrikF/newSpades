@@ -10,33 +10,45 @@ class JoinMsg(Message):
         'username' : ('str', '')
     }
 
-class PlayerUpdateMsg(Message):
-    """
-    To Server: Player tells its state (Server MUST IGNORE the username (security issue))
-    To Client: Update state of a player
-    """
-    msgID = 2
-    msgData = {
-        'username'  : ('str', ''),
-        'posx'      : ('float', 0),
-        'posy'      : ('float', 0),
-        'posz'      : ('float', 0),
-        'velx'      : ('float', 0),
-        'vely'      : ('float', 0),
-        'velz'      : ('float', 0),
-        'yaw'       : ('float', 0),
-        'pitch'     : ('float', 0),
-        'crouching' : ('bool', False)
-    }
-
 class LeaveMsg(Message):
     """
     To Server: --
     To Client: A Client left the game
     """
-    msgID = 3
+    msgID = 2
     msgData = {
         'username' : ('str', '')
+    }
+
+class CompleteUpdate(Message):
+    """
+    To Server: (Server MUST IGNORE the username (security issue))
+    To Client:
+    """
+    msgID = 3
+    msgData = {
+        'username'  : ('str', ''),
+        'x'         : ('float', 0),
+        'y'         : ('float', 0),
+        'z'         : ('float', 0),
+        'dx'        : ('float', 0),
+        'dy'        : ('float', 0),
+        'dz'        : ('float', 0),
+        'yaw'       : ('float', 0),
+        'pitch'     : ('float', 0),
+        'crouching' : ('bool', False)
+    }
+
+class Update(Message):
+    """
+    To Server: (Server MUST IGNORE the username (security issue))
+    To Client:
+    """
+    msgID = 4
+    msgData = {
+        'username'  : ('str', ''),
+        'key'       : ('str', ''),
+        'value'     : ('float', 0)
     }
 
 class BlockBuildMsg(Message):
@@ -44,7 +56,7 @@ class BlockBuildMsg(Message):
     To Server: .. obvious I think
     To Client: ..
     """
-    msgID = 4
+    msgID = 5
     msgData = {
         'x' : ('int', 0),
         'y' : ('int', 0),
@@ -59,7 +71,7 @@ class BlockBreakMsg(Message):
     To Server: .. obvious I think
     To Client: ..
     """
-    msgID = 5
+    msgID = 6
     msgData = {
         'x' : ('int', 0),
         'y' : ('int', 0),
@@ -68,8 +80,9 @@ class BlockBreakMsg(Message):
 
 def registerMessages(factory):
     factory.add(
-        JoinMsg, 
-        PlayerUpdateMsg, 
-        LeaveMsg, 
-        BlockBuildMsg, 
+        JoinMsg,
+        LeaveMsg,
+        CompleteUpdate,
+        Update,
+        BlockBuildMsg,
         BlockBreakMsg)

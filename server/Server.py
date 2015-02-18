@@ -1,8 +1,9 @@
 import time
 import threading
 import transmitter.general
-from shared import Messages
 from server import registry
+from shared import Messages
+from shared.Map import Map
 import shared.logging
 
 import logging
@@ -14,7 +15,7 @@ class Server(object):
         self.port = 55555
         self.players = {}
         self.time_update = 0.01
-        self.time_network = 0.05
+        self.time_network = 1
         self.commandThread = None
         self.running = True
     
@@ -22,6 +23,8 @@ class Server(object):
         self.commandThread = threading.Thread(target=self.consoleCommands)
         self.commandThread.daemon = True
         self.commandThread.start()
+        self.map = Map()
+        self.map.load()
         self._server = transmitter.general.Server()
         Messages.registerMessages(self._server.messageFactory)
         self._server.onConnect.attach(self.onConnect)
@@ -54,14 +57,25 @@ class Server(object):
                 self.last_network = t
                 wait = False
             if wait:
-                time.sleep(min(self.time_update, self.time_network))
+                time.sleep(0.001)
     
     def update(self, delta):
-        pass
+        for player in self.players.values():
+            player.update(delta, self.map)
     
     def updateNetwork(self, delta):
         for player in self.players.values():
-            self._server.send(player.getUpdateMsg(), exclude=[player.peer.id])
+            self._server.send(Messages.CompleteUpdate(
+                username=player.username,
+                x=player.position[0],
+                y=player.position[1],
+                z=player.position[2],
+                dx=player.dx,
+                dy=player.dy,
+                dz=player.dz,
+                yaw=player.yaw,
+                pitch=player.pitch,
+                crouching=player.crouching))
     
     def onConnect(self, peer):
         logger.info('Client connected: %s', peer)
@@ -78,6 +92,7 @@ class Server(object):
         
         if self._server.messageFactory.is_a(msg, 'JoinMsg'):
             if msg.username not in self.players:
+                logger.info('Player %s joined', msg.username)
                 ServerPlayer = registry.get('ServerPlayer')
                 self.players[msg.username] = ServerPlayer(peer, username=msg.username)
                 # tell the others that this player joined
@@ -91,11 +106,11 @@ class Server(object):
                 logger.warning('Received JoinMsg for existent Player! %s %s - Disconnecting him!', peer, msg)
                 peer.stop()
         
-        elif self._server.messageFactory.is_a(msg, 'PlayerUpdateMsg'):
+        elif self._server.messageFactory.is_a(msg, 'Update'):
             # peer is only allowed to update his own player !
             player = self.getPlayerFromPeer(peer)
             if player:
-                player.updateFromMsg(msg)
+                player.applyUpdate(msg.key, msg.value)
             else:
                 logger.warning('Peer is no Player but sent PlayerUpdate: %s - %s', peer, msg)
         
@@ -104,6 +119,11 @@ class Server(object):
         
         elif self._server.messageFactory.is_a(msg, 'BlockBreakMsg'):
             self._server.send(msg, exclude=[peer.id])
+        
+        elif self._server.messageFactory.is_a(msg, 'CompleteUpdate'):
+            pass
+            # we dont accept CompleteUpdates from clients
+            # with this elif we simply avoid the following warning
         
         else:
             logger.warning('Unknown Message: %s', msg)

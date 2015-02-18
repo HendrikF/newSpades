@@ -25,7 +25,7 @@ logger = logging.getLogger()
 #########################
 # Write and load config
 
-from server.config import config
+from server import config
 
 if args.create_config:
     # config created by importing config, we can exit

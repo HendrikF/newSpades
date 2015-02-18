@@ -38,11 +38,6 @@ from importlib import import_module
 
 from server import registry
 
-from server.Server import Server
-registry.add('Server', Server)
-from server.ServerPlayer import ServerPlayer
-registry.add('ServerPlayer', ServerPlayer)
-
 # scripts will be a reference to the config entry
 scripts = config.get('scripts', [])
 scriptModules = []

@@ -5,6 +5,14 @@ _logger = logging.getLogger(__name__)
 
 _classes = {}
 
+def _loadDefaults():
+    from server.Server import Server
+    add('Server', Server)
+    from server.ServerPlayer import ServerPlayer
+    add('ServerPlayer', ServerPlayer)
+
+_loadDefaults()
+
 def get(name):
     try:
         return _classes[name]

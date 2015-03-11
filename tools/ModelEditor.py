@@ -284,8 +284,11 @@ class ModelEditor(BaseWindow):
                 print('Cant replace color:', e)
             else:
                 oldColor = self.colorPicker.getRGB()
+                d = 1/255
                 for pos, col in self.model.blocks.items():
-                    if col == oldColor:
+                    if (abs(col[0]-oldColor[0]) < d and
+                            abs(col[1]-oldColor[1]) < d and
+                            abs(col[2]-oldColor[2]) < d):
                         self.model.removeBlock(pos, cn=False)
                         self.model.addBlock(pos, targetColor, cn=False)
     

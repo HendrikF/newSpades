@@ -8,6 +8,7 @@ parser.add_argument('host', nargs='?', help='Host to connect to (no port)')
 parser.add_argument('-p', '--port', type=int, help='Port at host to connect to')
 parser.add_argument('-u', '--username', help='Username to connect with')
 parser.add_argument('-a', '--auto', action='store_true', help='Automatically connect to server')
+parser.add_argument('-o', '--offline', action='store_true', help='Automatically start offline')
 args = parser.parse_args()
 
 import shared.logging
@@ -35,5 +36,7 @@ launcher = Launcher(**kw)
 
 if args.auto:
     launcher.connect()
+if args.offline:
+    launcher.offline()
 
 launcher.mainloop()

@@ -1,5 +1,6 @@
 from pyglet.gl import *
 from shared.Player import Player
+from math import sin
 
 import logging
 logger = logging.getLogger(__name__)
@@ -15,6 +16,9 @@ class DrawablePlayer(Player):
         self.positionToInterpolateTo = (0, 0, 0)
         self.interpolationTime = 0.2
         self.interpolating = 0
+        self.angleLeg = lambda: sin(self.animationTime)*30
+        self.animationSpeed = 5
+        self.animationTime = 0
     
     def applyUpdate(self, key, value):
         setattr(self, key, value)
@@ -45,8 +49,12 @@ class DrawablePlayer(Player):
         # -(self.yaw-90)
         glRotatef(90-self.yaw, 0, 1, 0)
         for name, part in self.model.items():
-            if name == 'head':
+            if name in ('head', 'arms', 'tool'):
                 part.draw(pitch=self.pitch)
+            elif name == 'legl' and any((self._dx, self._dz)):
+                part.draw(pitch=self.angleLeg())
+            elif name == 'legr' and any((self._dx, self._dz)):
+                part.draw(pitch=-self.angleLeg())
             else:
                 part.draw()
         glPopMatrix()
@@ -55,6 +63,7 @@ class DrawablePlayer(Player):
         self.sounds.play(name)
     
     def update(self, time, map):
+        self.animationTime += time * self.animationSpeed
         if self.interpolating > 0:
             # get coordinates
             x, y, z = self.position

@@ -16,13 +16,14 @@ FACES = [
 ]
 
 class Model(object):
-    def __init__(self, scale=0.1, offset=(0,0,0), progressbar=None):
+    def __init__(self, scale=0.1, scale2=1, offset=(0,0,0), offset2=(0,0,0)):
         self.blocks = {}
         self._blocks = {}
         self.batch = pyglet.graphics.Batch()
         self.scale = scale
+        self.scale2 = scale2
         self.offset = offset
-        self.progressbar = progressbar
+        self.offset2 = offset2
     
     @property
     def size(self):
@@ -57,6 +58,8 @@ class Model(object):
         glTranslatef(self.offset[0], self.offset[1], self.offset[2])
         if pitch != 0:
             glRotatef(pitch, 0, 0, 1)
+        glTranslatef(self.offset2[0], self.offset2[1], self.offset2[2])
+        glScalef(self.scale2, self.scale2, self.scale2)
         self.batch.draw()
         glPopMatrix()
     
@@ -174,7 +177,7 @@ class Model(object):
             logger.error("Cant't read file '%s': Size of file (%s) isn't a multiple of one entry (%s)", fn, filesize, size)
             raise TypeError("Cant't read file '%s': Size of file (%s) isn't a multiple of one entry (%s)" % (fn, filesize, size))
         self.clear()
-        if self.progressbar:
+        if progressbar:
             step = size / filesize
         with open(fn, 'rb') as f:
             while True:
@@ -183,8 +186,8 @@ class Model(object):
                     break
                 x, y, z, r, g, b = struct.unpack('!lllfff', data)
                 self.addBlock((x, y, z), (r, g, b))
-                if self.progressbar:
-                    self.progressbar.step(step)
-                    self.progressbar.update()
+                if progressbar:
+                    progressbar.step(step)
+                    progressbar.update()
         # makes it possible to do m=Model().load(...)
         return self

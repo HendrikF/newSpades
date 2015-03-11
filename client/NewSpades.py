@@ -39,12 +39,12 @@ class NewSpades(BaseWindow):
         self.map = ClientMap(maxFPS=self.maxFPS, farplane=self.farplane)
         
         self.model = {
-            'head': Model(offset=(0, 20, 0), progressbar=progressbar).load('head.nsmdl'),
-            'body': Model(offset=(0, 10, 0), progressbar=progressbar).load('body.nsmdl'),
-            'arml': Model(offset=(0, 10,-7), progressbar=progressbar).load('arm.nsmdl'),
-            'armr': Model(offset=(0, 10, 7), progressbar=progressbar).load('arm.nsmdl'),
-            'legl': Model(offset=(0,  0,-2), progressbar=progressbar).load('leg.nsmdl'),
-            'legr': Model(offset=(0,  0, 2), progressbar=progressbar).load('leg.nsmdl')
+            'head': Model(offset=(0, 22, 0.5)).load('client/models/head.nsmdl', progressbar=progressbar),
+            'torso': Model(offset=(0, 12, 0)).load('client/models/torso.nsmdl', progressbar=progressbar),
+            'arms': Model(offset=(0, 21, 0)).load('client/models/arms.nsmdl', progressbar=progressbar),
+            'legl': Model(offset=(1, 12,-3)).load('client/models/leg.nsmdl', progressbar=progressbar),
+            'legr': Model(offset=(1, 12, 3)).load('client/models/leg.nsmdl', progressbar=progressbar),
+            'tool': Model(scale2=0.6, offset=(0, 21, 5), offset2=(9, -1, 0)).load('client/models/rifle.nsmdl', progressbar=progressbar)
         }
         self.player = ControllablePlayer(self._client, self.model, self.sounds, username='local')
         
@@ -107,9 +107,11 @@ class NewSpades(BaseWindow):
         self.gui.draw()
     
     def draw3d(self):
-        self.gluLookAt(self.player.eyePosition, (self.player.yaw, self.player.pitch))
+        #self.gluLookAt(self.player.eyePosition, (self.player.yaw, self.player.pitch))
+        self.gluLookAt((0, 3, 0), (135, 0))
         self.map.draw()
         self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
+        self.player.draw()
         for player in self.otherPlayers.values():
             player.draw()
     

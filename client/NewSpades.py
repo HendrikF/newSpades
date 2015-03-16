@@ -107,11 +107,9 @@ class NewSpades(BaseWindow):
         self.gui.draw()
     
     def draw3d(self):
-        #self.gluLookAt(self.player.eyePosition, (self.player.yaw, self.player.pitch))
-        self.gluLookAt((0, 3, 0), (135, 0))
+        self.gluLookAt(self.player.eyePosition, (self.player.yaw, self.player.pitch))
         self.map.draw()
         self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
-        self.player.draw()
         for player in self.otherPlayers.values():
             player.draw()
     

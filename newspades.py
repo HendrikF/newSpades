@@ -36,7 +36,7 @@ launcher = Launcher(**kw)
 
 if args.auto:
     launcher.connect()
-if args.offline:
+elif args.offline:
     launcher.offline()
 
 launcher.mainloop()

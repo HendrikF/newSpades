@@ -153,7 +153,9 @@ class Model(object):
         r, g, b = self.blocks[(x, y, z)]
         color_data = []
         for i in range(24): # len(vertex_data) / 3
-            ll = self.getLightLevel(vertex_data[i*3:i*3+3], i//4)
+            j = i // 4
+            #ll = self.getLightLevel(vertex_data[i*3:i*3+3], j)
+            ll = 0.9 if j in (0, 1) else 1 if j in (2, 3) else 1.1
             color_data.extend((r*ll, g*ll, b*ll))
         return color_data
     

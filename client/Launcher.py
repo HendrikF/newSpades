@@ -55,6 +55,8 @@ class Launcher(Frame):
         self.offlinebutton.grid(column=2, row=2)
     
     def connect(self, *args):
+        self.connectbutton['state'] = 'disabled'
+        self.offlinebutton['state'] = 'disabled'
         logger.info('Starting in online mode')
         newspades = NewSpades(progressbar=self.progressbar, width=800, height=600, caption='NewSpades', resizable=True, visible=False)
         host, port, username = self.addr.get().strip(), int(self.port.get()), self.username.get().strip()
@@ -71,6 +73,8 @@ class Launcher(Frame):
             newspades.start()
     
     def offline(self, *args):
+        self.connectbutton['state'] = 'disabled'
+        self.offlinebutton['state'] = 'disabled'
         logger.info('Starting in offline mode')
         newspades = NewSpades(progressbar=self.progressbar, width=800, height=600, caption='NewSpades', resizable=True, visible=False)
         newspades.set_exclusive_mouse(True)

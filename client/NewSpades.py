@@ -166,7 +166,6 @@ class NewSpades(BaseWindow):
         self.player.pitch += dy * m
     
     def handleMouseScroll(self, x, y, dx, dy):
-        print('Scroll {} {}'.format(dx, dy))
         if self.command.active:
             self.command.on_mouse_scroll(x, y, dx, dy)
     
@@ -235,7 +234,8 @@ class NewSpades(BaseWindow):
     
     def handleMouseDrag(self, x, y, dx, dy, buttons, modifiers):
         if self.command.active:
-            self.command.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
+            return self.command.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
+        self.handleMouseMove(dx, dy)
                 
     def handleCommands(self, c):
         if c.startswith("/"):

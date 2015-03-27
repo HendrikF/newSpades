@@ -55,8 +55,7 @@ class Launcher(Frame):
         self.offlinebutton.grid(column=2, row=2)
     
     def connect(self, *args):
-        self.connectbutton['state'] = 'disabled'
-        self.offlinebutton['state'] = 'disabled'
+        self._changeButtons(False)
         logger.info('Starting in online mode')
         newspades = NewSpades(progressbar=self.progressbar, width=800, height=600, caption='NewSpades', resizable=True, visible=False)
         host, port, username = self.addr.get().strip(), int(self.port.get()), self.username.get().strip()
@@ -66,6 +65,7 @@ class Launcher(Frame):
         except socket.error as e:
             newspades.close()
             messagebox.showerror('NewSpades', "Can't connect to server: {}".format(e))
+            self._changeButtons(True)
         else:
             newspades.set_visible()
             newspades.set_exclusive_mouse(True)
@@ -73,14 +73,21 @@ class Launcher(Frame):
             newspades.start()
     
     def offline(self, *args):
-        self.connectbutton['state'] = 'disabled'
-        self.offlinebutton['state'] = 'disabled'
+        self._changeButtons(False)
         logger.info('Starting in offline mode')
         newspades = NewSpades(progressbar=self.progressbar, width=800, height=600, caption='NewSpades', resizable=True, visible=False)
         newspades.set_exclusive_mouse(True)
         newspades.set_visible()
         self.close()
         newspades.start()
+    
+    def _changeButtons(self, state):
+        if state:
+            state = 'enabled'
+        else:
+            state = 'disabled'
+        self.connectbutton['state'] = state
+        self.offlinebutton['state'] = state
     
     def close(self, *args):
         self.master.destroy()

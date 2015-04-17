@@ -11,8 +11,7 @@ logger = logging.getLogger(__name__)
 
 class Server(object):
     def __init__(self):
-        self.addr = ''
-        self.port = 55555
+        self.addr = ('', 55555)
         self.players = {}
         self.time_update = 0.01
         self.time_network = 1
@@ -26,11 +25,12 @@ class Server(object):
         self.map = Map()
         self.map.load()
         self._server = transmitter.general.Server()
-        Messages.registerMessages(self._server.messageFactory)
+        self._server.messageFactory.add(*Messages.messages)
         self._server.onConnect.attach(self.onConnect)
         self._server.onMessage.attach(self.onMessage)
         self._server.onDisconnect.attach(self.onDisconnect)
-        self._server.bind(self.addr, self.port)
+        self._server.onTimeout.attach(self.onTimeout)
+        self._server.bind(self.addr)
         self._server.start()
         self.loop()
     
@@ -87,26 +87,34 @@ class Server(object):
             self.players.pop(player.username)
             self._server.send(Messages.LeaveMsg(username=player.username))
     
+    def onTimeout(self, *args, **kw):
+        self.onDisconnect(*args, **kw)
+    
     def onMessage(self, msg, peer):
         logger.debug('Recieved Message from peer %s: %s', peer, msg)
         
-        if self._server.messageFactory.is_a(msg, 'JoinMsg'):
+        print('peers:', self._server.peers)
+        print('players:', self.players)
+        
+        if msg == 'JoinMsg':
             if msg.username not in self.players:
                 logger.info('Player %s joined', msg.username)
                 ServerPlayer = registry.get('ServerPlayer')
-                self.players[msg.username] = ServerPlayer(peer, username=msg.username)
+                player = ServerPlayer(peer, username=msg.username)
                 # tell the others that this player joined
                 self._server.send(msg, exclude=[peer.id])
+                logger.warning('Broadcasting join of %s', msg.username)
                 # tell him which players are already there
-                for player in self.players.values():
-                    if player.peer.id == peer.id:
-                        continue
-                    self._server.sendTo(peer.id, Messages.JoinMsg(username=player.username))
+                for p in self.players.values():
+                    peer.send(Messages.JoinMsg(username=p.username))
+                    logger.warning('Sending %s existence of %s', msg.username, p.username)
+                self.players[msg.username] = player
+                
             else:
                 logger.warning('Received JoinMsg for existent Player! %s %s - Disconnecting him!', peer, msg)
-                peer.stop()
+                peer.disconnect()
         
-        elif self._server.messageFactory.is_a(msg, 'Update'):
+        elif msg == 'Update':
             # peer is only allowed to update his own player !
             player = self.getPlayerFromPeer(peer)
             if player:
@@ -114,13 +122,13 @@ class Server(object):
             else:
                 logger.warning('Peer is no Player but sent PlayerUpdate: %s - %s', peer, msg)
         
-        elif self._server.messageFactory.is_a(msg, 'BlockBuildMsg'):
+        elif msg == 'BlockBuildMsg':
             self._server.send(msg, exclude=[peer.id])
         
-        elif self._server.messageFactory.is_a(msg, 'BlockBreakMsg'):
+        elif msg == 'BlockBreakMsg':
             self._server.send(msg, exclude=[peer.id])
         
-        elif self._server.messageFactory.is_a(msg, 'CompleteUpdate'):
+        elif msg == 'CompleteUpdate':
             pass
             # we dont accept CompleteUpdates from clients
             # with this elif we simply avoid the following warning

@@ -61,7 +61,7 @@ class Launcher(Frame):
         host, port, username = self.addr.get().strip(), int(self.port.get()), self.username.get().strip()
         import socket
         try:
-            newspades.connect(host, port, username)
+            newspades.connect((host, port), username)
         except socket.error as e:
             newspades.close()
             messagebox.showerror('NewSpades', "Can't connect to server: {}".format(e))

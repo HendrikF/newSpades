@@ -30,9 +30,10 @@ class NewSpades(BaseWindow):
         self.otherPlayers = {}
         
         self._client = Client()
-        Messages.registerMessages(self._client.messageFactory)
+        self._client.messageFactory.add(*Messages.messages)
         self._client.onMessage.attach(self.onMessage)
         self._client.onDisconnect.attach(self.onDisconnect)
+        self._client.onTimeout.attach(self.onTimeout)
         
         self.sounds = Sounds()
         
@@ -76,7 +77,7 @@ class NewSpades(BaseWindow):
     def start(self):
         self.map.load()
         super(NewSpades, self).start()
-        self._client.stop()
+        self._client.disconnect()
     
     ###############
     # Rendering
@@ -253,14 +254,14 @@ class NewSpades(BaseWindow):
     
     def onMessage(self, msg, peer):
         logger.debug('Received Message from peer %s: %s', peer, msg)
-        if self._client.messageFactory.is_a(msg, 'JoinMsg'):
+        if msg == 'JoinMsg':
             if msg.username not in self.otherPlayers:
                 self.otherPlayers[msg.username] = DrawablePlayer(self.model, self.sounds, username=msg.username)
             else:
                 logger.warning('Received JoinMsg for existent Player! %s %s', peer, msg)
-        elif self._client.messageFactory.is_a(msg, 'LeaveMsg'):
+        elif msg == 'LeaveMsg':
             self.otherPlayers.pop(msg.username)
-        elif self._client.messageFactory.is_a(msg, 'Update'):
+        elif msg == 'Update':
             if msg.username == self.player.username:
                 player = self.player
             else:
@@ -270,7 +271,7 @@ class NewSpades(BaseWindow):
                     logger.warning('Update with unknown username from peer %s: %s', peer, msg)
                     return
             player.applyUpdate(msg.key, msg.value)
-        elif self._client.messageFactory.is_a(msg, 'CompleteUpdate'):
+        elif msg == 'CompleteUpdate':
             if msg.username == self.player.username:
                 player = self.player
             else:
@@ -280,9 +281,9 @@ class NewSpades(BaseWindow):
                     logger.warning('CompleteUpdate with unknown username from peer %s: %s', peer, msg)
                     return
             player.updateFromMsg(msg)
-        elif self._client.messageFactory.is_a(msg, 'BlockBuildMsg'):
+        elif msg == 'BlockBuildMsg':
             self.map.addBlock((msg.x, msg.y, msg.z), (msg.r, msg.g, msg.b))
-        elif self._client.messageFactory.is_a(msg, 'BlockBreakMsg'):
+        elif msg == 'BlockBreakMsg':
             self.map.removeBlock((msg.x, msg.y, msg.z))
         else:
             logger.warning('Unknown Message from peer %s: %s', peer, msg)
@@ -291,8 +292,11 @@ class NewSpades(BaseWindow):
         logger.info('Disconnected from server!')
         self.gui.update(-1, text="{.align 'center'}{color (255,0,0,255)}{bold True}We're disconnected!", x=0.5, y=0.5, anchor_x=self.gui.CENTER, anchor_y=self.gui.CENTER)
     
-    def connect(self, host, port, username=''):
-        self._client.connect(host, port)
+    def onTimeout(self, *args, **kw):
+        self.onDisconnect(*args, **kw)
+    
+    def connect(self, addr, username=''):
+        self._client.connect(addr)
         self._client.start()
         self.player.username = username
         self._client.send(Messages.JoinMsg(username=username))

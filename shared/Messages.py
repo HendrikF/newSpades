@@ -1,4 +1,4 @@
-from transmitter.messages import Message
+from transmitter.Message import Message
 
 class JoinMsg(Message):
     """
@@ -6,6 +6,7 @@ class JoinMsg(Message):
     To Client: Another Client joined (PlayerUpdate must follow)
     """
     msgID = 1
+    msgReliable = True
     msgData = {
         'username' : ('str', '')
     }
@@ -16,6 +17,7 @@ class LeaveMsg(Message):
     To Client: A Client left the game
     """
     msgID = 2
+    msgReliable = True
     msgData = {
         'username' : ('str', '')
     }
@@ -26,6 +28,7 @@ class CompleteUpdate(Message):
     To Client:
     """
     msgID = 3
+    msgReliable = True
     msgData = {
         'username'  : ('str', ''),
         'x'         : ('float', 0),
@@ -57,6 +60,7 @@ class BlockBuildMsg(Message):
     To Client: ..
     """
     msgID = 5
+    msgReliable = True
     msgData = {
         'x' : ('int', 0),
         'y' : ('int', 0),
@@ -72,17 +76,18 @@ class BlockBreakMsg(Message):
     To Client: ..
     """
     msgID = 6
+    msgReliable = True
     msgData = {
         'x' : ('int', 0),
         'y' : ('int', 0),
         'z' : ('int', 0)
     }
 
-def registerMessages(factory):
-    factory.add(
-        JoinMsg,
-        LeaveMsg,
-        CompleteUpdate,
-        Update,
-        BlockBuildMsg,
-        BlockBreakMsg)
+messages = [
+    JoinMsg,
+    LeaveMsg,
+    CompleteUpdate,
+    Update,
+    BlockBuildMsg,
+    BlockBreakMsg,
+    ]

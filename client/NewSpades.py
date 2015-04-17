@@ -2,7 +2,6 @@ import pyglet
 from pyglet.gl import *
 from pyglet.window import key, mouse
 from shared.BaseWindow import BaseWindow
-from client.ControllablePlayer import ControllablePlayer
 from client.DrawablePlayer import DrawablePlayer
 from client.ClientMap import ClientMap
 from client.Sounds import Sounds
@@ -28,6 +27,8 @@ class NewSpades(BaseWindow):
             color=(0, 0, 0, 255))
         
         self.otherPlayers = {}
+        self.lastNetworkUpdate = 0
+        self.timeNetworkUpdate = 0.033
         
         self._client = Client()
         self._client.messageFactory.add(*Messages.messages)
@@ -47,7 +48,7 @@ class NewSpades(BaseWindow):
             'legr': Model(offset=(1, 12, 3)).load('client/models/leg.nsmdl', progressbar=progressbar),
             'tool': Model(scale2=0.6, offset=(0, 21, 5), offset2=(9, -1, 0)).load('client/models/rifle.nsmdl', progressbar=progressbar)
         }
-        self.player = ControllablePlayer(self._client, self.model, self.sounds, username='local')
+        self.player = DrawablePlayer(self.model, self.sounds, username='local')
         
         self.keys = {
             "FWD": key.W,
@@ -110,7 +111,8 @@ class NewSpades(BaseWindow):
     def draw3d(self):
         self.gluLookAt(self.player.eyePosition, (self.player.yaw, self.player.pitch))
         self.map.draw()
-        self.map.drawBlockLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
+        self.map.drawBlockLookingAt(
+            self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
         for player in self.otherPlayers.values():
             player.draw()
     
@@ -131,6 +133,11 @@ class NewSpades(BaseWindow):
     # Physics
     
     def update(self, dt):
+        t = time.time()
+        if self.lastNetworkUpdate + self.timeNetworkUpdate <= t:
+            self.lastNetworkUpdate = t
+            Msg = self._client.messageFactory.getByName('PlayerUpdate')
+            self._client.send(self.player.getUpdateMessage(Msg))
         self._client.update()
         self.map.update(self.player.position)
     
@@ -145,17 +152,18 @@ class NewSpades(BaseWindow):
     def handleMousePress(self, x, y, button, modifiers):
         if self.command.active:
             return self.command.on_mouse_press(x, y, button, modifiers)
-        block, previous = self.map.getBlocksLookingAt(self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
+        block, previous = self.map.getBlocksLookingAt(
+            self.player.eyePosition, self.player.getSightVector(), self.player.armLength)
         if button == mouse.RIGHT and previous:
             color = self.colorPicker.getRGB()
             self.map.addBlock(previous, color)
-            msg = Messages.BlockBuildMsg()
+            msg = self._client.messageFactory.getByName('BlockBuildMsg')()
             msg.x, msg.y, msg.z = previous
             msg.r, msg.g, msg.b = color
             self._client.send(msg)
         elif button == mouse.LEFT and block:
             self.map.removeBlock(block)
-            msg = Messages.BlockBreakMsg()
+            msg = self._client.messageFactory.getByName('BlockBreakMsg')()
             msg.x, msg.y, msg.z = block
             self._client.send(msg)
         elif button == mouse.MIDDLE and block:
@@ -244,24 +252,29 @@ class NewSpades(BaseWindow):
             if c.startswith("connect "):
                 c = c[8:]
                 c = c.split()
-                self.connect(c[0], int(c[1]), username=(c[2] if len(c)>2 else ''))
+                self.connect((c[0], int(c[1])), username=(c[2] if len(c)>2 else ''))
             elif c.startswith('c '):
                 c = c[2:]
-                self.connect('localhost', 55555, username=c)
+                self.connect(('localhost', 55555), username=c)
     
     #########################
     # Networking
     
     def onMessage(self, msg, peer):
         logger.debug('Received Message from peer %s: %s', peer, msg)
+        
+        print(self.player)
+        print(self.otherPlayers)
+        
         if msg == 'JoinMsg':
-            if msg.username not in self.otherPlayers:
-                self.otherPlayers[msg.username] = DrawablePlayer(self.model, self.sounds, username=msg.username)
+            username = msg.username
+            if username not in self.otherPlayers:
+                self.otherPlayers[username] = DrawablePlayer(self.model, self.sounds, username=username)
             else:
                 logger.warning('Received JoinMsg for existent Player! %s %s', peer, msg)
         elif msg == 'LeaveMsg':
             self.otherPlayers.pop(msg.username)
-        elif msg == 'Update':
+        elif msg == 'PlayerUpdate':
             if msg.username == self.player.username:
                 player = self.player
             else:
@@ -270,17 +283,7 @@ class NewSpades(BaseWindow):
                 except KeyError:
                     logger.warning('Update with unknown username from peer %s: %s', peer, msg)
                     return
-            player.applyUpdate(msg.key, msg.value)
-        elif msg == 'CompleteUpdate':
-            if msg.username == self.player.username:
-                player = self.player
-            else:
-                try:
-                    player = self.otherPlayers[msg.username]
-                except KeyError:
-                    logger.warning('CompleteUpdate with unknown username from peer %s: %s', peer, msg)
-                    return
-            player.updateFromMsg(msg)
+            player.updateFromMessage(msg)
         elif msg == 'BlockBuildMsg':
             self.map.addBlock((msg.x, msg.y, msg.z), (msg.r, msg.g, msg.b))
         elif msg == 'BlockBreakMsg':
@@ -299,4 +302,4 @@ class NewSpades(BaseWindow):
         self._client.connect(addr)
         self._client.start()
         self.player.username = username
-        self._client.send(Messages.JoinMsg(username=username))
+        self._client.send(self._client.messageFactory.getByName('JoinMsg')(username=username))

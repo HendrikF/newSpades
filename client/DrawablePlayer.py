@@ -20,22 +20,29 @@ class DrawablePlayer(Player):
         self.animationSpeed = 5
         self.animationTime = 0
     
-    def applyUpdate(self, key, value):
-        setattr(self, key, value)
-    
-    def updateFromMsg(self, msg):
-        # dont use properties -> faster
+    def updateFromMessage(self, msg):
         self.interpolateTo((msg.x, msg.y, msg.z))
-        self._dx = msg.dx
-        self._dy = msg.dy
-        self._dz = msg.dz
-        self._yaw = msg.yaw
-        self._pitch = msg.pitch
-        self._crouching = msg.crouching
+        self.dx = msg.dx
+        self.dy = msg.dy
+        self.dz = msg.dz
+        self.yaw = msg.yaw
+        self.pitch = msg.pitch
+        self.crouching = msg.crouching
+    
+    def getUpdateMessage(self, Msg):
+        x, y, z = self.position
+        return Msg(
+            username = self.username,
+            dx = self.dx,
+            dz = self.dz,
+            yaw = self.yaw,
+            pitch = self.pitch,
+            crouching = self.crouching,
+            )
     
     def interpolateTo(self, pos):
         distance = (pos[0]-self.position[0])**2 + (pos[1]-self.position[1])**2 + (pos[2]-self.position[2])**2
-        if distance >= 0.3**2:
+        if distance >= 0.09: #0.3**2
             logger.info('Interpolating positions of %s', self)
             self.positionToInterpolateTo = pos
             self.interpolating = self.interpolationTime
@@ -48,12 +55,13 @@ class DrawablePlayer(Player):
         glTranslatef(x, y-1, z)
         # -(self.yaw-90)
         glRotatef(90-self.yaw, 0, 1, 0)
+        moving = any((self._dx, self._dz))
         for name, part in self.model.items():
             if name in ('head', 'arms', 'tool'):
                 part.draw(pitch=self.pitch)
-            elif name == 'legl' and any((self._dx, self._dz)):
+            elif name == 'legl' and moving:
                 part.draw(pitch=self.angleLeg())
-            elif name == 'legr' and any((self._dx, self._dz)):
+            elif name == 'legr' and moving:
                 part.draw(pitch=-self.angleLeg())
             else:
                 part.draw()

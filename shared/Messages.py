@@ -1,34 +1,48 @@
 from transmitter.Message import Message
 
+_lastID = 0
+def _getID():
+    global _lastID
+    _lastID += 1
+    return _lastID
+
+messages = []
+def _add(clas):
+    global messages
+    messages.append(clas)
+    return clas
+
+@_add
 class JoinMsg(Message):
     """
     To Server: Client wants to join
     To Client: Another Client joined (PlayerUpdate must follow)
     """
-    msgID = 1
+    msgID = _getID()
     msgReliable = True
     msgData = {
         'username' : ('str', '')
     }
 
+@_add
 class LeaveMsg(Message):
     """
     To Server: --
     To Client: A Client left the game
     """
-    msgID = 2
+    msgID = _getID()
     msgReliable = True
     msgData = {
         'username' : ('str', '')
     }
 
-class CompleteUpdate(Message):
+@_add
+class PlayerUpdate(Message):
     """
     To Server: (Server MUST IGNORE the username (security issue))
     To Client:
     """
-    msgID = 3
-    msgReliable = True
+    msgID = _getID()
     msgData = {
         'username'  : ('str', ''),
         'x'         : ('float', 0),
@@ -42,24 +56,13 @@ class CompleteUpdate(Message):
         'crouching' : ('bool', False)
     }
 
-class Update(Message):
-    """
-    To Server: (Server MUST IGNORE the username (security issue))
-    To Client:
-    """
-    msgID = 4
-    msgData = {
-        'username'  : ('str', ''),
-        'key'       : ('str', ''),
-        'value'     : ('float', 0)
-    }
-
+@_add
 class BlockBuildMsg(Message):
     """
     To Server: .. obvious I think
     To Client: ..
     """
-    msgID = 5
+    msgID = _getID()
     msgReliable = True
     msgData = {
         'x' : ('int', 0),
@@ -70,24 +73,16 @@ class BlockBuildMsg(Message):
         'b' : ('float', 0)
     }
 
+@_add
 class BlockBreakMsg(Message):
     """
     To Server: .. obvious I think
     To Client: ..
     """
-    msgID = 6
+    msgID = _getID()
     msgReliable = True
     msgData = {
         'x' : ('int', 0),
         'y' : ('int', 0),
         'z' : ('int', 0)
     }
-
-messages = [
-    JoinMsg,
-    LeaveMsg,
-    CompleteUpdate,
-    Update,
-    BlockBuildMsg,
-    BlockBreakMsg,
-    ]

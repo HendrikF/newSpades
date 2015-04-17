@@ -14,7 +14,7 @@ class Server(object):
         self.addr = ('', 55555)
         self.players = {}
         self.time_update = 0.01
-        self.time_network = 1
+        self.time_network = 0.1
         self.commandThread = None
         self.running = True
     
@@ -43,39 +43,40 @@ class Server(object):
             # Update transmitter-Server
             self._server.update()
             wait = True
-            # Physics
+            # Update
             t = time.time()
             if t - self.last_update >= self.time_update:
-                self.update(t - self.last_update)
                 self.last_update = t
                 wait = False
+                dt = t - self.last_update
+                self.update(dt)
+                # to prevent wrong physics because of slow pc
+                # we make very small time steps
+                m = 10
+                dt = min(dt, 0.2) / m
+                for _ in range(m):
+                    self.updatePhysics(dt)
             # Networking
             # (Take time again, because update could take long)
             t = time.time()
             if t - self.last_network >= self.time_network:
-                self.updateNetwork(t - self.last_network)
                 self.last_network = t
                 wait = False
+                self.updateNetwork(t - self.last_network)
             if wait:
-                time.sleep(0.001)
+                time.sleep(0.002)
     
     def update(self, delta):
+        pass
+    
+    def updatePhysics(self, delta):
         for player in self.players.values():
             player.update(delta, self.map)
     
     def updateNetwork(self, delta):
+        PlayerUpdate = self._server.messageFactory.getByName('PlayerUpdate')
         for player in self.players.values():
-            self._server.send(Messages.CompleteUpdate(
-                username=player.username,
-                x=player.position[0],
-                y=player.position[1],
-                z=player.position[2],
-                dx=player.dx,
-                dy=player.dy,
-                dz=player.dz,
-                yaw=player.yaw,
-                pitch=player.pitch,
-                crouching=player.crouching))
+            self._server.send(player.getUpdateMessage(PlayerUpdate))
     
     def onConnect(self, peer):
         logger.info('Client connected: %s', peer)
@@ -85,7 +86,7 @@ class Server(object):
         player = self.getPlayerFromPeer(peer)
         if player:
             self.players.pop(player.username)
-            self._server.send(Messages.LeaveMsg(username=player.username))
+            self._server.send(self._server.messageFactory.getByName('LeaveMsg')(username=player.username))
     
     def onTimeout(self, *args, **kw):
         self.onDisconnect(*args, **kw)
@@ -93,32 +94,32 @@ class Server(object):
     def onMessage(self, msg, peer):
         logger.debug('Recieved Message from peer %s: %s', peer, msg)
         
-        print('peers:', self._server.peers)
-        print('players:', self.players)
+        print(self.players)
         
         if msg == 'JoinMsg':
-            if msg.username not in self.players:
-                logger.info('Player %s joined', msg.username)
+            username = msg.username
+            if username not in self.players:
+                logger.info('Player %s joined', username)
                 ServerPlayer = registry.get('ServerPlayer')
-                player = ServerPlayer(peer, username=msg.username)
+                player = ServerPlayer(peer, username=username)
                 # tell the others that this player joined
                 self._server.send(msg, exclude=[peer.id])
-                logger.warning('Broadcasting join of %s', msg.username)
+                logger.warning('Broadcasting join of %s', username)
                 # tell him which players are already there
                 for p in self.players.values():
-                    peer.send(Messages.JoinMsg(username=p.username))
-                    logger.warning('Sending %s existence of %s', msg.username, p.username)
-                self.players[msg.username] = player
+                    peer.send(self._server.messageFactory.getByName('JoinMsg')(username=p.username))
+                    logger.warning('Sending %s existence of %s', username, p.username)
+                self.players[username] = player
                 
             else:
                 logger.warning('Received JoinMsg for existent Player! %s %s - Disconnecting him!', peer, msg)
                 peer.disconnect()
         
-        elif msg == 'Update':
+        elif msg == 'PlayerUpdate':
             # peer is only allowed to update his own player !
             player = self.getPlayerFromPeer(peer)
             if player:
-                player.applyUpdate(msg.key, msg.value)
+                player.updateFromMessage(msg)
             else:
                 logger.warning('Peer is no Player but sent PlayerUpdate: %s - %s', peer, msg)
         
@@ -128,21 +129,16 @@ class Server(object):
         elif msg == 'BlockBreakMsg':
             self._server.send(msg, exclude=[peer.id])
         
-        elif msg == 'CompleteUpdate':
-            pass
-            # we dont accept CompleteUpdates from clients
-            # with this elif we simply avoid the following warning
-        
         else:
             logger.warning('Unknown Message: %s', msg)
     
     def consoleCommands(self):
         while self.running:
-            c = input(": ")
-            if c == "exit":
+            c = input(': ')
+            if c == 'exit':
                 self.running = False
-            elif c == "help":
-                print('Available Commands: help, exit')
+            elif c == 'help':
+                print('Available Commands: help, exit, log {DEBUG|INFO|WARNING|ERROR|CRITICAL}')
             elif c.startswith('log '):
                 c = c[4:].strip()
                 shared.logging.setLogLevel(c)

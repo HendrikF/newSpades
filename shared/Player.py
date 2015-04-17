@@ -54,6 +54,8 @@ class Player(object):
         return self._yaw
     @yaw.setter
     def yaw(self, v):
+        if v >= 360 or v < 0:
+            v %= 360
         self._yaw = v
     
     @property
@@ -61,6 +63,10 @@ class Player(object):
         return self._pitch
     @pitch.setter
     def pitch(self, v):
+        if v > 90:
+            v = 90
+        elif v < -90:
+            v = -90
         self._pitch = v
     
     @property

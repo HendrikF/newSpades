@@ -1,4 +1,4 @@
-New Spades
+NewSpades
 ===========
 This game is developed by KingEik and HendrikF.
 It consists of a client and a server and is inspired by the old Beta version (0.75) of [Ace of Spades](http://buildandshoot.com/).
@@ -21,9 +21,10 @@ Requirements
 -------------
 To run the game you need to install:
 
-* Python 3.2 or newer: https://www.python.org/download/
-
-(We tested with 3.2 and 3.4)
+* Python 3.2 or newer: https://www.python.org/download/  
+  (We tested with 3.2 and 3.4)
+* Transmitter  
+  (run `./downloadDependencies.py`)
 
 Known problems
 ---------------

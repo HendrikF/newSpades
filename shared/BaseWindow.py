@@ -31,6 +31,7 @@ class BaseWindow(pyglet.window.Window):
     
     def _update(self, dt):
         self.update(dt)
+        # calc physics more accurate
         m = 10
         dt = min(dt, 0.2)
         for _ in range(m):

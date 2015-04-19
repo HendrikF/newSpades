@@ -67,6 +67,7 @@ class Server(object):
                 time.sleep(0.002)
     
     def update(self, delta):
+        #print(self.players)
         pass
     
     def updatePhysics(self, delta):
@@ -76,7 +77,7 @@ class Server(object):
     def updateNetwork(self, delta):
         PlayerUpdate = self._server.messageFactory.getByName('PlayerUpdate')
         for player in self.players.values():
-            self._server.send(player.getUpdateMessage(PlayerUpdate))
+            self._server.send(player.getUpdateMessage(PlayerUpdate), exclude=[player.peer.id])
     
     def onConnect(self, peer):
         logger.info('Client connected: %s', peer)
@@ -93,8 +94,6 @@ class Server(object):
     
     def onMessage(self, msg, peer):
         logger.debug('Recieved Message from peer %s: %s', peer, msg)
-        
-        print(self.players)
         
         if msg == 'JoinMsg':
             username = msg.username

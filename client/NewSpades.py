@@ -133,6 +133,8 @@ class NewSpades(BaseWindow):
     # Physics
     
     def update(self, dt):
+        #print(self.player)
+        #print(self.otherPlayers)
         t = time.time()
         if self.lastNetworkUpdate + self.timeNetworkUpdate <= t:
             self.lastNetworkUpdate = t
@@ -262,9 +264,6 @@ class NewSpades(BaseWindow):
     
     def onMessage(self, msg, peer):
         logger.debug('Received Message from peer %s: %s', peer, msg)
-        
-        print(self.player)
-        print(self.otherPlayers)
         
         if msg == 'JoinMsg':
             username = msg.username

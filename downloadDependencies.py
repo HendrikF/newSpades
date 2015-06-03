@@ -33,3 +33,8 @@ downloadZipFile(
     'https://github.com/HendrikF/transmitter/archive/v0.4.1.zip',
     'transmitter',
     'transmitter-0.4.1/transmitter/')
+
+downloadZipFile(
+    'https://github.com/HendrikF/events/archive/v0.1.2.zip',
+    'events',
+    'events-0.1.2/events/')

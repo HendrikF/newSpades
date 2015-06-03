@@ -1,16 +1,18 @@
 import time
 import threading
 import transmitter.general
-from server import registry
 from shared import Messages
 from shared.Map import Map
+from server.ServerPlayer import ServerPlayer
 import shared.logging
 
 import logging
 logger = logging.getLogger(__name__)
 
 class Server(object):
-    def __init__(self):
+    def __init__(self, events):
+        self.events = events
+        self.invoke = self.events.invoke
         self.addr = ('', 55555)
         self.players = {}
         self.time_update = 0.01
@@ -99,7 +101,6 @@ class Server(object):
             username = msg.username
             if username not in self.players:
                 logger.info('Player %s joined', username)
-                ServerPlayer = registry.get('ServerPlayer')
                 player = ServerPlayer(peer, username=username)
                 # tell the others that this player joined
                 self._server.send(msg, exclude=[peer.id])

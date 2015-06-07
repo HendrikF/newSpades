@@ -88,8 +88,8 @@ events.invoke('scripts_loaded')
 ##########################
 # Start server
 
-from server.Server import Server
+from server.NewSpadesServer import NewSpadesServer
 
-server = Server(events)
+server = NewSpadesServer(events)
 
 server.start()

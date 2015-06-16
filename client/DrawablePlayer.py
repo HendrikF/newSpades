@@ -6,9 +6,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 class DrawablePlayer(Player):
-    """Extends shared.Player.Player by model, draw(), sounds and playSound()"""
-    def __init__(self, model, sounds, *args, **kw):
-        self.model = model
+    """Extends shared.Player.Player by models, draw(), sounds and playSound()"""
+    def __init__(self, models, sounds, *args, **kw):
+        self.models = models
         self.sounds = sounds
         
         super().__init__(*args, **kw)
@@ -55,8 +55,8 @@ class DrawablePlayer(Player):
         glTranslatef(x, y-1, z)
         # -(self.yaw-90)
         glRotatef(90-self.yaw, 0, 1, 0)
-        moving = any((self._dx, self._dz))
-        for name, part in self.model.items():
+        moving = any((self.dx, self.dz))
+        for name, part in self.models.items():
             if name in ('head', 'arms', 'tool'):
                 part.draw(pitch=self.pitch)
             elif name == 'legl' and moving:

@@ -13,23 +13,32 @@ import logging
 logger = logging.getLogger(__name__)
 
 class NewSpadesServer(BasicServer):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.addr = (
+    def __init__(self, events):
+        self.events = events
+        addr = (
             config.get('host', ''),
             config.get('port', 55555)
         )
+        super().__init__(addr)
         self._server.messageFactory.add(*Messages.messages)
         self.commandThread = Thread(target=self.consoleCommands)
         self.commandThread.daemon = True
         
         self.connections = {}
-        self.map = Map()
+        self.map = None
+    
+    def invoke(self, name, *args, **kw):
+        self.events.invoke(name, self, *args, **kw)
     
     def start(self):
         self.commandThread.start()
-        self.map.load()
+        self.loadMap('map.nsmap')
         super().start()
+    
+    def loadMap(self, filename):
+        self.map = Map()
+        with open(filename, 'rb') as f:
+            self.map.importBytes(f.read())
     
     def consoleCommands(self):
         self.running = True
@@ -38,6 +47,7 @@ class NewSpadesServer(BasicServer):
                 c = input(': ')
             except EOFError:
                 self.running = False
+                print('')
             else:
                 if c == 'exit':
                     self.running = False
@@ -48,7 +58,7 @@ class NewSpadesServer(BasicServer):
                     shared.logging.setLogLevel(c)
     
     def onConnect(self, peer):
-        self.connections[peer] = Connection(self, peer)
+        self.connections[peer] = Connection(self.events, self, peer)
     
     def onDisconnect(self, peer):
         try:
@@ -63,3 +73,14 @@ class NewSpadesServer(BasicServer):
     
     def onMessage(self, msg, peer):
         self.connections[peer].receivedMessage(msg)
+    
+    def update(self, dt):
+        for connection in self.connections.values():
+            connection.update(dt)
+    
+    def updatePhysics(self, dt):
+        for connection in self.connections.values():
+            connection.updatePhysics(dt)
+    
+    def updateNetwork(self, dt):
+        pass

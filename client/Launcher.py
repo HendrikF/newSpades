@@ -51,7 +51,7 @@ class Launcher(Frame):
         self.connectbutton = Button(self, text='connect', command=self.connect)
         self.connectbutton.grid(column=2, row=1)
         
-        self.offlinebutton = Button(self, text='start offline', command=self.offline)
+        self.offlinebutton = Button(self, text='start offline', command=self.offline, state='disabled')
         self.offlinebutton.grid(column=2, row=2)
     
     def connect(self, *args):

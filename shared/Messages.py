@@ -13,7 +13,33 @@ def _add(clas):
     return clas
 
 @_add
-class JoinMsg(Message):
+class StartMapTransfer(Message):
+    """
+    To Server: --
+    To Client: Start map transfer
+    """
+    msgID = _getID()
+    msgReliable = True
+    msgData = {
+        'parts' : ('int', 0),
+        'data' : ('bytes', b'')
+    }
+
+@_add
+class MapData(Message):
+    """
+    To Server: --
+    To Client: Send map data
+    """
+    msgID = _getID()
+    msgReliable = True
+    msgData = {
+        'part' : ('int', 0),
+        'data' : ('bytes', b'')
+    }
+
+@_add
+class Join(Message):
     """
     To Server: Client wants to join
     To Client: Another Client joined (PlayerUpdate must follow)
@@ -25,7 +51,7 @@ class JoinMsg(Message):
     }
 
 @_add
-class LeaveMsg(Message):
+class Leave(Message):
     """
     To Server: --
     To Client: A Client left the game
@@ -57,7 +83,7 @@ class PlayerUpdate(Message):
     }
 
 @_add
-class BlockBuildMsg(Message):
+class BlockBuild(Message):
     """
     To Server: .. obvious I think
     To Client: ..
@@ -74,7 +100,7 @@ class BlockBuildMsg(Message):
     }
 
 @_add
-class BlockBreakMsg(Message):
+class BlockBreak(Message):
     """
     To Server: .. obvious I think
     To Client: ..

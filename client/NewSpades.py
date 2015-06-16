@@ -3,9 +3,9 @@ from pyglet.gl import *
 from pyglet.window import key, mouse
 from shared.BaseWindow import BaseWindow
 from client.DrawablePlayer import DrawablePlayer
-from client.ClientMap import ClientMap
+from client.DrawableMap import DrawableMap
 from client.Sounds import Sounds
-from shared.Model import Model
+from shared.DrawableModel import DrawableModel
 from shared.CommandLine import CommandLine
 from shared.ColorPicker import ColorPicker
 from client.GuiManager import GuiManager
@@ -38,17 +38,23 @@ class NewSpades(BaseWindow):
         
         self.sounds = Sounds()
         
-        self.map = ClientMap(maxFPS=self.maxFPS, farplane=self.farplane)
+        self.map = DrawableMap(maxFPS=self.maxFPS, farplane=self.farplane)
         
-        self.model = {
-            'head': Model(offset=(0, 22, 0.5)).load('client/models/head.nsmdl', progressbar=progressbar),
-            'torso': Model(offset=(0, 12, 0)).load('client/models/torso.nsmdl', progressbar=progressbar),
-            'arms': Model(offset=(0, 21, 0)).load('client/models/arms.nsmdl', progressbar=progressbar),
-            'legl': Model(offset=(1, 12,-3)).load('client/models/leg.nsmdl', progressbar=progressbar),
-            'legr': Model(offset=(1, 12, 3)).load('client/models/leg.nsmdl', progressbar=progressbar),
-            'tool': Model(scale2=0.6, offset=(0, 21, 5), offset2=(9, -1, 0)).load('client/models/rifle.nsmdl', progressbar=progressbar)
-        }
-        self.player = DrawablePlayer(self.model, self.sounds, username='local')
+        self.models = {}
+        with open('client/models/head.nsmdl', 'rb') as f:
+            self.models['head'] = DrawableModel(offset=(0, 22, 0.5)).importBytes(f.read())
+        with open('client/models/torso.nsmdl', 'rb') as f:
+            self.models['torso'] = DrawableModel(offset=(0, 12, 0)).importBytes(f.read())
+        with open('client/models/arms.nsmdl', 'rb') as f:
+            self.models['arms'] = DrawableModel(offset=(0, 21, 0)).importBytes(f.read())
+        with open('client/models/leg.nsmdl', 'rb') as f:
+            b = f.read()
+            self.models['legl'] = DrawableModel(offset=(1, 12,-3)).importBytes(b)
+            self.models['legr'] = DrawableModel(offset=(1, 12, 3)).importBytes(b)
+        with open('client/models/rifle.nsmdl', 'rb') as f:
+            self.models['tool'] = DrawableModel(scale2=0.6, offset=(0, 21, 5), offset2=(9, -1, 0)).importBytes(f.read())
+        
+        self.player = DrawablePlayer(self.models, self.sounds, username='local')
         
         self.keys = {
             "FWD": key.W,
@@ -159,17 +165,17 @@ class NewSpades(BaseWindow):
         if button == mouse.RIGHT and previous:
             color = self.colorPicker.getRGB()
             self.map.addBlock(previous, color)
-            msg = self._client.messageFactory.getByName('BlockBuildMsg')()
+            msg = self._client.messageFactory.getByName('BlockBuild')()
             msg.x, msg.y, msg.z = previous
             msg.r, msg.g, msg.b = color
             self._client.send(msg)
         elif button == mouse.LEFT and block:
             self.map.removeBlock(block)
-            msg = self._client.messageFactory.getByName('BlockBreakMsg')()
+            msg = self._client.messageFactory.getByName('BlockBreak')()
             msg.x, msg.y, msg.z = block
             self._client.send(msg)
         elif button == mouse.MIDDLE and block:
-            self.colorPicker.setRGB(self.map.world[block])
+            self.colorPicker.setRGB(self.map.blocks[block])
     
     def handleMouseMove(self, dx, dy):
         m = 0.1
@@ -265,13 +271,13 @@ class NewSpades(BaseWindow):
     def onMessage(self, msg, peer):
         logger.debug('Received Message from peer %s: %s', peer, msg)
         
-        if msg == 'JoinMsg':
+        if msg == 'Join':
             username = msg.username
             if username not in self.otherPlayers:
-                self.otherPlayers[username] = DrawablePlayer(self.model, self.sounds, username=username)
+                self.otherPlayers[username] = DrawablePlayer(self.models, self.sounds, username=username)
             else:
-                logger.warning('Received JoinMsg for existent Player! %s %s', peer, msg)
-        elif msg == 'LeaveMsg':
+                logger.warning('Received Join for existent Player! %s %s', peer, msg)
+        elif msg == 'Leave':
             self.otherPlayers.pop(msg.username)
         elif msg == 'PlayerUpdate':
             if msg.username == self.player.username:
@@ -283,9 +289,9 @@ class NewSpades(BaseWindow):
                     logger.warning('Update with unknown username from peer %s: %s', peer, msg)
                     return
             player.updateFromMessage(msg)
-        elif msg == 'BlockBuildMsg':
+        elif msg == 'BlockBuild':
             self.map.addBlock((msg.x, msg.y, msg.z), (msg.r, msg.g, msg.b))
-        elif msg == 'BlockBreakMsg':
+        elif msg == 'BlockBreak':
             self.map.removeBlock((msg.x, msg.y, msg.z))
         else:
             logger.warning('Unknown Message from peer %s: %s', peer, msg)
@@ -301,4 +307,4 @@ class NewSpades(BaseWindow):
         self._client.connect(addr)
         self._client.start()
         self.player.username = username
-        self._client.send(self._client.messageFactory.getByName('JoinMsg')(username=username))
+        self._client.send(self._client.messageFactory.getByName('Join')(username=username))

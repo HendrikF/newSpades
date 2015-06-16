@@ -4,7 +4,7 @@ from pyglet.window import key, mouse
 import math
 import os, sys
 from shared.BaseWindow import BaseWindow
-from shared.Model import Model
+from shared.DrawableModel import DrawableModel
 from shared.ColorPicker import ColorPicker
 from shared.CommandLine import CommandLine
 
@@ -15,7 +15,7 @@ class ModelEditor(BaseWindow):
     ##################
     # General stuff
     def __init__(self, *args, **kw):
-        super(ModelEditor, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.fpsLabel = pyglet.text.Label('', font_name='Ubuntu', font_size=10,
             x=0, y=0, anchor_x='left', anchor_y='top',
             color=(0, 0, 0, 255))
@@ -69,7 +69,7 @@ class ModelEditor(BaseWindow):
         self.orientation = [90, 0]
         self.armLength = 100
         
-        self.model = Model(scale=1)
+        self.model = DrawableModel(scale=1)
         self.model.addBlock((0,0,0), (0,0,0))
         
         self.colorPicker = ColorPicker()
@@ -78,8 +78,9 @@ class ModelEditor(BaseWindow):
     def start(self):
         if len(sys.argv) > 1:
             fn = sys.argv[1]
-            self.model.load(fn)
-        super(ModelEditor, self).start()
+            with open(fn, 'rb') as f:
+                self.model.importBytes(f.read())
+        super().start()
     
     ###############
     # Rendering
@@ -165,7 +166,7 @@ class ModelEditor(BaseWindow):
         if button == mouse.RIGHT:
             if previous:
                 self.model.addBlock(previous, self.colorPicker.getRGB())
-        elif button == mouse.LEFT and block and self.model.size > 1:
+        elif button == mouse.LEFT and block and len(self.model.blocks) > 1:
             self.model.removeBlock(block)
         elif button == mouse.MIDDLE and block:
             self.colorPicker.setRGB(self.model.blocks[block])
@@ -271,7 +272,8 @@ class ModelEditor(BaseWindow):
                 self.helpLabel.text = 'overwriting '+text
             except OSError:
                 pass
-            self.model.save(text)
+            with open(text, 'wb') as f:
+                f.write(self.model.exportBytes())
         elif text.startswith('/color'):
             r, g, b = text[6:].strip().split()
             text = (int(r)/255, int(g)/255, int(b)/255)
@@ -326,7 +328,7 @@ class ModelEditor(BaseWindow):
         previous = None
         for _ in range(maxDistance * m):
             key = (round(x), round(y), round(z))
-            if key != previous and self.model.contains(key):
+            if key != previous and key in self.model.blocks:
                 return key, previous
             previous = key
             x, y, z = x + dx / m, y + dy / m, z + dz / m

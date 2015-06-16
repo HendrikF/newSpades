@@ -1,5 +1,5 @@
 import math
-from shared.Map import FACES
+from shared.BlockStructure import BlockStructure
 
 def radians(deg):
     return deg*0.01745329251994329577 #deg*PI/180
@@ -14,40 +14,21 @@ class Player(object):
     def __init__(self, username=''):
         self.username = username
         
-        self._dx = 0
-        self._dy = 0
-        self._dz = 0
+        self.dx = 0
+        self.dy = 0
+        self.dz = 0
         self.position = (0, 2, 0)
         self._yaw   = 90
         self._pitch = 0
-        self._crouching = False
+        self.crouching = False
         
         self._speed = 5
-        self._maxFallSpeed = 50
-        self._gravity = 20
+        self.maxFallSpeed = 50
         self._height = 3
-        self._armLength = 5
-    
-    @property
-    def dx(self):
-        return self._dx
-    @dx.setter
-    def dx(self, v):
-        self._dx = v
-    
-    @property
-    def dy(self):
-        return self._dy
-    @dy.setter
-    def dy(self, v):
-        self._dy = v
-    
-    @property
-    def dz(self):
-        return self._dz
-    @dz.setter
-    def dz(self, v):
-        self._dz = v
+        self.armLength = 5
+        
+        self._gravity = 20
+        self.jumpHeight = 2.1 # Trigger calc of jumpSpeed
     
     @property
     def yaw(self):
@@ -70,22 +51,17 @@ class Player(object):
         self._pitch = v
     
     @property
-    def crouching(self):
-        return self._crouching
-    @crouching.setter
-    def crouching(self, v):
-        self._crouching = v
-    
-    @property
     def speed(self):
         return self._speed if not self.crouching else self._speed*0.7
     
     @property
-    def maxFallSpeed(self):
-        return self._maxFallSpeed
-    @maxFallSpeed.setter
-    def maxFallSpeed(self, v):
-        self._maxFallSpeed = v
+    def height(self):
+        return self._height if not self.crouching else self._height-1
+    
+    @property
+    def eyePosition(self):
+        x, y, z = self.position
+        return (x, y+self.height-1, z) # should be 2.5 but you cannot build the block in eye-height ??
     
     @property
     def gravity(self):
@@ -93,26 +69,18 @@ class Player(object):
     @gravity.setter
     def gravity(self, v):
         self._gravity = v
+        self.jumpSpeed = math.sqrt(2*self._gravity*self._jumpHeight)
     
     @property
-    def height(self):
-        return self._height if not self.crouching else self._height-1
-    
-    @property
-    def armLength(self):
-        return self._armLength
-    @armLength.setter
-    def armLength(self, v):
-        self._armLength = v
-    
-    @property
-    def eyePosition(self):
-        x, y, z = self.position
-        return (x, y+self.height-1, z) # should be 2.5 but you cannot build the block in eye-height ??
+    def jumpHeight(self):
+        return self._jumpHeight
+    @jumpHeight.setter
+    def jumpHeight(self, v):
+        self._jumpHeight = v
+        self.jumpSpeed = math.sqrt(2*self._gravity*self._jumpHeight)
     
     def jump(self):
-        # TODO: Tell server
-        pass
+        self.dy = self.jumpSpeed
     
     def update(self, time, map):
         """Updates the players fallspeed and its position"""
@@ -145,7 +113,7 @@ class Player(object):
         pad = 0
         p = list(position)
         np = (round(p[0]), round(p[1]), round(p[2]))
-        for face in FACES:  # check all surrounding blocks
+        for face in BlockStructure.FACES:  # check all surrounding blocks
             for i in range(3):  # check each dimension independently
                 if not face[i]:
                     continue
@@ -157,7 +125,7 @@ class Player(object):
                     op = list(np)
                     op[1] += dy
                     op[i] += face[i]
-                    if tuple(op) not in map.world:
+                    if tuple(op) not in map.blocks:
                         continue
                     p[i] -= (d - pad) * face[i]
                     if face == (0, 1, 0) or face == (0, -1, 0):

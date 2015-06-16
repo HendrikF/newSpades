@@ -6,10 +6,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 class BasicServer(object):
-    def __init__(self, events):
-        self.events = events
-        self.invoke = self.events.invoke
-        self.addr = ('', 55555)
+    def __init__(self, addr=('', 55555)):
+        self.addr = addr
         self.time_update = 0.01
         self.time_network = 0.1
         

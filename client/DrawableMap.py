@@ -1,6 +1,6 @@
 from collections import deque
 import time
-from shared.Map import Map, FACES
+from shared.Map import Map
 from pyglet.gl import *
 import pyglet
 
@@ -15,13 +15,13 @@ def sectorize(position):
     x, z = x // SECTOR_SIZE, z // SECTOR_SIZE
     return (x, 0, z)
 
-class ClientMap(Map):
+class DrawableMap(Map):
     """Extends shared.Map by rendering"""
     def __init__(self, maxFPS=60, farplane=100):
         self.maxFPS = maxFPS
         # helps calculating how many sectors are shown around the player
         self.farplane = farplane
-        super(ClientMap, self).__init__()
+        super().__init__()
         self.batch = pyglet.graphics.Batch()
         # all blocks which are shown at current position
         self.shown = {}
@@ -41,9 +41,18 @@ class ClientMap(Map):
         self.mmResolution = 3
         self.mmPosition = (0, 0)
     
+    def load(self):
+        for x in range(0, 50):
+            self.addBlock((x, 1, 0), (1, 1, 0), immediate=False)
+            for z in range(0, 50):
+                self.addBlock((x, 0, z), (0, 1, 0), immediate=False)
+        self.addBlock((1, 0, 0), (1, 0, 0), immediate=False)
+        self.addBlock((0, 1, 0), (0, 1, 0), immediate=False)
+        self.addBlock((0, 0, 1), (0, 0, 1), immediate=False)
+    
     def addBlock(self, position, color, immediate=True):
         """Adds a block to the map"""
-        super(ClientMap, self).addBlock(position, color)
+        super().addBlock(position, color)
         self.sectors.setdefault(sectorize(position), []).append(position)
         self.updateMinimap(position)
         if immediate:
@@ -53,7 +62,7 @@ class ClientMap(Map):
     
     def removeBlock(self, position, immediate=True):
         """Removes a block from the map"""
-        super(ClientMap, self).removeBlock(position)
+        super().removeBlock(position)
         try:
             self.sectors[sectorize(position)].remove(position)
         except (KeyError, ValueError):
@@ -100,17 +109,17 @@ class ClientMap(Map):
     def exposed(self, position):
         """Returns whether a block must be rendered (True when not covered on all 6 sides)"""
         x, y, z = position
-        for dx, dy, dz in FACES:
-            if (x + dx, y + dy, z + dz) not in self.world:
+        for dx, dy, dz in self.FACES:
+            if (x + dx, y + dy, z + dz) not in self.blocks:
                 return True
         return False
     
     def checkNeighbors(self, position):
         """Checks whether a new or removed block covers a neighbor and eventually hides/shows the neighbors"""
         x, y, z = position
-        for dx, dy, dz in FACES:
+        for dx, dy, dz in self.FACES:
             key = (x + dx, y + dy, z + dz)
-            if key not in self.world:
+            if key not in self.blocks:
                 continue
             if self.exposed(key):
                 if key not in self.shown:
@@ -128,7 +137,7 @@ class ClientMap(Map):
                         self.updateBlock(pos)
     
     def showBlock(self, position, immediate=True):
-        self.shown[position] = self.world[position] # color
+        self.shown[position] = self.blocks[position] # color
         if immediate:
             self._showBlock(position)
         else:
@@ -273,11 +282,11 @@ class ClientMap(Map):
                 (x+0.5, y+1, z-0.5)
             ]
         ]
-        return sum([0.15 if pos in self.world else 0.25 for pos in m[f]])
+        return sum([0.15 if pos in self.blocks else 0.25 for pos in m[f]])
     
     def vertexColors(self, x, y, z, vertex_data):
         """For each vertex look which lightlevel it has and modify its color"""
-        r, g, b = self.world[(x, y, z)]
+        r, g, b = self.blocks[(x, y, z)]
         color_data = []
         for i in range(24): # len(vertex_data) / 3
             ll = self.getLightLevel(vertex_data[i*3:i*3+3], i//4)
@@ -286,8 +295,8 @@ class ClientMap(Map):
     
     def getHighestBlocksColor(self, x, z):
         for y in range(30, -1, -1):
-            if (x, y, z) in self.world:
-                return self.world[(x, y, z)]
+            if (x, y, z) in self.blocks:
+                return self.blocks[(x, y, z)]
         return (0, 0, 0)
     
     def drawMinimap(self):

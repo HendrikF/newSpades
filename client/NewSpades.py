@@ -82,7 +82,6 @@ class NewSpades(BaseWindow):
         self.gui = GuiManager(self)
     
     def start(self):
-        self.map.load()
         super(NewSpades, self).start()
         self._client.disconnect()
     
@@ -293,6 +292,8 @@ class NewSpades(BaseWindow):
             self.map.addBlock((msg.x, msg.y, msg.z), (msg.r, msg.g, msg.b))
         elif msg == 'BlockBreak':
             self.map.removeBlock((msg.x, msg.y, msg.z))
+        elif msg == 'StartMapTransfer' or msg == 'MapData':
+            self.map.receivedMapData(msg)
         else:
             logger.warning('Unknown Message from peer %s: %s', peer, msg)
     

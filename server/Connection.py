@@ -18,15 +18,8 @@ class Connection(object):
     
     def sendMap(self):
         data = self.server.map.exportBytes()
-        maxlen = self.peer.endpoint.mtu - 25
-        # Split data in chunks of maxlen bytes
-        parts = [data[i:i+maxlen] for i in range(0, len(data), maxlen)]
-        msg = self.server._server.messageFactory.getByName('StartMapTransfer')(parts=len(parts), data=parts.pop(0))
+        msg = self.server._server.messageFactory.getByName('Map')(data=data)
         self.peer.send(msg)
-        Msg = self.server._server.messageFactory.getByName('MapData')
-        for i in range(1, len(parts)+1):
-            msg = Msg(part=i, data=parts.pop(0))
-            self.peer.send(msg)
     
     def update(self, dt):
         try:

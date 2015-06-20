@@ -41,9 +41,6 @@ class DrawableMap(Map):
         self.mmSize = (50, 50)
         self.mmResolution = 3
         self.mmPosition = (0, 0)
-        
-        self.receivedParts = []
-        self.partsCount = 0
     
     """def load(self):
         for x in range(0, 50):
@@ -54,23 +51,8 @@ class DrawableMap(Map):
         self.addBlock((0, 1, 0), (0, 1, 0), immediate=False)
         self.addBlock((0, 0, 1), (0, 0, 1), immediate=False)"""
     
-    @property
-    def active(self):
-        return len(self.receivedParts) >= self.partsCount and self.partsCount > 0
-    
-    def receivedMapData(self, msg):
-        msg = copy.deepcopy(msg)
-        if msg == 'StartMapTransfer':
-            self.partsCount = msg.parts
-            msg.part = 0
-            self.receivedParts.append(msg)
-        elif msg == 'MapData':
-            self.receivedParts.append(msg)
-        if self.active:
-            data = b''
-            for part in sorted(self.receivedParts, key=lambda item: item.part):
-                data += part.data
-            self.importBytes(data)
+    def receivedMap(self, msg):
+        self.importBytes(msg.data)
         
     def addBlock(self, position, color, immediate=True):
         """Adds a block to the map"""

@@ -30,9 +30,9 @@ def downloadZipFile(url, destPath, zipPath=''):
                     outfile.write(zipfile.read(name))
 
 downloadZipFile(
-    'https://github.com/HendrikF/transmitter/archive/v0.4.3.zip',
+    'https://github.com/HendrikF/transmitter/archive/v0.5.zip',
     'transmitter',
-    'transmitter-0.4.3/transmitter/')
+    'transmitter-0.5/transmitter/')
 
 downloadZipFile(
     'https://github.com/HendrikF/events/archive/v0.1.2.zip',

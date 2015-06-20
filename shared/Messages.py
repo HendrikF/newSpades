@@ -13,20 +13,7 @@ def _add(clas):
     return clas
 
 @_add
-class StartMapTransfer(Message):
-    """
-    To Server: --
-    To Client: Start map transfer
-    """
-    msgID = _getID()
-    msgReliable = True
-    msgData = {
-        'parts' : ('int', 0),
-        'data' : ('bytes', b'')
-    }
-
-@_add
-class MapData(Message):
+class Map(Message):
     """
     To Server: --
     To Client: Send map data
@@ -34,7 +21,6 @@ class MapData(Message):
     msgID = _getID()
     msgReliable = True
     msgData = {
-        'part' : ('int', 0),
         'data' : ('bytes', b'')
     }
 

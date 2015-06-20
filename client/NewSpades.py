@@ -292,8 +292,8 @@ class NewSpades(BaseWindow):
             self.map.addBlock((msg.x, msg.y, msg.z), (msg.r, msg.g, msg.b))
         elif msg == 'BlockBreak':
             self.map.removeBlock((msg.x, msg.y, msg.z))
-        elif msg == 'StartMapTransfer' or msg == 'MapData':
-            self.map.receivedMapData(msg)
+        elif msg == 'Map':
+            self.map.receivedMap(msg)
         else:
             logger.warning('Unknown Message from peer %s: %s', peer, msg)
     

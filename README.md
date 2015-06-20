@@ -69,5 +69,4 @@ Library | License
 --------|--------
 [pyglet](http://pyglet.org/) | [3-clause-BSD](https://code.google.com/p/pyglet/source/browse/LICENSE)
 [AVbin](http://avbin.github.io/AVbin/Home/Home.html) | [GNU LGPL](https://github.com/AVbin/AVbin/blob/master/COPYING.LESSER)
-[transmitter](https://github.com/HendrikF/transmitter) | [3-clause-BSD](https://github.com/HendrikF/transmitter/blob/master/LICENSE)
 [The Ubuntu Font](http://font.ubuntu.com/) | http://font.ubuntu.com/licence/

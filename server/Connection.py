@@ -8,6 +8,7 @@ class Connection(object):
         self.player = None
         
         self.sendMap()
+        self.sendAssets()
     
     @property
     def active(self):
@@ -18,8 +19,13 @@ class Connection(object):
     
     def sendMap(self):
         data = self.server.map.exportBytes()
-        msg = self.server._server.messageFactory.getByName('Map')(data=data)
+        msg = self.peer.endpoint.messageFactory.getByName('Map')(data=data)
         self.peer.send(msg)
+    
+    def sendAssets(self):
+        Msg = self.peer.endpoint.messageFactory.getByName('Asset')
+        for name, data in self.server.assetManager.assets.items():
+            self.peer.send(Msg(name=name, data=data))
     
     def update(self, dt):
         try:

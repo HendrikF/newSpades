@@ -4,6 +4,7 @@ from pyglet.window import key, mouse
 from shared.BaseWindow import BaseWindow
 from client.DrawablePlayer import DrawablePlayer
 from client.MapManager import MapManager
+from client.AssetManager import AssetManager
 from client.Sounds import Sounds
 from shared.DrawableModel import DrawableModel
 from shared.CommandLine import CommandLine
@@ -42,6 +43,8 @@ class NewSpades(BaseWindow):
         
         self.mapManager = MapManager(self.maxFPS, self.farplane)
         self.map = None
+        
+        self.assetManager = AssetManager()
         
         self.models = {}
         with open('client/models/head.nsmdl', 'rb') as f:
@@ -305,6 +308,8 @@ class NewSpades(BaseWindow):
         elif msg == 'Map':
             self.map = self.mapManager.fromBytes(msg.data)
             self._setActive()
+        elif msg == 'Asset':
+            self.assetManager.add(msg.name, msg.data)
         else:
             logger.warning('Unknown Message from peer %s: %s', peer, msg)
     

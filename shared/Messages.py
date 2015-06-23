@@ -25,6 +25,19 @@ class Map(Message):
     }
 
 @_add
+class Asset(Message):
+    """
+    To Server: --
+    To Client: Send asset
+    """
+    msgID = _getID()
+    msgReliable = True
+    msgData = {
+        'name' : ('str', ''),
+        'data' : ('bytes', b'')
+    }
+
+@_add
 class Join(Message):
     """
     To Server: Client wants to join

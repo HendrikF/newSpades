@@ -4,3 +4,4 @@ logs/
 config.txt
 transmitter/
 events/
+*.sublime-*

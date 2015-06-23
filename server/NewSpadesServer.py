@@ -2,10 +2,10 @@ from threading import Thread
 import shared.logging
 from shared import Messages
 from server.BasicServer import BasicServer
-from server.types import MultikeyDict
 from server.ServerPlayer import ServerPlayer
 from server.Connection import Connection
 from shared.Map import Map
+from server.AssetManager import AssetManager
 
 from server import config
 
@@ -26,6 +26,8 @@ class NewSpadesServer(BasicServer):
         
         self.connections = {}
         self.map = None
+        
+        self.assetManager = AssetManager()
     
     def invoke(self, name, *args, **kw):
         self.events.invoke(name, self, *args, **kw)
@@ -33,12 +35,16 @@ class NewSpadesServer(BasicServer):
     def start(self):
         self.commandThread.start()
         self.loadMap('map.nsmap')
+        self.loadAssets()
         super().start()
     
     def loadMap(self, filename):
         self.map = Map()
         with open(filename, 'rb') as f:
             self.map.importBytes(f.read())
+    
+    def loadAssets(self):
+        self.assetManager.load('assets')
     
     def consoleCommands(self):
         self.running = True

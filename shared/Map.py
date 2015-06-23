@@ -4,8 +4,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Map(BlockStructure):
-    """Map represents the world"""
-    
+    """ Map represents the world
+    """
     def getBlocksLookingAt(self, position, vector, maxDistance):
         """Returns which blocks the player is looking at"""
         m = 20

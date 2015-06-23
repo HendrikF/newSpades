@@ -1,7 +1,7 @@
 """
-Loads the config file and can be imported by modules needing the config.
+Loads the config file and provides read-only access to it
 
-I recommend to read values with config.get(key, default) to avoid KeyErrors.
+Read values with config.get(key, default) to avoid KeyErrors
 """
 import json
 import os
@@ -11,8 +11,18 @@ _logger = logging.getLogger()
 
 _configname = 'config.txt'
 _config = {
-    'scripts': []
+    'scripts': [],
+    'designs': {
+        'player': {
+            'head': 'head.nsmdl',
+            'torso': 'torso.nsmdl',
+            'arms': 'arms.nsmdl',
+            'legl': 'leg.nsmdl',
+            'legr': 'leg.nsmdl',
+        }
+    }
 }
+
 if not os.path.isfile(_configname):
     try:
         with open(_configname, 'w') as f:

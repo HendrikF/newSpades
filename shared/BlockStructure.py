@@ -6,6 +6,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 class BlockStructure:
+    """ A structure of blocks...
+    """
     FACES = [
         ( 0, 1, 0), # UP
         ( 0,-1, 0), # DOWN

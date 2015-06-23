@@ -3,7 +3,7 @@ import pyglet
 
 class BaseWindow(pyglet.window.Window):
     def __init__(self, *args, **kw):
-        super(BaseWindow, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.exclusive = False
         self.maxFPS = 60
         self.farplane = 100
@@ -26,7 +26,7 @@ class BaseWindow(pyglet.window.Window):
         pyglet.app.run()
     
     def set_exclusive_mouse(self, exclusive):
-        super(BaseWindow, self).set_exclusive_mouse(exclusive)
+        super().set_exclusive_mouse(exclusive)
         self.exclusive = exclusive
     
     def _update(self, dt):
@@ -92,6 +92,8 @@ class BaseWindow(pyglet.window.Window):
         glLoadIdentity()
     
     def on_draw(self):
+        if not self.visible:
+            return
         self.clear()
         self.set3d()
         self.draw3d()

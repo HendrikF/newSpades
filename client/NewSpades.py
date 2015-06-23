@@ -3,7 +3,7 @@ from pyglet.gl import *
 from pyglet.window import key, mouse
 from shared.BaseWindow import BaseWindow
 from client.DrawablePlayer import DrawablePlayer
-from client.DrawableMap import DrawableMap
+from client.MapManager import MapManager
 from client.Sounds import Sounds
 from shared.DrawableModel import DrawableModel
 from shared.CommandLine import CommandLine
@@ -20,8 +20,9 @@ logger = logging.getLogger(__name__)
 class NewSpades(BaseWindow):
     ##################
     # General stuff
-    def __init__(self, progressbar=None, *args, **kw):
-        super(NewSpades, self).__init__(*args, **kw)
+    def __init__(self, *args, **kw):
+        kw['visible'] = False
+        super().__init__(*args, **kw)
         self.label = pyglet.text.Label('', font_name='Ubuntu', font_size=10,
             x=10, y=self.height, anchor_x='left', anchor_y='top',
             color=(0, 0, 0, 255))
@@ -33,12 +34,14 @@ class NewSpades(BaseWindow):
         self._client = Client()
         self._client.messageFactory.add(*Messages.messages)
         self._client.onMessage.attach(self.onMessage)
+        self._client.onConnect.attach(self.onConnect)
         self._client.onDisconnect.attach(self.onDisconnect)
         self._client.onTimeout.attach(self.onTimeout)
         
         self.sounds = Sounds()
         
-        self.map = DrawableMap(maxFPS=self.maxFPS, farplane=self.farplane)
+        self.mapManager = MapManager(self.maxFPS, self.farplane)
+        self.map = None
         
         self.models = {}
         with open('client/models/head.nsmdl', 'rb') as f:
@@ -82,8 +85,12 @@ class NewSpades(BaseWindow):
         self.gui = GuiManager(self)
     
     def start(self):
-        super(NewSpades, self).start()
+        super().start()
         self._client.disconnect()
+    
+    def _setActive(self):
+        self.set_visible(True)
+        self.set_exclusive_mouse(True)
     
     ###############
     # Rendering
@@ -138,8 +145,9 @@ class NewSpades(BaseWindow):
     # Physics
     
     def update(self, dt):
-        #print(self.player)
-        #print(self.otherPlayers)
+        if not self.visible:
+            self._client.update()
+            return
         t = time.time()
         if self.lastNetworkUpdate + self.timeNetworkUpdate <= t:
             self.lastNetworkUpdate = t
@@ -149,6 +157,8 @@ class NewSpades(BaseWindow):
         self.map.update(self.player.position)
     
     def updatePhysics(self, dt):
+        if not self.visible:
+            return
         self.player.update(dt, self.map)
         for player in self.otherPlayers.values():
             player.update(dt, self.map)
@@ -293,9 +303,13 @@ class NewSpades(BaseWindow):
         elif msg == 'BlockBreak':
             self.map.removeBlock((msg.x, msg.y, msg.z))
         elif msg == 'Map':
-            self.map.receivedMap(msg)
+            self.map = self.mapManager.fromBytes(msg.data)
+            self._setActive()
         else:
             logger.warning('Unknown Message from peer %s: %s', peer, msg)
+    
+    def onConnect(self, peer):
+        logger.info('Peer connected: %s', peer)
     
     def onDisconnect(self, peer):
         logger.info('Disconnected from server!')

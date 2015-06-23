@@ -56,3 +56,5 @@ class BlockStructure:
             position = byteBuffer.readStruct('iii')
             color = colors[byteBuffer.readStruct('i')[0]]
             self.addBlock(position, color)
+        # for chaining
+        return self

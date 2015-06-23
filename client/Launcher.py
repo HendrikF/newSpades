@@ -57,7 +57,7 @@ class Launcher(Frame):
     def connect(self, *args):
         self._changeButtons(False)
         logger.info('Starting in online mode')
-        newspades = NewSpades(progressbar=self.progressbar, width=800, height=600, caption='NewSpades', resizable=True, visible=False)
+        newspades = NewSpades(width=800, height=600, caption='NewSpades', resizable=True)
         host, port, username = self.addr.get().strip(), int(self.port.get()), self.username.get().strip()
         import socket
         try:
@@ -67,17 +67,14 @@ class Launcher(Frame):
             messagebox.showerror('NewSpades', "Can't connect to server: {}".format(e))
             self._changeButtons(True)
         else:
-            newspades.set_visible()
-            newspades.set_exclusive_mouse(True)
             self.close()
             newspades.start()
     
     def offline(self, *args):
+        return
         self._changeButtons(False)
         logger.info('Starting in offline mode')
-        newspades = NewSpades(progressbar=self.progressbar, width=800, height=600, caption='NewSpades', resizable=True, visible=False)
-        newspades.set_exclusive_mouse(True)
-        newspades.set_visible()
+        newspades = NewSpades(width=800, height=600, caption='NewSpades', resizable=True)
         self.close()
         newspades.start()
     

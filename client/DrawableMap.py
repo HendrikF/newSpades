@@ -41,18 +41,6 @@ class DrawableMap(Map):
         self.mmSize = (50, 50)
         self.mmResolution = 3
         self.mmPosition = (0, 0)
-    
-    """def load(self):
-        for x in range(0, 50):
-            self.addBlock((x, 1, 0), (1, 1, 0), immediate=False)
-            for z in range(0, 50):
-                self.addBlock((x, 0, z), (0, 1, 0), immediate=False)
-        self.addBlock((1, 0, 0), (1, 0, 0), immediate=False)
-        self.addBlock((0, 1, 0), (0, 1, 0), immediate=False)
-        self.addBlock((0, 0, 1), (0, 0, 1), immediate=False)"""
-    
-    def receivedMap(self, msg):
-        self.importBytes(msg.data)
         
     def addBlock(self, position, color, immediate=True):
         """Adds a block to the map"""
